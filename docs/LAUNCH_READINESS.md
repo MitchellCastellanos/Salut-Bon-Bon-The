@@ -14,7 +14,7 @@ Production checkout stays disabled until hosted validation and owner sign-off. T
 
 - [x] Neon project `salut-bon-bon-the` with `production` (empty), `development`, `migration-test`; migrations 001–005 and the catalog import rehearsed on Neon; import idempotent; rollback verified; least-privilege `salut_app` role. See [Neon setup](NEON_SETUP.md).
 - [x] Vercel Preview uses the Neon `development` branch (Preview-only sensitive variable). A preview served Mango Series products read from Neon. Production has no database variable and refuses demo storage.
-- [x] Stripe Checkout (test mode), signed webhook, idempotent reconciliation, expiry slot release, refund-required flag. 12 reconciliation tests plus a live Neon run of the same SQL under the runtime role.
+- [x] Stripe Checkout (test mode), signed webhook, idempotent reconciliation, expiry slot release, refund-required flag. Payment, lifecycle, email and search tests (12 in `tests/payments.test.ts`) plus a live Neon run of the same SQL under the runtime role.
 - [x] Resend transactional email (FR/EN, outbox, retries, test-recipient guard). Not sent to any real address.
 - [x] Exceptional closures, staff order search, payment-aware order states, paid-before-confirm and paid-before-complete guards.
 - [x] 25 automated tests, `npm run check`, `npm run build`, demo browser smoke.
