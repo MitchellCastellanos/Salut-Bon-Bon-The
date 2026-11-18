@@ -1,20 +1,20 @@
 "use client";
+import { cartKey, cartChanged } from "../../../src/cart";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { categories, lineSchema, modifiers, money, pickupDate, products, quote, type Lang, type Line } from "../../../src/domain";
 import { slots, submitOrder } from "./actions";
 
-const key = "salut-cart";
 const errors: Record<string, [string, string]> = {
   SLOT: ["Choisis une nouvelle heure de cueillette.", "Choose a new pickup time."],
   MENU: ["Vérifie les options de ton panier.", "Check your cart options."],
   CONFLICT: ["Cette commande existe déjà avec d’autres détails.", "This order already exists with different details."],
 };
-export function Menu({ lang, demo, photos }: { lang: Lang; demo: boolean; photos: Record<string, ReactNode> }) {
+export function Menu({ lang, demo, photos, initialCategory }: { lang: Lang; demo: boolean; photos: Record<string, ReactNode>; initialCategory: keyof typeof categories | "all" }) {
   const fr = lang === "fr";
   const router = useRouter();
   const customization = useRef<HTMLFormElement>(null);
-  const [category, setCategory] = useState<"all" | keyof typeof categories>("all");
+  const [category, setCategory] = useState<"all" | keyof typeof categories>(initialCategory);
   const [selected, setSelected] = useState<(typeof products)[number]>();
   const [cart, setCart] = useState<Line[]>([]);
   const [times, setTimes] = useState<string[]>([]);
@@ -25,7 +25,7 @@ export function Menu({ lang, demo, photos }: { lang: Lang; demo: boolean; photos
   useEffect(() => {
     const init = window.setTimeout(() => {
       try {
-        const saved = lineSchema.array().max(20).parse(JSON.parse(localStorage.getItem(key) || "[]"));
+        const saved = lineSchema.array().max(20).parse(JSON.parse(localStorage.getItem(cartKey) || "[]"));
         quote(saved);
         setCart(saved);
       } catch { /* An invalid or unavailable cart starts empty. */ }
@@ -39,7 +39,7 @@ export function Menu({ lang, demo, photos }: { lang: Lang; demo: boolean; photos
   }, [selected]);
   function save(lines: Line[]) {
     setCart(lines);
-    try { localStorage.setItem(key, JSON.stringify(lines)); } catch { /* Keep the current cart usable. */ }
+    try { localStorage.setItem(cartKey, JSON.stringify(lines)); window.dispatchEvent(new Event(cartChanged)); } catch { /* Keep the current cart usable. */ }
   }
   function add(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,7 +84,7 @@ export function Menu({ lang, demo, photos }: { lang: Lang; demo: boolean; photos
   const priced = quote(cart);
   return <div className="menu-layout">
     <div>
-      <div className="filters">{(["all", "fruit", "milk"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>
+      <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>
       <div className="product-grid menu-grid">{products.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={p.id} key={p.id}>
         {photos[p.id]}<div><strong>{p.name[lang]}</strong><span>{money(p.price, lang)}</span></div><p>{p.description[lang]}</p>
         <button className="outline" onClick={() => setSelected(p)}>{fr ? "Personnaliser" : "Customize"} ＋</button>
@@ -102,7 +102,7 @@ export function Menu({ lang, demo, photos }: { lang: Lang; demo: boolean; photos
       </form>}
       <p role="status">{message}</p>
     </div>
-    <aside className="panel cart"><h2>{fr ? "Ton panier" : "Your cart"}</h2>
+    <aside className="panel cart" id="cart"><h2>{fr ? "Ton panier" : "Your cart"}</h2>
       {!priced.length ? <p>{fr ? "Ton panier est vide." : "Your cart is empty."}</p> : <>
         <ul className="cart-lines">{priced.map((item, index) => <li key={index}><div><strong>{item.quantity} × {item.name[lang]}</strong><small>{modifiers[item.size][lang]} · {modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</small></div><div>{money(item.subtotal, lang)} <button type="button" className="remove" aria-label={fr ? `Retirer ${item.name[lang]}` : `Remove ${item.name[lang]}`} onClick={() => save(cart.filter((_, i) => index !== i))}>×</button></div></li>)}</ul>
         <p className="total">{fr ? "Total démo" : "Demo total"} <strong>{money(priced.reduce((sum, item) => sum + item.subtotal, 0), lang)}</strong></p>

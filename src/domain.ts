@@ -14,6 +14,7 @@ export function pickupDate(value: string, lang: Lang) {
 }
 export const categories = {
   fruit: { fr: "Thés fruités", en: "Fruit teas" },
+  matcha: { fr: "Matcha", en: "Matcha" },
   milk: { fr: "Thés au lait", en: "Milk teas" },
 } as const;
 export const products = [
@@ -21,6 +22,7 @@ export const products = [
   { id: "strawberry", category: "fruit", name: { fr: "Fraise pétillante", en: "Strawberry pop" }, description: { fr: "Thé au jasmin et fraises acidulées.", en: "Jasmine tea and tangy strawberries." }, price: 650, color: "strawberry", topping: ["none", "popping"] },
   { id: "taro", category: "milk", name: { fr: "Nuage de taro", en: "Taro cloud" }, description: { fr: "Thé au lait crémeux au taro.", en: "Creamy taro milk tea." }, price: 700, color: "taro", topping: ["none", "pearls"] },
   { id: "classic", category: "milk", name: { fr: "Lait & cassonade", en: "Brown sugar milk tea" }, description: { fr: "Thé noir et notes de cassonade.", en: "Black tea with notes of brown sugar." }, price: 725, color: "classic", topping: ["none", "pearls"] },
+  { id: "matcha", category: "matcha", name: { fr: "Matcha au lait", en: "Matcha milk tea" }, description: { fr: "Une boisson au lait et au matcha.", en: "A creamy matcha and milk drink." }, price: 725, color: "matcha", topping: ["none", "pearls"] },
 ] as const;
 export const modifiers = {
   regular: { fr: "Régulier", en: "Regular" }, large: { fr: "Grand", en: "Large" },
