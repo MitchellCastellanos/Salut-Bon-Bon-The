@@ -7,6 +7,7 @@ import { language, states } from "../../../src/domain";
 import { demoStaff, signInStaff, signOutStaff, staffRole } from "../../../src/staff";
 import { recordPayment, updateOrder } from "../../../src/orders";
 import { notifyOrder } from "../../../src/notifications";
+import { earnForOrder } from "../../../src/loyalty";
 
 export async function login(lang: string, form: FormData) {
   if (!language(lang)) return;
@@ -39,6 +40,7 @@ export async function change(lang: string, form: FormData) {
   if (to === "PAY") await recordPayment(number);
   else if (await updateOrder(number, from, to)) {
     if (to === "READY") await notifyOrder(number, ["ready"]);
+    if (to === "COMPLETED") await earnForOrder(number).catch(error => console.error("loyalty earn failed", { order: number, message: error instanceof Error ? error.message : "unknown" }));
     if (to === "CANCELLED") await notifyOrder(number, ["cancelled"]);
   }
   revalidatePath(`/${lang}/staff`);

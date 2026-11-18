@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { pickupPolicySchema } from "../../../src/pickup-policy";
 import { database } from "../../../src/db";
 import { staffRole } from "../../../src/staff";
 
@@ -111,23 +110,4 @@ export async function saveCampaign(form: FormData) {
   revalidatePath("/[lang]/admin", "page");
   revalidatePath("/[lang]", "page");
   revalidatePath("/[lang]/catalog/[collection]", "page");
-}
-
-export async function savePickupPolicy(form: FormData) {
-  if (!process.env.DATABASE_URL || await staffRole() !== "ADMIN") throw new Error("Forbidden");
-  const raw = z.string().max(4000).parse(form.get("policy"));
-  const policy = pickupPolicySchema.parse(JSON.parse(raw));
-  const enabled = form.get("enabled") === "on";
-  await (await database()).query(`
-    WITH saved AS (
-      INSERT INTO catalog_store_settings (key, value)
-      VALUES ('pickup_policy', $1::jsonb), ('pickup_checkout_enabled', $2::jsonb)
-      ON CONFLICT (key) DO UPDATE SET value = excluded.value
-      RETURNING key, value
-    )
-    INSERT INTO catalog_audit_history (action, subject, details)
-    SELECT 'store.update', key, value FROM saved
-  `, [JSON.stringify(policy), JSON.stringify(enabled)]);
-  revalidatePath("/[lang]/admin", "page");
-  revalidatePath("/[lang]/catalog", "page");
 }

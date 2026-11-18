@@ -15,7 +15,7 @@ type Order = {
 type Receipt = { number: string; tracking_token: string; request_fingerprint: string };
 const settled = "('PAID_AT_PICKUP', 'PAID_ONLINE', 'DEMO_PAID')";
 
-export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytics?: { campaign: string | null }) {
+export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytics?: { campaign: string | null }, customerUserId?: string) {
   const { request, lang, name, notes, pickup, method, lines, email } = input;
   const fingerprint = createHash("sha256").update(JSON.stringify(input)).digest("hex");
   const db = await database();
@@ -54,19 +54,19 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
   const token = randomBytes(32).toString("hex");
   const conversion = official && analytics ? `, conversion AS (
     INSERT INTO marketing_events (event, campaign_id)
-    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $14) FROM inserted
+    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $15) FROM inserted
   )` : "";
   const insert = (connection = db) => connection.query<Receipt>(`
     WITH inserted AS (
-      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment, tax_cents, customer_email, payment_method)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment, tax_cents, customer_email, payment_method, customer_user_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       ON CONFLICT (request_id) DO NOTHING
       RETURNING number, tracking_token, request_fingerprint
     ), event AS (
       INSERT INTO order_events (order_number, status) SELECT number, 'RECEIVED' FROM inserted
     ) ${conversion} SELECT * FROM inserted`, [
       request, fingerprint, token, lang, name, notes, pickup, JSON.stringify(items),
-      total, method === "demo" ? "DEMO_PAID" : "UNPAID", tax, email ?? null, method,
+      total, method === "demo" ? "DEMO_PAID" : "UNPAID", tax, email ?? null, method, customerUserId ?? null,
       ...(conversion ? [analytics?.campaign ?? null] : []),
     ]);
   if (policy) {

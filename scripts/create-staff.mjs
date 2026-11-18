@@ -25,8 +25,8 @@ async function createStaff() {
   try {
     await pool.query(`
       WITH created AS (
-        INSERT INTO "user" ("id", "name", "email", "role")
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO "user" ("id", "name", "email", "role", "emailVerified")
+        VALUES ($1, $2, $3, $4, true)
         RETURNING "id"
       )
       INSERT INTO "account" ("id", "accountId", "providerId", "userId", "password", "updatedAt")

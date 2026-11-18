@@ -28,7 +28,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
   const fr = lang === "fr";
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
-    {!orderable.length && <p>{fr ? "Aperçu du catalogue. Commandes en ligne à venir." : "Catalog preview. Online ordering is coming."}</p>}
+    {!orderable.length && <p role="status">{fr ? "La commande en ligne est indisponible pour le moment : les prix ou les heures de cueillette ne sont pas encore publiés par l’équipe. Vous pouvez parcourir tout le menu ci-dessous." : "Online ordering is unavailable right now: prices or pickup hours have not been published by the team yet. You can browse the full menu below."}</p>}
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
       {collections.map(item => <Link key={item.id} href={`/${lang}/catalog/${item.id}`}>{item[lang]}</Link>)}
     </nav>

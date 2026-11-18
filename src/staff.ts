@@ -56,3 +56,10 @@ export async function staffRole(): Promise<StaffRole | undefined> {
   const session = await auth?.api.getSession({ headers: await headers() });
   return canManageOrders(session?.user.role) ? session.user.role : undefined;
 }
+
+/** Stable identifier of the signed-in staff member, recorded as the actor on loyalty and audit entries. */
+export async function staffActor(): Promise<string> {
+  if (demoStaff()) return "demo-staff";
+  const session = await staffAuth()?.api.getSession({ headers: await headers() });
+  return session?.user.id ?? "unknown";
+}

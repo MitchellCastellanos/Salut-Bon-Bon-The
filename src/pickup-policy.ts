@@ -85,3 +85,14 @@ export function openOn(date: string, weekday: Day, policy: PickupPolicy) {
 export function salesTax(subtotal: number, rates: number[]) {
   return rates.reduce((total, rate) => total + Math.round(subtotal * rate / 100000), 0);
 }
+
+/** The next `count` Montréal calendar days with their effective opening intervals, for the admin preview. */
+export function scheduleOutlook(policy: PickupPolicy, count = 21, now = Date.now()) {
+  const dateOf = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" });
+  return Array.from({ length: count }, (_, i) => {
+    const date = dateOf.format(now + i * day);
+    const weekday = days[(new Date(`${date}T12:00:00Z`).getUTCDay() + 6) % 7];
+    const reason = policy.exceptions?.slice().reverse().find(e => e.from <= date && date <= e.to)?.reason;
+    return { date, weekday, intervals: intervalsFor(date, weekday, policy), reason };
+  });
+}

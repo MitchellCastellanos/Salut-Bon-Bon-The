@@ -72,10 +72,22 @@ Generate in the order in [Batch 1](image-prompts/BATCH-01.md), [Batch 2](image-p
 
 The machine-readable register is [`image-manifest.json`](image-manifest.json) (id, batch, file, association, placement, aspect ratio, size, FR/EN alt text, generation and integration status). Run `npm run assets:check` to list what is still missing.
 
-Status: **0 of 27 files exist.** There is no `public/` directory yet, so every slot renders its CSS or SVG fallback (`hasPublicImage` guards each one, and layouts do not shift). All 26 images have finished prompts in `docs/image-prompts/BATCH-01.md` to `BATCH-05.md`, written to be run one image at a time. Nothing was substituted or fabricated.
+Status: **0 of 30 files exist** (27 originally plus the 3 rewards and account images of BATCH-06). There is no `public/` directory yet, so every slot renders its CSS or SVG fallback (`hasPublicImage` guards each one, and layouts do not shift). All 29 generated images have finished prompts in `docs/image-prompts/BATCH-01.md` to `BATCH-06.md`, written to be run one image at a time. Nothing was substituted or fabricated.
 
 - Launch-critical for the approved campaigns: `hero.webp`, `creme-brulee.webp`, `house-lemonade.webp` (BATCH-01 image 1, BATCH-05 images 5–6) and the nine product photos in BATCH-04 and BATCH-05 images 1–4.
 - Not launch-critical: BATCH-01 demo drinks, BATCH-02, BATCH-03 gallery. Do not publish demo drinks as the real menu.
 - `public/brand/logo.svg` must be supplied by the owner. No prompt was written because a generated logo would misrepresent the brand.
 - The house-lemonade poster prompt matches the collection exactly (701, 702, 704, 706, pineapple lemonade, 707); the pineapple lemonade has no product photo of its own and none was invented.
 - Drop-in rule: save each file at its exact path, run `npm run assets:check`, then `npm run build`. Images are decorative next to visible product names, so they ship with empty `alt`; the register's alt text is for any future standalone use.
+
+### Rewards and account imagery (BATCH-06, added for Récompenses Salut)
+
+| Path | Placement | Notes |
+| --- | --- | --- |
+| `public/rewards/campaign-banner.webp` | Header of `/account/rewards` and the signed-out `/account` | 8:3, clean left 40% for HTML copy. |
+| `public/rewards/card-background.webp` | Background layer of the loyalty QR card | 4:5, low-contrast centre so the QR stays scannable. |
+| `public/account/welcome.webp` | Side image on the signed-out `/account` | 4:3. |
+
+Existing coverage reviewed and kept: mango, crème brûlée and lemonade campaigns (BATCH-01, 04, 05) and the generic rewards tile `public/promotions/rewards.webp` (BATCH-02, a rewards card with a gift motif, not a gift-card product).
+
+**Logo policy.** Product photography stays logo-free. The official logo is always a separate HTML/CSS layer (`src/brand.tsx`, `src/brand-server.ts`): header, footer, account pages, rewards and QR card, checkout surfaces and transactional emails. Until the owner supplies `public/brand/logo.svg` the site shows the typographic wordmark; emails need a PNG export at `public/brand/logo-email.png` (email clients reject SVG); `public/brand/logo.svg` also becomes the favicon and the social preview automatically. Never embed a logo inside AI-generated photography.

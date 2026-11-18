@@ -5,6 +5,7 @@ import { analyticsAllowed, campaignIds } from "../../../src/analytics";
 import { commercialPickupSlots } from "../../../src/store-settings";
 import { checkoutSchema, pickupSlots } from "../../../src/domain";
 import { demoStorageAllowed } from "../../../src/db";
+import { customerSession } from "../../../src/customer";
 import { placeOrder } from "../../../src/orders";
 import { cardCheckoutUrl } from "../../../src/card-checkout";
 import { cardPaymentsEnabled } from "../../../src/providers/stripe";
@@ -23,7 +24,10 @@ export async function submitOrder(payload: unknown, campaign?: unknown) {
   try {
     const allowed = await analyticsAllowed();
     const attribution = z.enum(campaignIds).safeParse(campaign);
-    const order = await placeOrder(parsed.data, allowed ? { campaign: attribution.success ? attribution.data : null } : undefined);
+    const customer = process.env.DATABASE_URL ? await customerSession().catch(() => undefined) : undefined;
+    // A signed-in customer gets order history, loyalty earning and notices at their account email.
+    const order = await placeOrder({ ...parsed.data, email: parsed.data.email ?? customer?.email },
+      allowed ? { campaign: attribution.success ? attribution.data : null } : undefined, customer?.id);
     const number = order.number.toString();
     if (parsed.data.method === "card") {
       const redirect = await cardCheckoutUrl(number);

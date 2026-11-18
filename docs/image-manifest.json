@@ -349,5 +349,44 @@
   "altEn": "Salut Bon Bon Thé",
   "generation": "needs-owner-supplied-file (no prompt: do not generate a logo)",
   "integration": "wired-with-fallback"
+ },
+ {
+  "id": "rewards-campaign-banner",
+  "batch": "BATCH-06",
+  "file": "public/rewards/campaign-banner.webp",
+  "association": "Salut Rewards program",
+  "placement": "Header of /account/rewards and /account (signed out)",
+  "aspectRatio": "8:3",
+  "size": "2400x900",
+  "altFr": "Boissons et étoiles en papier pour Récompenses Salut.",
+  "altEn": "Drinks and paper stars for Salut Rewards.",
+  "generation": "pending",
+  "integration": "wired-with-fallback"
+ },
+ {
+  "id": "rewards-card-background",
+  "batch": "BATCH-06",
+  "file": "public/rewards/card-background.webp",
+  "association": "Loyalty QR card",
+  "placement": "Background layer of the member card (logo is an HTML layer)",
+  "aspectRatio": "4:5",
+  "size": "1200x1500",
+  "altFr": "Fond décoratif de la carte de membre.",
+  "altEn": "Decorative background of the member card.",
+  "generation": "pending",
+  "integration": "wired-with-fallback"
+ },
+ {
+  "id": "account-welcome",
+  "batch": "BATCH-06",
+  "file": "public/account/welcome.webp",
+  "association": "Customer account",
+  "placement": "Side image on /account (signed out)",
+  "aspectRatio": "4:3",
+  "size": "1600x1200",
+  "altFr": "Un vaso de thé à la mangue remis au comptoir.",
+  "altEn": "A mango tea handed over at the counter.",
+  "generation": "pending",
+  "integration": "wired-with-fallback"
  }
 ]

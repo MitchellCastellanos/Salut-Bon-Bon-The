@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { catalogCategories, catalogCollections, catalogProducts, visibleCampaigns } from "../../src/catalog";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
+import { loyaltyProgram } from "../../src/loyalty";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, money, products } from "../../src/domain";
@@ -28,6 +29,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const fr = lang === "fr";
   const menu = `/${lang}/menu`;
   const official = usesOfficialCatalog();
+  const rewardsActive = official ? await loyaltyProgram().then(p => p.active, () => undefined) : undefined;
   const promotions = await visibleCampaigns();
   const mangoHero = promotions.find(campaign => campaign.id === "fresh-mango-series");
   const officialTiles = [
@@ -107,8 +109,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <section className="promo-banner rewards-banner" id="rewards">
           <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>
             <p>{fr ? "Cumulez des points à chaque achat admissible et échangez-les contre des récompenses." : "Earn points on eligible purchases and redeem them for rewards."}</p>
-            <a className="button purple" href="#account">{fr ? "Bientôt disponible" : "Coming soon"} <span aria-hidden="true">→</span></a>
-            <div id="account" tabIndex={-1} className="account-status">{fr ? "Les comptes clients et les récompenses seront disponibles prochainement." : "Customer accounts and rewards are coming soon."}</div>
+            <Link className="button purple" href={`/${lang}/account/rewards`}>{fr ? "Voir ma carte Récompenses" : "View my rewards card"} <span aria-hidden="true">→</span></Link>
+            <p className="account-status">{rewardsActive === undefined ? (fr ? "Créez un compte pour suivre vos commandes et adhérer au programme." : "Create an account to follow your orders and join the program.") : rewardsActive ? (fr ? "Programme actif : cumulez des points à chaque achat admissible." : "Program active: earn points on every eligible purchase.") : (fr ? "Le programme n’est pas actif pour le moment : aucun point n’est cumulé." : "The program is not active right now: no points are being earned.")}</p>
           </div>
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/rewards.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="rewards-art"><StorefrontIcon name="gift"/><span>★ ★ ★</span></span></StorefrontArt></div>
         </section>
