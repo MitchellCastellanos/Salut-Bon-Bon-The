@@ -135,6 +135,10 @@ try {
   await profileForm.locator('input[name="phone"]').fill("+1 514-637-6666");
   await profileForm.getByRole("button", { name: "Enregistrer le profil" }).click();
   await admin.getByText(/Code postal canadien invalide/).waitFor();
+  // The failed save reloads the page with the (still empty) stored profile, so every required field is filled again.
+  await profileForm.locator('input[name="displayName"]').fill("Salut Bon Bon Thé");
+  await profileForm.locator('input[name="street"]').fill("1175 Rue Notre Dame");
+  await profileForm.locator('input[name="city"]').fill("Lachine");
   await profileForm.locator('input[name="postalCode"]').fill("h8s2c5");
   await profileForm.locator('input[name="phone"]').fill("+1 514-637-6666");
   await profileForm.getByRole("button", { name: "Enregistrer le profil" }).click();
