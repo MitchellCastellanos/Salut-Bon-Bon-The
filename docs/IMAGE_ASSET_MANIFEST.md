@@ -1,6 +1,6 @@
 # Storefront image asset manifest
 
-The approved mockup is the design reference. All paths below are relative to the repository root. Current photos and banner artwork are placeholders. Add approved files before rebuilding, and check desktop and phone crops. Product imagery depicts the demo menu until the owner confirms the catalog. Drawings for the seven category tiles and utility icons live inline. Waves and background colors are CSS.
+The approved mockup is the design reference. All paths below are relative to the repository root. Photos and banner artwork were supplied by the owner on 2026-11-18 (see the register below). Check desktop and phone crops after replacing any file. Product imagery depicts the demo menu until the owner confirms the catalog. Drawings for the seven category tiles and utility icons live inline. Waves and background colors are CSS.
 
 ## Campaign photography · P0
 
@@ -8,7 +8,7 @@ Full-width at desktop, with HTML titles and buttons over the left side. On phone
 
 | Path | Component and purpose | Source and subject |
 | --- | --- | --- |
-| `public/drinks/hero.webp` | Homepage carousel, opening mango campaign | 8:3 landscape, 2400 × 900. Group the official mango coconut, mango slush, and mango lychee specialties at right. Prompt updated in Batch 1. Image pending. |
+| `public/drinks/hero.webp` | Homepage carousel, opening mango campaign | 8:3 landscape, 2400 × 900. Group the official mango coconut, mango slush, and mango lychee specialties at right. Prompt updated in Batch 1. Present (uploaded 2026-11-18). |
 | `public/promotions/strawberry.webp` | Homepage carousel, strawberry campaign | 8:3 landscape, 2400 × 900. Pink iced fruit tea and strawberries at right. |
 | `public/promotions/taro.webp` | Homepage carousel, taro campaign | 8:3 landscape, 2400 × 900. Creamy lavender taro drinks at right. |
 
@@ -56,23 +56,31 @@ Generate in the order in [Batch 1](image-prompts/BATCH-01.md), [Batch 2](image-p
 
 | Path | Purpose | Dimensions | Status | Batch | Replaces placeholder |
 | --- | --- | --- | --- | --- | --- |
-| `public/catalog/MANGO-01.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
-| `public/catalog/MANGO-02.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
-| `public/catalog/MANGO-03.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
-| `public/catalog/MANGO-04.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
-| `public/catalog/MANGO-05.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
-| `public/catalog/BRULEE-01.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
-| `public/catalog/BRULEE-02.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
-| `public/catalog/BRULEE-03.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
-| `public/catalog/BRULEE-04.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
-| `public/promotions/creme-brulee.webp` | Collection banner | 2400 × 900 | Prompt ready, image pending | 5 | Empty image slot |
-| `public/promotions/house-lemonade.webp` | Collection banner | 2400 × 900 | Prompt ready, image pending | 5 | Empty image slot |
+| `public/catalog/MANGO-01.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 4 | Empty image slot |
+| `public/catalog/MANGO-02.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 4 | Empty image slot |
+| `public/catalog/MANGO-03.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 4 | Empty image slot |
+| `public/catalog/MANGO-04.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 4 | Empty image slot |
+| `public/catalog/MANGO-05.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 4 | Empty image slot |
+| `public/catalog/BRULEE-01.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 5 | Empty image slot |
+| `public/catalog/BRULEE-02.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 5 | Empty image slot |
+| `public/catalog/BRULEE-03.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 5 | Empty image slot |
+| `public/catalog/BRULEE-04.webp` | Specialty product card | 1200 × 1140 | Present (uploaded 2026-11-18) | 5 | Empty image slot |
+| `public/promotions/creme-brulee.webp` | Collection banner | 2400 × 900 | Present (uploaded 2026-11-18) | 5 | Empty image slot |
+| `public/promotions/house-lemonade.webp` | Collection banner | 2400 × 900 | Present (uploaded 2026-11-18) | 5 | Empty image slot |
 
 ## Asset register (audit 2026-11-18)
 
 The machine-readable register is [`image-manifest.json`](image-manifest.json) (id, batch, file, association, placement, aspect ratio, size, FR/EN alt text, generation and integration status). Run `npm run assets:check` to list what is still missing.
 
-Status: **0 of 30 files exist** (27 originally plus the 3 rewards and account images of BATCH-06). There is no `public/` directory yet, so every slot renders its CSS or SVG fallback (`hasPublicImage` guards each one, and layouts do not shift). All 29 generated images have finished prompts in `docs/image-prompts/BATCH-01.md` to `BATCH-06.md`, written to be run one image at a time. Nothing was substituted or fabricated.
+**Status (after merging the owner's image upload from `main`, commit `08c286f`): 27 image files are present (about 1.6 MB), covering all 26 images of BATCH-01 to BATCH-05 plus one extra. Pending: the 3 BATCH-06 rewards and account images and the official logo.** Every slot is still guarded by `hasPublicImage`, so a missing file falls back instead of breaking. All 29 images have finished prompts in `docs/image-prompts/BATCH-01.md` to `BATCH-06.md`, written to be run one image at a time. Nothing was substituted or fabricated.
+
+### Verified against the real files
+
+`npm run assets:check` reports 27 of 31 manifest entries present (26 expected images plus the extra upload); the four missing are the official logo and the three BATCH-06 images. Every present file matches its manifest aspect ratio (hero and campaign banners 8:3 at 2048×768, product and featured cards ≈20:19 at 1200×1138, gallery ≈31:20 at 1200×775, pickup 4:5, rewards 1:1). Rendered in a browser at 1280 px and 390 px, FR and EN, with no broken images, no horizontal overflow and no failed requests (`npm run test:storefront`). A phone downloads about 45 KB of images for the first homepage view because Next serves resized WebP; the hero is the preloaded LCP element.
+
+Where each campaign shows its imagery with the official catalog: the homepage hero carousel (Mango, Crème Brûlée, House Lemonade, each linking to its collection), the homepage campaign cards, the collection page banners, and the nine product photos on collection pages, product pages and "Nos coups de cœur". The pickup and rewards tiles and the gallery use their own files. The five `public/drinks/*.webp` cards and the strawberry and taro banners belong to the fictional demo menu and are shown only without a database.
+
+`public/catalog/creme-brulee.webp` (1200×450) is the same photograph as `public/promotions/creme-brulee.webp` at lower resolution. It is intentionally unused; the campaign banner path is what the database references.
 
 - Launch-critical for the approved campaigns: `hero.webp`, `creme-brulee.webp`, `house-lemonade.webp` (BATCH-01 image 1, BATCH-05 images 5–6) and the nine product photos in BATCH-04 and BATCH-05 images 1–4.
 - Not launch-critical: BATCH-01 demo drinks, BATCH-02, BATCH-03 gallery. Do not publish demo drinks as the real menu.

@@ -43,7 +43,7 @@ npm run build
 
 `TEST_DATABASE_URL` must point at a **disposable** PostgreSQL migrated with `node scripts/migrate.mjs` and imported with `node scripts/import-catalog.mjs` (CI provides one as a service container). Without it the concurrency suites (`tests/loyalty-concurrency.test.ts`, `tests/pickup-capacity.test.ts`) are skipped.
 
-Browser suites (need a built app and a Chromium path in `CHROMIUM_PATH`):
+Browser suites (need a built app and a Chromium path in `CHROMIUM_PATH`). `npm run test:storefront` (needs only a running official-catalog app and `SMOKE_BASE_URL`) audits images, campaign links, accessibility structure and placeholder copy on 14 pages at desktop and mobile widths.
 
 | Suite | Command | Needs |
 | --- | --- | --- |

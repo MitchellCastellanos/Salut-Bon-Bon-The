@@ -13,3 +13,7 @@ Start with [Launch readiness](LAUNCH_READINESS.md). When Neon access is availabl
 ## Update 2026-11-18 (accounts, rewards, scheduling)
 
 Branch `claude/salut-bon-bon-the-launch-6a36qh`, draft PR #4 (the earlier `feat/official-catalog-neon-marketing` branch was already merged in PR #3). Added customer accounts and Récompenses Salut ([Rewards](REWARDS.md)), the visual business-hours editor with exceptional schedules and pickup settings ([Scheduling](SCHEDULING.md)), the ADMIN price sheet, cart quantity controls, brand integration points, BATCH-06 image prompts, migrations 006 and 007, and a Postgres-backed CI job. Gift cards are explicitly excluded. Next steps: owner approvals listed in [Launch readiness](LAUNCH_READINESS.md), supply the official logo, configure email and auth variables, then rehearse and (with approval) migrate production.
+
+## Update 2026-11-18 (images merged)
+
+The owner uploaded 27 optimized WebP images to `main` (commit `08c286f`); they were merged into PR #4 without conflicts. The homepage now carries a multi-campaign hero carousel, image-led campaign cards and photo-only favourites; the gallery heading no longer claims Instagram or shows demo labels with the official catalog. Run `npm run assets:check` and `npm run test:storefront` after changing images or campaigns. Still pending: the official logo and the three BATCH-06 images.

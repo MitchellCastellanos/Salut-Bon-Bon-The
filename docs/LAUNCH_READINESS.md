@@ -16,6 +16,7 @@ Production checkout stays disabled until hosted validation and owner sign-off. T
 - [x] Customer accounts (register, verify, sign in/out, reset, profile, order history) on a separate Better Auth instance; staff/admin separation verified in the browser. See [Rewards](REWARDS.md).
 - [x] Récompenses Salut: inactive by default, ADMIN-configurable, atomic idempotent engine, single-use QR identification and redemption, audited adjustments. Concurrency verified on real PostgreSQL.
 - [x] Menu: 7 category tiles, 62 official products × 2 languages, customization, cart with quantity −/+ and remove, pickup checkout; no placeholder text.
+- [x] Photography integrated and audited: homepage hero carousel (Mango, Crème Brûlée, House Lemonade) with working links, image-led campaign cards, collection banners, 9 product photos, pickup/rewards tiles, gallery; no broken images or overflow at 1280 px and 390 px in FR and EN; about 45 KB of images on a phone's first homepage view (`npm run test:storefront`).
 - [x] ADMIN price sheet, visual business-hours editor with exceptional schedules and pickup settings, enforced server-side. See [Scheduling](SCHEDULING.md).
 - [x] Stripe (test mode) reconciliation, Resend outbox, tax logic, as before.
 - [x] 47 automated tests (7 need a PostgreSQL), lint and types clean, production build, and four browser suites (demo, catalog, staff authorization, and the new rewards/accounts/hours/menu suite, also run with the app connected as the least-privilege role).
@@ -28,7 +29,7 @@ Production checkout stays disabled until hosted validation and owner sign-off. T
 - [ ] Resend verified domain, API key, `STORE_NOTIFICATION_EMAIL`, `CRON_SECRET`. **Customer registration stays unavailable until email is configured** (by design).
 - [ ] `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` per Vercel environment (not set; accounts and staff sign-in show an accurate unavailable state until they are).
 - [ ] Production Neon: create `salut_app`, run migrations 001–007 and the import (separate approval), create ADMIN users.
-- [ ] **Official logo** (`public/brand/logo.svg`, plus `public/brand/logo-email.png` for email), and the 30 image assets ([manifest](IMAGE_ASSET_MANIFEST.md); 0 of 30 present). Logo integration points are wired; the wordmark is shown until the file exists.
+- [ ] **Official logo** (`public/brand/logo.svg`, plus `public/brand/logo-email.png` for email) and the 3 BATCH-06 rewards/account images ([manifest](IMAGE_ASSET_MANIFEST.md)). The 26 marketing and product images are present and verified (uploaded to `main`, 27 files including one unused extra). Logo and BATCH-06 slots are wired and fall back (wordmark, or nothing) until the files exist.
 - [ ] Legal and privacy copy (customer accounts and loyalty data), analytics consent review, custom domain and DNS (not touched).
 - [ ] Edge rate limits for checkout and staff sign-in (Vercel Firewall) as defence in depth.
 - [ ] Twilio SMS: not implemented (optional, not a launch blocker).
@@ -37,7 +38,7 @@ Production checkout stays disabled until hosted validation and owner sign-off. T
 
 - Scanning the QR with a physical phone camera. The QR payload and the staff page were tested separately; the SVG was not decoded by a scanner.
 - Real Stripe sessions and signed webhooks, and real Resend delivery (no credentials). Account emails were exercised through the non-deployed file-capture hook.
-- Mobile-width rendering and accessibility audits of the **new** pages (account, rewards, hours editor, price sheet); only the legacy mobile checks ran.
+- Mobile-width rendering of the account, rewards, hours-editor and price-sheet pages (the storefront, campaign, catalog and account pages were audited at 390 px; the admin screens and the QR card were not). No assistive-technology or contrast tooling was run; accessibility checks are structural (one h1, alt text, labels, names, language).
 - Authenticated flows on the Vercel preview (no auth variables there).
 - Concurrency on Neon itself (it ran on local PostgreSQL 16; the Neon branches were verified with sequential SQL).
 - GitHub Actions has not run the new Postgres-backed CI job yet.

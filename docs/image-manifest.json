@@ -9,8 +9,10 @@
   "size": "2400x900",
   "altFr": "Trois boissons de la série Mangue Fraîche sur fond crème.",
   "altEn": "Three Fresh Mango Series drinks on a cream background.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "2048x768",
+  "bytes": 49904
  },
  {
   "id": "promo-strawberry",
@@ -22,8 +24,10 @@
   "size": "2400x900",
   "altFr": "Thé aux fruits rose et fraises.",
   "altEn": "Pink iced fruit tea with strawberries.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "2048x768",
+  "bytes": 66790
  },
  {
   "id": "promo-taro",
@@ -35,8 +39,10 @@
   "size": "2400x900",
   "altFr": "Boissons crémeuses au taro lavande.",
   "altEn": "Creamy lavender taro drinks.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "2048x768",
+  "bytes": 54130
  },
  {
   "id": "drink-classic",
@@ -48,8 +54,10 @@
   "size": "1200x1140",
   "altFr": "Thé au lait à la cassonade.",
   "altEn": "Brown sugar milk tea.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "1200x1134",
+  "bytes": 70668
  },
  {
   "id": "drink-matcha",
@@ -61,8 +69,10 @@
   "size": "1200x1140",
   "altFr": "Matcha au lait glacé.",
   "altEn": "Iced matcha milk tea.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "1200x1134",
+  "bytes": 61828
  },
  {
   "id": "drink-taro",
@@ -74,8 +84,10 @@
   "size": "1200x1140",
   "altFr": "Thé au lait au taro.",
   "altEn": "Taro milk tea.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "1200x1134",
+  "bytes": 55036
  },
  {
   "id": "drink-mango",
@@ -87,8 +99,10 @@
   "size": "1200x1140",
   "altFr": "Thé aux fruits à la mangue.",
   "altEn": "Mango fruit tea.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "1200x1134",
+  "bytes": 60968
  },
  {
   "id": "drink-strawberry",
@@ -100,8 +114,10 @@
   "size": "1200x1140",
   "altFr": "Thé aux fruits à la fraise.",
   "altEn": "Strawberry fruit tea.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "demo-menu only (not shown with the official catalog)",
+  "actualSize": "1200x1141",
+  "bytes": 43582
  },
  {
   "id": "promo-pickup",
@@ -113,8 +129,10 @@
   "size": "720x900",
   "altFr": "Une main tient un téléphone avec un sac de cueillette.",
   "altEn": "A hand holding a phone beside a pickup bag.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "900x1125",
+  "bytes": 81416
  },
  {
   "id": "promo-rewards",
@@ -126,8 +144,10 @@
   "size": "780x780",
   "altFr": "Carte de récompenses avec étoiles et cadeau.",
   "altEn": "Rewards card with stars and a gift icon.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "900x900",
+  "bytes": 55692
  },
  {
   "id": "gallery-matcha",
@@ -139,8 +159,10 @@
   "size": "930x600",
   "altFr": "Matcha au lait sur une table ensoleillée.",
   "altEn": "Matcha milk tea on a sunlit table.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x775",
+  "bytes": 55466
  },
  {
   "id": "gallery-mango",
@@ -152,8 +174,10 @@
   "size": "930x600",
   "altFr": "Thé à la mangue et fruit de la passion avec cubes de mangue.",
   "altEn": "Mango passion fruit tea with mango cubes.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x775",
+  "bytes": 68752
  },
  {
   "id": "gallery-strawberry",
@@ -165,8 +189,10 @@
   "size": "930x600",
   "altFr": "Thé de jasmin à la fraise avec fraises.",
   "altEn": "Strawberry jasmine tea with strawberries.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x775",
+  "bytes": 75674
  },
  {
   "id": "gallery-classic",
@@ -178,8 +204,10 @@
   "size": "930x600",
   "altFr": "Thé au lait à la cassonade avec perles.",
   "altEn": "Brown sugar milk tea with pearls.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x775",
+  "bytes": 77608
  },
  {
   "id": "gallery-taro",
@@ -191,8 +219,10 @@
   "size": "930x600",
   "altFr": "Thé au lait au taro lavande.",
   "altEn": "Lavender taro milk tea.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x775",
+  "bytes": 68372
  },
  {
   "id": "product-MANGO-01",
@@ -204,8 +234,10 @@
   "size": "1200x1140",
   "altFr": "Mangue coco avec gelée de coco",
   "altEn": "Mango Coconut with Coconut Jelly",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1139",
+  "bytes": 41018
  },
  {
   "id": "product-MANGO-02",
@@ -217,8 +249,10 @@
   "size": "1200x1140",
   "altFr": "Slush de mangue fraîche avec gelée de coco",
   "altEn": "Fresh Mango Slush with Coconut Jelly",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1139",
+  "bytes": 53888
  },
  {
   "id": "product-MANGO-03",
@@ -230,8 +264,10 @@
   "size": "1200x1140",
   "altFr": "Mangue et litchi avec gelée de litchi",
   "altEn": "Mango Lychee with Lychee Jelly",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1139",
+  "bytes": 50058
  },
  {
   "id": "product-MANGO-04",
@@ -243,8 +279,10 @@
   "size": "1200x1140",
   "altFr": "Mangue au Yakult avec gelée de litchi",
   "altEn": "Mango Yakult with Lychee Jelly",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1139",
+  "bytes": 48622
  },
  {
   "id": "product-MANGO-05",
@@ -256,8 +294,10 @@
   "size": "1200x1140",
   "altFr": "Mangue, litchi et pamplemousse avec gelée de litchi",
   "altEn": "Mango, Lychee & Grapefruit with Lychee Jelly",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1139",
+  "bytes": 58574
  },
  {
   "id": "product-BRULEE-01",
@@ -269,8 +309,10 @@
   "size": "1200x1140",
   "altFr": "Matcha crème brûlée",
   "altEn": "Matcha Crème Brûlée",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1138",
+  "bytes": 44740
  },
  {
   "id": "product-BRULEE-02",
@@ -282,8 +324,10 @@
   "size": "1200x1140",
   "altFr": "Taro crème brûlée",
   "altEn": "Taro Crème Brûlée",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1137",
+  "bytes": 44706
  },
  {
   "id": "product-BRULEE-03",
@@ -295,8 +339,10 @@
   "size": "1200x1140",
   "altFr": "Lait à la cassonade crème brûlée",
   "altEn": "Brown Sugar Milk Crème Brûlée",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1137",
+  "bytes": 51762
  },
  {
   "id": "product-BRULEE-04",
@@ -308,8 +354,10 @@
   "size": "1200x1140",
   "altFr": "Thé au lait classique crème brûlée",
   "altEn": "Classic Milk Tea Crème Brûlée",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "1200x1137",
+  "bytes": 46736
  },
  {
   "id": "campaign-creme-brulee",
@@ -321,8 +369,10 @@
   "size": "2400x900",
   "altFr": "Quatre boissons crème brûlée sur fond crème.",
   "altEn": "Four crème brûlée drinks on a cream background.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "2048x768",
+  "bytes": 71522
  },
  {
   "id": "campaign-house-lemonade",
@@ -334,8 +384,10 @@
   "size": "2400x900",
   "altFr": "Six limonades maison aux fruits.",
   "altEn": "Six house lemonades in different fruit flavors.",
-  "generation": "pending",
-  "integration": "wired-with-fallback"
+  "generation": "generated",
+  "integration": "wired and verified in browser (desktop + mobile, FR + EN)",
+  "actualSize": "2048x768",
+  "bytes": 64824
  },
  {
   "id": "brand-logo",
@@ -348,7 +400,7 @@
   "altFr": "Salut Bon Bon Thé",
   "altEn": "Salut Bon Bon Thé",
   "generation": "needs-owner-supplied-file (no prompt: do not generate a logo)",
-  "integration": "wired-with-fallback"
+  "integration": "wired-with-fallback (wordmark shown until supplied)"
  },
  {
   "id": "rewards-campaign-banner",
@@ -361,7 +413,7 @@
   "altFr": "Boissons et étoiles en papier pour Récompenses Salut.",
   "altEn": "Drinks and paper stars for Salut Rewards.",
   "generation": "pending",
-  "integration": "wired-with-fallback"
+  "integration": "wired-with-fallback (renders nothing until the file exists)"
  },
  {
   "id": "rewards-card-background",
@@ -374,7 +426,7 @@
   "altFr": "Fond décoratif de la carte de membre.",
   "altEn": "Decorative background of the member card.",
   "generation": "pending",
-  "integration": "wired-with-fallback"
+  "integration": "wired-with-fallback (renders nothing until the file exists)"
  },
  {
   "id": "account-welcome",
@@ -387,6 +439,21 @@
   "altFr": "Un vaso de thé à la mangue remis au comptoir.",
   "altEn": "A mango tea handed over at the counter.",
   "generation": "pending",
-  "integration": "wired-with-fallback"
+  "integration": "wired-with-fallback (renders nothing until the file exists)"
+ },
+ {
+  "id": "extra-catalog-creme-brulee-banner",
+  "batch": "(uploaded to main)",
+  "file": "public/catalog/creme-brulee.webp",
+  "association": "Crème Brûlée campaign (lighter duplicate of the campaign banner)",
+  "placement": "Unused",
+  "aspectRatio": "8:3",
+  "size": "1200x450",
+  "altFr": "Quatre boissons crème brûlée sur fond pêche.",
+  "altEn": "Four crème brûlée drinks on a peach background.",
+  "generation": "generated",
+  "integration": "unused: same photograph as public/promotions/creme-brulee.webp at lower resolution",
+  "actualSize": "1200x450",
+  "bytes": 31828
  }
 ]
