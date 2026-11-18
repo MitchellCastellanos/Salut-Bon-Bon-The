@@ -28,6 +28,11 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return error("INVALID_ORDER", 400);
   try {
+    const ip = req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const clientHash = hash((process.env.DEMO_RATE_SALT ?? "salut-demo") + ":" + ip);
+    await pool().query("DELETE FROM demo_orders WHERE expires_at < now()");
+    const recent = await pool().query<{ count: string }>("SELECT count(*)::text AS count FROM demo_orders WHERE client_hash=$1 AND created_at > now() - interval '1 hour'", [clientHash]);
+    if (Number(recent.rows[0]?.count ?? 0) >= 20) return error("DEMO_RATE_LIMIT", 429);
     const ids = [...new Set(parsed.data.lines.map(line => line.product))];
     const { rows } = await pool().query<{ id: string; size: string; cents: number; fr: string; en: string }>(`
       SELECT p.id, v.id AS size, coalesce(v.promotional_cents,v.price_cents) AS cents, fr.name AS fr, en.name AS en
@@ -51,9 +56,9 @@ export async function POST(req: NextRequest) {
     const points = Math.floor(subtotal * 10 / 100);
     const id = randomUUID();
     const token = randomBytes(32).toString("hex");
-    await pool().query(`INSERT INTO demo_orders (id,access_token_hash,name,lines,subtotal_cents,tax_cents,total_cents,points,pickup)
-      VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9)`,
-      [id, hash(token), parsed.data.name, JSON.stringify(lines), subtotal, tax, subtotal + tax, points, parsed.data.pickup]);
+    await pool().query(`INSERT INTO demo_orders (id,access_token_hash,name,lines,subtotal_cents,tax_cents,total_cents,points,pickup,client_hash)
+      VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9,$10)`,
+      [id, hash(token), parsed.data.name, JSON.stringify(lines), subtotal, tax, subtotal + tax, points, parsed.data.pickup, clientHash]);
     return NextResponse.json({ id, token, status: 0, lines, name: parsed.data.name, pickup: parsed.data.pickup, subtotal, gst, qst, total: subtotal + tax, points }, { status: 201, headers: noStore });
   } catch (err) {
     if (err instanceof Error && err.message === "PRODUCT_UNAVAILABLE") return error("PRODUCT_UNAVAILABLE", 400);
