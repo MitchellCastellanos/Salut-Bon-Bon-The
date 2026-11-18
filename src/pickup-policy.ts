@@ -10,6 +10,8 @@ export const pickupPolicySchema = z.object({
   slotCapacity: z.number().int().min(1).max(500),
   hours: z.partialRecord(z.enum(days), z.array(interval).max(4)),
   taxRates: z.array(z.number().int().min(0).max(100000)).max(4),
+  /** Exceptional closures as Montréal calendar dates (YYYY-MM-DD). No pickup is offered or accepted on them. */
+  closedDates: z.array(z.string().regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/)).max(120).optional(),
 }).refine(policy => Object.values(policy.hours).some(hours => hours.length > 0));
 
 export type PickupPolicy = z.infer<typeof pickupPolicySchema>;
@@ -17,11 +19,13 @@ export type PickupPolicy = z.infer<typeof pickupPolicySchema>;
 const toronto = new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/Toronto", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
 });
+const localDate = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" });
 const quarter = 15 * 60000;
 const day = 24 * 60 * 60000;
 
 export function eligiblePickup(time: number, policy: PickupPolicy, now = Date.now()) {
   if (!Number.isFinite(time) || (time % quarter) || time < now + policy.leadMinutes * 60000 || time > now + 7 * day) return false;
+  if (policy.closedDates?.includes(localDate.format(time))) return false;
   const parts = Object.fromEntries(toronto.formatToParts(time).map(part => [part.type, part.value]));
   const start = `${parts.hour}:${parts.minute}`;
   const endMinutes = Number(parts.hour) * 60 + Number(parts.minute) + 15;

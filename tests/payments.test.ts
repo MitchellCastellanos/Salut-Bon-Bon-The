@@ -3,7 +3,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
 import { applyStripeEvent, recordCheckoutSession } from "../src/payments";
 import { deliverPendingEmails, emailMode, enqueueOrderEmails, orderEmail } from "../src/notifications";
-import { updateOrder } from "../src/orders";
+import { listOrders, updateOrder } from "../src/orders";
 
 const local = vi.hoisted(() => ({ current: undefined as PGlite | undefined }));
 vi.mock("../src/db", async () => {
@@ -142,5 +142,17 @@ describe("transactional email", () => {
     expect(calls.every(call => call.to[0] === "qa@example.invalid")).toBe(true);
     expect(new Set(calls.map(call => call.key)).size).toBe(2);
     expect(await q("SELECT status FROM email_outbox WHERE order_number = $1", [stranger.number])).toEqual([{ status: "SKIPPED" }]);
+  });
+});
+
+describe("staff order search", () => {
+  it("filters by number, customer text (no wildcard injection) and status", async () => {
+    const a = await order("pickup");
+    await order("pickup");
+    expect((await listOrders({ q: a.number })).map(row => String(row.number))).toEqual([a.number]);
+    expect((await listOrders({ q: "guest" })).length).toBeGreaterThan(1);
+    expect(await listOrders({ q: "%" })).toHaveLength(0);
+    expect(await listOrders({ status: "CANCELLED", q: a.number })).toHaveLength(0);
+    expect((await listOrders({ status: "RECEIVED", q: a.number })).length).toBe(1);
   });
 });

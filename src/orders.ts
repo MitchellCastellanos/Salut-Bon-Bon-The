@@ -107,11 +107,14 @@ export async function trackOrder(token: string) {
     "SELECT number, status, pickup_at FROM orders WHERE tracking_token = $1", [token]
   )).rows[0];
 }
-export async function listOrders() {
-  return (await (await database()).query<Order>(`
-    SELECT number, customer, notes, pickup_at, created_at, status, payment, total, items
-    FROM orders ORDER BY (status IN ('COMPLETED','CANCELLED')), created_at DESC LIMIT 100
-  `)).rows;
+export async function listOrders(filter: { q?: string; status?: string } = {}) {
+  return (await (await database()).query<Order & { tax_cents: number; payment_method: string }>(`
+    SELECT number, customer, notes, pickup_at, created_at, status, payment, total, items, tax_cents, payment_method
+    FROM orders
+    WHERE ($2 = '' OR status = $2)
+      AND ($1 = '' OR number::text = $1 OR position(lower($1) in lower(customer)) > 0)
+    ORDER BY (status IN ('COMPLETED','CANCELLED')), created_at DESC LIMIT 100
+  `, [filter.q ?? "", filter.status ?? ""])).rows;
 }
 export async function updateOrder(number: string, from: State, to: State) {
   if (!transitions[from].includes(to)) return false;
