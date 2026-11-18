@@ -9,3 +9,11 @@ Initial event and order insert share a statement. Every status change compares t
 ## Official catalog
 
 Migration 003 adds categories, products, two translation rows per seeded product, variants, modifier group/eligibility tables, reusable collections, image and placement tables, campaign scheduling and localized copy, event storage, store settings and audit history. Migration 004 adds tax_cents to orders with zero for historical rows. Better Auth is untouched. Orders retain bilingual names and selected modifiers, item subtotals, taxes and the accepted total.
+
+## Migrations 005–007 (2026-11-18)
+
+- [005](../db/005-payments-notifications.sql): `payment_attempts`, `provider_events`, `email_outbox`, `orders.customer_email`, `orders.payment_method`, extended `orders.payment` states.
+- [006](../db/006-accounts-loyalty.sql): `orders.customer_user_id`, `rate_limits`, `loyalty_program`, `loyalty_rewards`, `loyalty_accounts`, `loyalty_transactions`, `loyalty_qr_tokens`, functions `loyalty_post` and `loyalty_redeem`; marks existing staff as email-verified. No gift-card objects.
+- [007](../db/007-append-only-history.sql): append-only history (revokes and `loyalty_transactions_append_only` trigger).
+
+The pickup policy stored in `catalog_store_settings.pickup_policy` gained `slotMinutes`, `advanceDays`, `sameDayCutoff` and `exceptions` (see [Scheduling](SCHEDULING.md)); older documents remain valid.

@@ -28,7 +28,7 @@ try {
   await page.goto(new URL("/en/catalog/house-lemonade", base).href);
   assert.equal(await page.locator(".catalog-grid li").count(), 6);
   await page.getByRole("link", { name: "Pineapple Lemonade" }).click();
-  await page.getByText("Unavailable for online ordering.").waitFor();
+  await page.getByText(/Unavailable for online ordering/).waitFor();
 
   await pool.query("UPDATE catalog_products SET available = true WHERE id = '401'");
   await pool.query(`INSERT INTO catalog_variants

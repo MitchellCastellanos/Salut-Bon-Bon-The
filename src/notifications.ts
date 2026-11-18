@@ -1,5 +1,6 @@
 import { database } from "./db";
 import { money, pickupDate, type Lang } from "./domain";
+import { emailLogoUrl } from "./brand-server";
 
 type Db = { query<T extends Record<string, unknown>>(sql: string, args?: unknown[]): Promise<{ rows: T[] }> };
 export type EmailKind = "customer_confirmation" | "store_notification" | "ready" | "cancelled";
@@ -48,10 +49,11 @@ export function orderEmail(kind: EmailKind, order: OrderRow, lang: Lang, siteUrl
     ...(kind === "store_notification" ? ["", `Client: ${order.customer}`] : []),
     ...(track && kind !== "store_notification" ? ["", `${text.labels.track}: ${track}`] : []), "", text.labels.sign,
   ].filter((line, index, all) => line !== "" || all[index - 1] !== "").join("\n");
+  const logoUrl = emailLogoUrl(siteUrl);
   const html = `<!doctype html><html lang="${lang}"><body style="margin:0;background:${palette.cream};font-family:Arial,Helvetica,sans-serif;color:${palette.brown}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px">
 <table role="presentation" width="560" style="max-width:560px;background:#fff;border-radius:20px;overflow:hidden">
-<tr><td style="background:${palette.coral};color:#fff;padding:24px 28px;font-size:22px;font-weight:bold">Salut Bon Bon Thé</td></tr>
+<tr><td style="background:${palette.coral};color:#fff;padding:24px 28px;font-size:22px;font-weight:bold">${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Salut Bon Bon Thé" height="40">` : "Salut Bon Bon Thé"}</td></tr>
 <tr><td style="padding:28px">
 <h1 style="margin:0 0 8px;font-size:22px">${escapeHtml(head.heading)}</h1>
 <p style="margin:0 0 16px">${escapeHtml(head.lead)}</p>

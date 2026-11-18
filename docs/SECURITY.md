@@ -27,3 +27,12 @@ Fixed in this change:
 - Staff sign-in has no explicit lockout beyond Better Auth defaults; add Vercel Firewall rate limits on `/fr/staff` and `/en/staff`.
 - Server actions rely on Next.js origin checks for CSRF; no separate CSRF token is added.
 - Vercel Deployment Protection (SSO) is enabled for the default `*.vercel.app` URLs; the Stripe webhook must be reachable, so use the production custom domain or a protection-bypass for the webhook path on previews.
+
+## Audit 2026-11-18, part 2 (accounts, loyalty, scheduling)
+
+- **Identity separation.** Customers use a separate Better Auth instance and cookie prefix; its session hook refuses STAFF and ADMIN users, and the staff instance refuses non-staff. Browser-verified: a customer cannot reach `/admin/*` (404) or use staff screens; staff credentials do not sign in as a customer; STAFF cannot open ADMIN pages. Better Auth's public HTTP handler is not mounted.
+- **Abuse controls.** PostgreSQL-backed rate limits on register, sign-in, forgot/reset password, QR issuance and staff redemption/award (see [Rewards](REWARDS.md)); uniform responses so accounts cannot be enumerated; reset and verification tokens expire in 1 hour; verification requires a button press so link prefetchers cannot consume it.
+- **Loyalty integrity.** Hashed single-use 5-minute QR tokens carrying no personal data; atomic row-locked balance changes with idempotency keys; balance cannot go negative; a program cannot be activated without an earning rate; adjustments need a reason; actors and changes are recorded. Parallel redemption tests on PostgreSQL show no overspend and no double redemption.
+- **Append-only history (found and fixed by migration 007).** Neon's default privileges had left the runtime role able to UPDATE newly created history tables. It can no longer UPDATE or DELETE `loyalty_transactions`, `order_events`, `catalog_audit_history` or `provider_events`, and a trigger rejects changes to loyalty history for all roles.
+- **Production never serves fictional products.** In Vercel production/preview `usesOfficialCatalog()` is always true and demo storage is refused, so the demo menu cannot appear; a missing database shows a bilingual unavailable state instead.
+- **Still open.** Edge rate limiting and bot protection (Vercel Firewall), account deletion/export tooling and privacy copy for customer data, a lockout policy beyond rate limits, and a dependency review of `qrcode` (added this phase, pinned).

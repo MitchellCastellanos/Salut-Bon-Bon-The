@@ -36,3 +36,7 @@ Use a staging project or protected preview connected to Neon development. Provid
 ## Twilio
 
 SMS is not implemented: it is not a launch requirement and would need a consent flow and a number. Revisit after launch.
+
+## Account email and test hooks (2026-11-18)
+
+Verification and password-reset emails use the same Resend configuration and test/live gates as order email. `SALUT_EMAIL_CAPTURE_DIR` writes them to files instead of sending; it is ignored when `VERCEL_ENV` is `production` or `preview`. Customer registration is hidden behind an accurate "unavailable" message until Resend is configured, because accounts cannot be verified without email.

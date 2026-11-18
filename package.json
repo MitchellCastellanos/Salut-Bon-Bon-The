@@ -13,7 +13,8 @@
     "test:staff": "node tests/staff-browser-smoke.mjs",
     "db:migrate": "node scripts/migrate.mjs",
     "db:status": "node scripts/migrate.mjs --status",
-    "assets:check": "node scripts/check-assets.mjs"
+    "assets:check": "node scripts/check-assets.mjs",
+    "test:rewards": "node tests/rewards-browser-smoke.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.3.16",

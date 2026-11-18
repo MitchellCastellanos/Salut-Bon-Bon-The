@@ -1,3 +1,4 @@
+import { officialLogo } from "../../../src/brand-server";
 import { cardPaymentsEnabled } from "../../../src/providers/stripe";
 import { pickupConfiguration } from "../../../src/store-settings";
 import { Menu } from "../menu/menu";
@@ -43,7 +44,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
     <CatalogList lang={lang} category={selected} search={search}/>
     {orderable.length > 0 && <section aria-labelledby="orderable">
       <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} photos={{}} initialCategory="all" officialProducts={orderable} taxRates={config?.policy?.taxRates ?? []} cardPayments={cardPaymentsEnabled()}/>
+      <Menu lang={lang} demo={false} photos={{}} initialCategory="all" officialProducts={orderable} taxRates={config?.policy?.taxRates ?? []} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
     </section>}
   </section>;
 }

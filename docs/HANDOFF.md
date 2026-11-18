@@ -9,3 +9,7 @@ Migrations 001–004 and the repeat import passed against a disposable PGlite Po
 ## Next engineering step
 
 Start with [Launch readiness](LAUNCH_READINESS.md). When Neon access is available, follow [Neon setup](NEON_SETUP.md) and the [catalog import guide](CATALOG_IMPORT_GUIDE.md) on an isolated migration-testing branch. Keep production checkout disabled while the owner approves settings and media. See the [image manifest](IMAGE_ASSET_MANIFEST.md) for the expected assets and [Provider activation](PROVIDER_SETUP.md) for the remaining Stripe, Resend, optional Twilio, and Vercel work. Récompenses Salut and Salut Rewards remain a preview.
+
+## Update 2026-11-18 (accounts, rewards, scheduling)
+
+Branch `claude/salut-bon-bon-the-launch-6a36qh`, draft PR #4 (the earlier `feat/official-catalog-neon-marketing` branch was already merged in PR #3). Added customer accounts and Récompenses Salut ([Rewards](REWARDS.md)), the visual business-hours editor with exceptional schedules and pickup settings ([Scheduling](SCHEDULING.md)), the ADMIN price sheet, cart quantity controls, brand integration points, BATCH-06 image prompts, migrations 006 and 007, and a Postgres-backed CI job. Gift cards are explicitly excluded. Next steps: owner approvals listed in [Launch readiness](LAUNCH_READINESS.md), supply the official logo, configure email and auth variables, then rehearse and (with approval) migrate production.
