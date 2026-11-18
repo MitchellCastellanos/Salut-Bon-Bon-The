@@ -5,4 +5,4 @@
 - Checkout offers quarter-hour demo slots and checks lead time. Business hours, pause, taxes and capacity rules are pending. Simulated payment labels state that there is no charge.
 - Status moves from received through confirmed, preparing, ready and completed. Staff can cancel eligible active orders. Completion requires recorded pickup payment or demo settlement. Cancellation does not process a refund.
 - A tracking link can be copied or bookmarked. It reveals order status, number and pickup only.
-- Staff and tracking refresh on a five-second interval. There is a shared demo sign-in and the queue combines active and recent closed orders.
+- Staff and tracking refresh on a five-second interval. The queue combines active and recent closed orders. The private local demo uses a shared sign-in. With PostgreSQL configured, individual STAFF and ADMIN accounts can view and update orders.

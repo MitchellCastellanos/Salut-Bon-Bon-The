@@ -10,3 +10,11 @@ Neon connectivity, multitenant authorization, payment webhooks, notifications, l
 ## Latest results
 
 In the cloud checkout, `npm run check` passed without warnings, `npm test` passed all four tests, and `npm run build` succeeded. The Chromium smoke passed against `next start`; a separate browser check confirmed the completed synthetic order remained available after restarting on the same data directory. The final production dependency audit reported zero known vulnerabilities.
+
+## Staff authorization verification
+
+After applying migrations 001 and 002 to a disposable database, run the built app with its Better Auth configuration. Set `STAFF_SMOKE_DATABASE_URL` and `STAFF_SMOKE_BASE_URL` to that database and app, then run `npm run test:staff`. The test provisions synthetic STAFF, ADMIN and CUSTOMER fixtures, creates an order, and removes those fixtures at the end.
+
+Latest cloud run passed type checking, linting, all four order tests, the production build and the existing full demo browser smoke. The staff browser smoke passed against both migrations on a temporary PGlite PostgreSQL wire-protocol endpoint using the app's pg driver. It covered guest denial, CUSTOMER sign-in denial, STAFF and ADMIN transitions, denial of a mutation after ADMIN demotion, and sign-out. Live Neon and Vercel validation are pending.
+
+A separate startup check confirmed that configuring PostgreSQL without the Better Auth settings disables staff sign-in and hides the demo password. The production dependency audit flagged the picomatch advisory GHSA-fc5q-39xc-vjpf through Better Auth's optional Vitest peer. The current registry's latest picomatch version is within the advisory range, and npm proposed a major Vitest downgrade. No forced downgrade was applied.
