@@ -34,6 +34,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
         <Link href={home}>{fr ? "Accueil" : "Home"}</Link>
         <Link href={`${home}/menu`}>Menu</Link>
         <Link href={`${home}/catalog`}>{fr ? "Catalogue" : "Catalog"}</Link>
+        <Link href={`${home}/${fr ? "demo-commande" : "demo-order"}`}>{fr ? "Essayer une commande" : "Try an order"}</Link>
         <Link href={`${home}#promotions`}>Promotions</Link>
         {showRewards && <Link href={rewardsPath[lang]}>{fr ? "Récompenses" : "Rewards"}</Link>}
         <Link href="#find-us">{fr ? "Nous trouver" : "Find us"}</Link>
@@ -42,7 +43,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
         <Link className="icon-link" href={`${home}/account`} aria-label={fr ? "Compte client" : "Customer account"}><StorefrontIcon name="account"/></Link>
         <Link className="icon-link" href={`${home}/${official ? "catalog" : "menu"}#cart`} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>
         <LanguageLink lang={lang}/>
-        <Link className="button header-order" href={`${home}/menu`}><StorefrontIcon name="bag"/>{fr ? "Commander pour emporter" : "Order for pickup"}</Link>
+        <Link className="button header-order" href={`${home}/${fr ? "demo-commande" : "demo-order"}`}><StorefrontIcon name="bag"/>{fr ? "Essayer une commande" : "Try an order"}</Link>
       </div>
     </div></header>
     <main id="main">{children}</main>
