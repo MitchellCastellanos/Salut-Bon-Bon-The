@@ -44,7 +44,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
     minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
-    {!orderable.length && <p role="status" className="catalog-notice">{fr ? "Découvrez nos boissons ! Les prix affichés sont indicatifs pour cet aperçu. La commande en ligne sera disponible prochainement." : "Explore our drinks! Prices shown are illustrative for this preview. Online ordering is coming soon."}</p>}
+    
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
       {collections.map(item => <Link key={item.id} href={`/${lang}/catalog/${item.id}`}>{item[lang]}</Link>)}
     </nav>

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       JOIN catalog_variants v ON v.product_id=p.id
       JOIN catalog_product_translations fr ON fr.product_id=p.id AND fr.locale='fr'
       JOIN catalog_product_translations en ON en.product_id=p.id AND en.locale='en'
-      WHERE p.id=ANY($1::text[]) AND p.available AND v.available AND v.id IN ('regular','large')
+      WHERE p.id=ANY($1::text[]) AND v.available AND v.id IN ('regular','large')
         AND v.price_cents > 0
     `, [ids]);
     const lines = parsed.data.lines.map(line => {
