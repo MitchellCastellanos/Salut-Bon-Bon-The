@@ -15,7 +15,7 @@ const noStore = { "Cache-Control": "no-store" };
 const schema = z.object({
   name: z.string().trim().min(1).max(80),
   pickup: z.enum(["14:00", "14:30", "15:00", "15:30"]),
-  lines: z.array(z.object({ product: z.string().regex(/^[0-9]{3}$/), size: z.enum(["regular", "large"]), topping: z.enum(["none", "pearls", "popping"]), quantity: z.number().int().min(1).max(10) })).min(1).max(20),
+  lines: z.array(z.object({ product: z.string().min(1).max(64).regex(/^[a-zA-Z0-9-]+$/), size: z.enum(["regular", "large"]), topping: z.enum(["none", "pearls", "popping"]), quantity: z.number().int().min(1).max(10) })).min(1).max(20),
 });
 const idSchema = z.string().uuid();
 const tokenSchema = z.string().regex(/^[a-f0-9]{64}$/);
