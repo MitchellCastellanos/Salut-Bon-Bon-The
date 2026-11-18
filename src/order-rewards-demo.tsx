@@ -46,16 +46,16 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
     const id = params.get("id"), token = params.get("token");
     if (id && token) {
       const saved = { id, token, name: "", lines: [], subtotal: 0, total: 0, points: 0, pickup: "", status: 0 };
-      setOrder(saved); localStorage.setItem(key, JSON.stringify(saved));
+      queueMicrotask(() => setOrder(saved)); localStorage.setItem(key, JSON.stringify(saved));
     } else {
-      try { const raw = localStorage.getItem(key); if (raw) setOrder(JSON.parse(raw)); } catch { /* Browser storage is optional. */ }
+      try { const raw = localStorage.getItem(key); if (raw) { const restored = JSON.parse(raw); queueMicrotask(() => setOrder(restored)); } } catch { /* Browser storage is optional. */ }
     }
   }, []);
   useEffect(() => {
     if (!order?.id || !order.token) return;
-    void refresh(order.id, order.token);
+    const immediate = setTimeout(() => void refresh(order.id, order.token), 0);
     const timer = setInterval(() => void refresh(order.id, order.token), 5000);
-    return () => clearInterval(timer);
+    return () => { clearTimeout(immediate); clearInterval(timer); };
   }, [order?.id, order?.token, refresh]);
   const add = () => {
     setCart(items => {
