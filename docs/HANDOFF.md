@@ -1,29 +1,11 @@
-# Handoff
+# Engineering handoff
 
-## Current checkpoint
+The commercial implementation is on `feat/official-catalog-neon-marketing`. It includes the official bilingual catalog, campaign pages, ADMIN catalog and pickup settings, opt-in analytics, and pay-at-pickup checkout. The credential-free demo uses separate data and a separate cart. STAFF can fulfill orders, and ADMIN controls commercial configuration.
 
-Branch `feat/salut-plus-foundation`. The first guest pickup workflow remains verified in the private local demo. Staff can also sign in with individual PostgreSQL-backed Better Auth accounts. STAFF and ADMIN can read and update the order queue. Current role checks deny guests, CUSTOMER accounts and demoted sessions. Admin-only management screens are pending. See [status](IMPLEMENTATION_STATUS.md) and [testing](TESTING.md).
+## Verification
 
-The approved storefront mockup is implemented with demo content and graceful media fallbacks. The [image manifest](IMAGE_ASSET_MANIFEST.md) maps 15 wired image slots to [three Spanish prompt batches](image-prompts/). Run the batches one at a time with the mockup attached, then export the approved images to the exact paths and rebuild. Add the official SVG logo and verified Instagram profile separately. The image-prompts skill archive was unavailable, so the batches use the pasted brief’s format. Récompenses Salut / Salut Rewards is an honest bilingual preview. Customer authentication and points are pending.
+Migrations 001–004 and the repeat import passed against a disposable PGlite PostgreSQL-wire database. Demo, staff authorization, and commercial browser smoke tests passed during implementation. Final handoff checks passed ESLint, TypeScript, eight automated tests, and the production build. See [Testing](TESTING.md) for commands and fixture requirements.
 
-## Database and configuration
+## Next engineering step
 
-`db/001-orders.sql` initializes automatically in the local demo. A configured PostgreSQL database needs 001 followed by `db/002-staff-auth.sql`, `DATABASE_URL`, `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET`. Use `npm run staff:create` as documented in [environment setup](ENVIRONMENT_SETUP.md). Both migrations and the sign-in flow ran against a temporary local database using the PostgreSQL wire protocol. Neon rehearsal still needs an authorized test branch. No external payment or notification provider is connected.
-
-## Next priority
-
-After swapping and reviewing the approved assets, add admin-only store settings and enforce pickup availability during order creation. Start with `src/auth.ts`, `src/staff.ts`, `src/orders.ts`, `src/domain.ts` and `app/[lang]/menu/actions.ts`. Confirm store hours, pause behavior and capacity with the owner. Preserve guest checkout and tracking. Keep the database authoritative for capacity when orders race or retry. Add login and checkout rate limiting before a public pilot.
-
-## Commands and continuation
-
-Use `npm ci`, `npm run dev`, `npm run check`, `npm test` and `npm run build`. See [testing](TESTING.md) for both browser commands. Read [decisions](DECISIONS.md) before changing persistence or authentication.
-
-## Ready-to-paste agent prompt
-
-> Read AGENTS.md, docs/HANDOFF.md, docs/IMPLEMENTATION_STATUS.md and docs/IMPLEMENTATION_PLAN.md. Add versioned PostgreSQL store settings and an ADMIN-only editor for ordering pause, hours, lead time and per-slot capacity. Enforce those settings in server-generated slots and atomically during checkout. Preserve retry idempotency and the credential-free demo. Use an isolated Neon branch to rehearse migrations when access is available. Exercise guest checkout, concurrent slot limits, STAFF denial and ADMIN access. Run type checking, lint, tests, build and both browser smokes. Update the schema, decisions, status, changelog and handoff.
-
-## Official catalog continuation
-
-The commercial branch adds [catalog import](CATALOG_IMPORT_GUIDE.md), bilingual preview pages, ADMIN catalog management and a guarded pickup path. The local demo and the commercial database workflow use separate carts. Start with [Neon setup](NEON_SETUP.md) and [launch readiness](LAUNCH_READINESS.md). New image prompts are BATCH-04.md and BATCH-05.md. The real images are pending.
-
-Migrations 001–004 and the repeat import were exercised on a disposable PostgreSQL-wire PGlite database. Neon was unavailable. Hosted migration testing, approved settings, photos, production edge controls and [provider activation](PROVIDER_SETUP.md) are the next steps.
+Start with [Launch readiness](LAUNCH_READINESS.md). When Neon access is available, follow [Neon setup](NEON_SETUP.md) and the [catalog import guide](CATALOG_IMPORT_GUIDE.md) on an isolated migration-testing branch. Keep production checkout disabled while the owner approves settings and media. See the [image manifest](IMAGE_ASSET_MANIFEST.md) for the expected assets and [Provider activation](PROVIDER_SETUP.md) for the remaining Stripe, Resend, optional Twilio, and Vercel work. Récompenses Salut and Salut Rewards remain a preview.
