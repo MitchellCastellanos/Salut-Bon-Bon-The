@@ -53,3 +53,9 @@ Browser suites (need a built app and a Chromium path in `CHROMIUM_PATH`). `npm r
 | Rewards, accounts, hours, menu | `npm run test:rewards` | `E2E_DATABASE_URL`, `E2E_MAIL_DIR`, optional `SMOKE_BASE_URL`; database with ADMIN `admin@example.invalid` / `AdminPassw0rd!x` and STAFF `staff@example.invalid` / `StaffPassw0rd!x` created with `npm run staff:create`; app started with `SALUT_EMAIL_CAPTURE_DIR` (non-deployed only, writes account emails to files instead of sending), `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` and `SITE_URL` on the same localhost origin. Reset the database between runs. |
 
 The rewards suite was also run with the app connected as the least-privilege `salut_app` role. Run tests only against disposable local or CI databases, never `production`.
+
+## Salut Rewards 5 % tests (2026-11-18)
+
+- `npm test`: adds `tests/rewards-five-percent.test.ts`, `tests/rewards-public.test.tsx` (renders the public pages against an in-memory database), `tests/rewards-permissions.test.ts` and extra cases in `tests/loyalty-concurrency.test.ts`. `vitest.config.mts` only enables the automatic JSX runtime for the page test.
+- `npm run test:rewards-public`: browser checks at 390 px and 1280 px in FR and EN (no login, no overflow, images, calculator, preview vs active states, metadata, guest card, STAFF counter flow, cart hint, ADMIN state panel). Run it **after** `npm run test:rewards` on the same fixture (it needs ADMIN/STAFF, the catalog and, for the guest-order step, an open checkout); set `E2E_DATABASE_URL`, `SMOKE_BASE_URL`, `CHROMIUM_PATH`, optionally `SHOT_DIR` for screenshots. Build with `SITE_URL` set to the test origin so canonical, alternates, `robots.txt` and the sitemap can be asserted.
+- Run only on disposable databases. Results: see [Launch readiness](LAUNCH_READINESS.md).

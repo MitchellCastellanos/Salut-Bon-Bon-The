@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
-import { adjustPoints, LoyaltyError } from "../../../../src/loyalty";
+import { adjustPoints, LoyaltyError, reverseForRefund, saveProgramConfig } from "../../../../src/loyalty";
 import { staffActor, staffRole } from "../../../../src/staff";
 
 async function admin() {
@@ -22,21 +22,19 @@ export async function saveProgram(lang: string, form: FormData) {
     rate: z.union([z.literal(""), z.string().regex(/^\d{1,3}$/)]),
     min: z.union([z.literal(""), dollars]),
   }).safeParse({ rate: form.get("rate") ?? "", min: form.get("min") ?? "" });
-  const rate = parsed.success && parsed.data.rate ? Number(parsed.data.rate) : null;
-  if (!parsed.success || (rate !== null && (rate < 1 || rate > 100))) back(lang, "error=program");
-  const active = form.get("active") === "on";
-  // Activation needs an explicit earning rate: an unconfigured program can never award points.
-  if (active && rate === null) back(lang, "error=rate");
+  if (!parsed.success) back(lang, "error=program");
+  const flag = (name: string) => form.get(name) === "on";
   const categories = form.getAll("category").map(String).filter(value => /^[a-z0-9-]{1,48}$/.test(value));
-  const db = await database();
-  await db.query(`
-    WITH saved AS (
-      UPDATE loyalty_program SET active = $1, points_per_dollar = $2,
-        earn_categories = (SELECT CASE WHEN count(*) = 0 THEN NULL ELSE array_agg(id) END FROM catalog_categories WHERE id = ANY($3::text[])),
-        min_order_cents = $4, updated_at = now(), updated_by = $5
-      WHERE id = 1 RETURNING active, points_per_dollar, earn_categories, min_order_cents
-    ) INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.program', 'program', to_jsonb(saved) || jsonb_build_object('actor', $5::text) FROM saved
-  `, [active, rate, categories, parsed.data!.min ? Math.round(Number(parsed.data!.min) * 100) : 0, actor]);
+  try {
+    await saveProgramConfig({
+      active: flag("active"), rate: parsed.data!.rate ? Number(parsed.data!.rate) : null,
+      minOrderCents: parsed.data!.min ? Math.round(Number(parsed.data!.min) * 100) : 0, categories,
+      previewVisible: flag("previewVisible"), accrualEnabled: flag("accrualEnabled"), redemptionEnabled: flag("redemptionEnabled"),
+      commercialAuthorized: flag("commercialAuthorized"),
+    }, actor, { production: process.env.VERCEL_ENV === "production" });
+  } catch (error) {
+    back(lang, `error=${error instanceof LoyaltyError ? (error.code === "PROGRAM_INACTIVE" ? "rate" : error.code) : "program"}`);
+  }
   revalidatePath(`/${lang}/admin/rewards`);
   back(lang, "saved=program");
 }
@@ -50,20 +48,23 @@ export async function saveReward(lang: string, form: FormData) {
     descFr: z.string().trim().max(400), descEn: z.string().trim().max(400),
     cost: z.string().regex(/^\d{1,6}$/).transform(Number).refine(v => v >= 1 && v <= 100000),
     category: z.string().regex(/^[a-z0-9-]*$/), product: z.string().regex(/^[A-Za-z0-9-]*$/),
+    discount: z.union([z.literal(""), dollars]),
   }).safeParse(Object.fromEntries(form));
   if (!parsed.success || (parsed.data.category && parsed.data.product)) back(lang, "error=reward");
   const r = parsed.data!;
   try {
     await (await database()).query(`
       WITH saved AS (
-        INSERT INTO loyalty_rewards (id, name_fr, name_en, description_fr, description_en, points_cost, available, eligible_category, eligible_product_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NULLIF($8, ''), NULLIF($9, ''))
+        INSERT INTO loyalty_rewards (id, name_fr, name_en, description_fr, description_en, points_cost, available, eligible_category, eligible_product_id, discount_cents, preview_visible)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NULLIF($8, ''), NULLIF($9, ''), $11, $12)
         ON CONFLICT (id) DO UPDATE SET name_fr = EXCLUDED.name_fr, name_en = EXCLUDED.name_en, description_fr = EXCLUDED.description_fr,
           description_en = EXCLUDED.description_en, points_cost = EXCLUDED.points_cost, available = EXCLUDED.available,
-          eligible_category = EXCLUDED.eligible_category, eligible_product_id = EXCLUDED.eligible_product_id
-        RETURNING id, points_cost, available
+          eligible_category = EXCLUDED.eligible_category, eligible_product_id = EXCLUDED.eligible_product_id,
+          discount_cents = EXCLUDED.discount_cents, preview_visible = EXCLUDED.preview_visible
+        RETURNING id, points_cost, available, discount_cents, preview_visible
       ) INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.reward', id, to_jsonb(saved) || jsonb_build_object('actor', $10::text) FROM saved
-    `, [r.id, r.nameFr, r.nameEn, r.descFr, r.descEn, r.cost, form.get("available") === "on", r.category, r.product, actor]);
+    `, [r.id, r.nameFr, r.nameEn, r.descFr, r.descEn, r.cost, form.get("available") === "on", r.category, r.product, actor,
+      r.discount ? Math.round(Number(r.discount) * 100) : null, form.get("previewVisible") === "on"]);
   } catch { back(lang, "error=reward"); }
   revalidatePath(`/${lang}/admin/rewards`);
   back(lang, "saved=reward");
@@ -97,4 +98,20 @@ export async function setAccountStatus(lang: string, form: FormData) {
     INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.account', id::text, to_jsonb(saved) || jsonb_build_object('actor', $3::text) FROM saved
   `, [parsed.data!.account, parsed.data!.status, actor]);
   back(lang, `q=${encodeURIComponent(parsed.data!.q)}&saved=account`);
+}
+
+export async function recordRefund(lang: string, form: FormData) {
+  const actor = await admin();
+  if (!language(lang)) return;
+  const parsed = z.object({ order: z.string().regex(/^[1-9]\d{0,17}$/), amount: dollars, reason: z.string().trim().min(3).max(280), key: z.string().min(8).max(120) }).safeParse(Object.fromEntries(form));
+  if (!parsed.success) back(lang, "error=refund");
+  const r = parsed.data!;
+  try {
+    const result = await reverseForRefund({ order: r.order, refundCents: Math.round(Number(r.amount) * 100), reason: r.reason, key: r.key, actor });
+    revalidatePath(`/${lang}/admin/rewards`);
+    back(lang, `saved=refund&reversed=${result.reversed}&shortfall=${result.shortfall}`);
+  } catch (error) {
+    if (error instanceof LoyaltyError) back(lang, `error=${error.code}`);
+    throw error;
+  }
 }

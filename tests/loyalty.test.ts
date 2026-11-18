@@ -41,9 +41,11 @@ describe("enrollment and safe defaults", () => {
     expect(b.account.member_code).not.toBe(a.account.member_code);
     expect(a.account.balance).toBe(0);
   });
-  it("ships inactive with no rate and no rewards so nothing can be awarded or redeemed unapproved", async () => {
+  it("ships inactive with the preview terms and an unoffered reward so nothing can be awarded or redeemed unapproved", async () => {
     const [p] = await q("SELECT active, points_per_dollar, (SELECT count(*) FROM loyalty_rewards)::int AS rewards FROM loyalty_program");
-    expect(p).toEqual({ active: false, points_per_dollar: null, rewards: 0 });
+    // Migration 009 seeds the 5 % preview terms (10 points per $1) and one $5 reward, both still inactive.
+    expect(p).toEqual({ active: false, points_per_dollar: 10, rewards: 1 });
+    expect((await q("SELECT available FROM loyalty_rewards WHERE id = 'rabais-5'"))[0]).toEqual({ available: false });
     const c = await customer();
     const order = await completedOrder(c.id, [{ product: "p1", subtotal: 1000 }]);
     expect(await loyalty.earnForOrder(order, db)).toEqual({ awarded: 0 });
