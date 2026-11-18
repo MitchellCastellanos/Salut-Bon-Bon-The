@@ -1,0 +1,3 @@
+# Agent instructions
+
+Read README.md, docs/HANDOFF.md, docs/IMPLEMENTATION_STATUS.md and docs/IMPLEMENTATION_PLAN.md first. Work in the existing checkout. Keep the application a strict TypeScript modular monolith and keep business state in PostgreSQL. Validate input and enforce staff permissions on the server. Never commit credentials, real customer data, or local database files. Preserve French and English parity and label demo data. Run npm run check, npm test and npm run build before handing off. Update affected documentation and record decisions, test outcomes, and concrete next steps. A feature is complete only after persistence, permissions, error states, localization and representative verification are in place.

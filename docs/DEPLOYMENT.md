@@ -1,0 +1,3 @@
+# Deployment
+
+Vercel and Neon are target services. The local PGlite demo needs writable disk and one application process. For any Vercel test environment apply the SQL migration in a Neon test branch, configure DATABASE_URL and staff credentials, and smoke-test checkout, status updates and tracking. Keep deployments private until authentication, operational controls and demo catalog isolation are ready. Set SITE_URL to the validated domain once approved. Keep the previous application deployment and database recovery point before changing schema. Rollback and migration recovery have yet to be rehearsed. Stripe webhook, Resend, Twilio and production domain setup are pending.
