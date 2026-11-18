@@ -3,7 +3,7 @@ import { cardPaymentsEnabled } from "../../../src/providers/stripe";
 import { pickupConfiguration } from "../../../src/store-settings";
 import { Menu } from "../menu/menu";
 import { officialPrices } from "../../../src/catalog-pricing";
-import { database } from "../../../src/db";
+import { displayedCatalogPrices } from "../../../src/catalog-display-prices";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -34,8 +34,8 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
   });
   const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
   const fr = lang === "fr";
-  const demoPriceRows = process.env.DATABASE_URL ? await (await database()).query<{ product_id: string; price_cents: number; approved: boolean }>(`SELECT product_id, price_cents, approved FROM catalog_variants WHERE id = 'regular' AND price_cents IS NOT NULL`).then(result => result.rows) : [];
-  const demoPrices = Object.fromEntries(demoPriceRows.map(row => [row.product_id, { cents: row.price_cents, approved: row.approved }]));
+  const displayRows = await displayedCatalogPrices();
+  const demoPrices = Object.fromEntries(displayRows.filter(row => row.size === "regular").map(row => [row.id, { cents: row.cents, approved: true }]));
   // Cart rewards hint: only with a configured, publicly visible program. Reading failures simply hide the hint.
   const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
   const linked = program ? Boolean(await customerSession().catch(() => undefined) || await currentGuestCard().catch(() => undefined)) : false;

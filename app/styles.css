@@ -354,3 +354,29 @@ a.category-tile:hover{box-shadow:inset 0 0 0 2px var(--detail)}
 .checkout-preview-method span:last-child{margin-left:auto;font-size:.8rem}
 .checkout-preview-note{font-size:.83rem;color:#565a67}
 @media(max-width:600px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.catalog-grid>li{border-radius:16px}.catalog-fallback{width:75px;height:75px}.catalog-grid .catalog-add{padding:10px 8px;font-size:.85rem}}
+
+/* Consolidated desktop navigation and accessible mobile hamburger */
+.store-nav-shell{min-width:0}
+.store-nav-links{display:flex;align-items:center;justify-content:center;gap:clamp(10px,1.8vw,24px);font-size:.9rem;font-weight:750}
+.store-nav-links a{white-space:nowrap}
+.store-nav-links a[aria-current="page"]{color:#b93625;text-decoration:underline;text-underline-offset:6px}
+.store-nav-toggle{display:none;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);padding:9px 12px;align-items:center;gap:8px;font-weight:800;font:inherit}
+.store-nav-mobile-order,.store-nav-mobile-account{display:none}
+@media(max-width:1020px){
+  .storefront-nav{display:grid;grid-template-columns:auto 1fr auto;row-gap:0;padding-block:6px}
+  .store-nav-shell{grid-column:2;grid-row:1;justify-self:end}
+  .store-nav-toggle{display:inline-flex}
+  .store-nav-links{display:none;position:absolute;top:100%;left:0;right:0;background:var(--cream);border-bottom:1px solid var(--line);box-shadow:0 16px 24px #42261b20;padding:16px max(16px,calc((100vw - 1160px)/2));flex-direction:column;align-items:stretch;gap:0;max-height:calc(100dvh - 90px);overflow-y:auto}
+  .store-nav-links.is-open{display:flex}
+  .store-nav-links a{display:block;padding:13px 16px;border-bottom:1px solid var(--line);font-size:1rem}
+  .store-nav-mobile-order,.store-nav-mobile-account{display:block}
+  .header-actions{grid-column:3;grid-row:1}
+  .storefront-nav>.brand{grid-column:1;grid-row:1}
+}
+@media(max-width:600px){
+  .storefront-nav{gap:8px}
+  .store-nav-toggle{font-size:.82rem;padding:8px}
+  .header-order{display:none}
+  .header-actions{gap:1px}
+  .header-actions .icon-link{min-width:32px}
+}

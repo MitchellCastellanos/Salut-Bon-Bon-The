@@ -13,6 +13,7 @@ import { pickupConfiguration } from "../../src/store-settings";
 import { AddressBlock, HoursList } from "../../src/business-view";
 import { loyaltyProgram } from "../../src/loyalty";
 import { rewardsPath } from "../../src/rewards-paths";
+import { StoreNavigation } from "../../src/store-navigation";
 
 export default async function LanguageLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
@@ -30,18 +31,10 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
     <a className="skip" href="#main">{fr ? "Aller au contenu" : "Skip to content"}</a>
     <header className="top"><div className="wrap storefront-nav">
       <Brand href={home}/>
-      <nav aria-label={fr ? "Navigation principale" : "Main navigation"}>
-        <Link href={home}>{fr ? "Accueil" : "Home"}</Link>
-        <Link href={`${home}/menu`}>Menu</Link>
-        <Link href={`${home}/catalog`}>{fr ? "Catalogue" : "Catalog"}</Link>
-        <Link href={`${home}/${fr ? "demo-commande" : "demo-order"}`}>{fr ? "Commander" : "Order"}</Link>
-        <Link href={`${home}#promotions`}>Promotions</Link>
-        {showRewards && <Link href={rewardsPath[lang]}>{fr ? "Récompenses" : "Rewards"}</Link>}
-        <Link href="#find-us">{fr ? "Nous trouver" : "Find us"}</Link>
-      </nav>
+      <StoreNavigation lang={lang} showRewards={showRewards}/>
       <div className="header-actions">
         <Link className="icon-link" href={`${home}/account`} aria-label={fr ? "Compte client" : "Customer account"}><StorefrontIcon name="account"/></Link>
-        <Link className="icon-link" href={`${home}/${official ? "catalog" : "menu"}#cart`} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>
+        <Link className="icon-link" href={`${home}/${fr ? "demo-commande" : "demo-order"}`} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>
         <LanguageLink lang={lang}/>
         <Link className="button header-order" href={`${home}/${fr ? "demo-commande" : "demo-order"}`}><StorefrontIcon name="bag"/>{fr ? "Commander" : "Order"}</Link>
       </div>
@@ -50,7 +43,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
     <footer className="bottom rich-footer" id="find-us">
       <div className="wrap footer-grid">
         <div><Brand href={home}/></div>
-        <div><h2>Menu</h2><Link href={`${home}/menu?category=milk`}>{fr ? "Bubble thé au lait" : "Milk bubble tea"}</Link><Link href={`${home}/menu?category=fruit`}>{fr ? "Thés aux fruits" : "Fruit teas"}</Link><Link href={`${home}/menu?category=matcha`}>Matcha</Link>{showRewards && <Link href={rewardsPath[lang]}>{rewardsName[lang]}</Link>}</div>
+        <div><h2>Menu</h2><Link href={`${home}/catalog?category=milk-tea`}>{fr ? "Bubble thé au lait" : "Milk bubble tea"}</Link><Link href={`${home}/catalog?category=fruit-tea`}>{fr ? "Thés aux fruits" : "Fruit teas"}</Link><Link href={`${home}/catalog?category=matcha`}>Matcha</Link>{showRewards && <Link href={rewardsPath[lang]}>{rewardsName[lang]}</Link>}</div>
         <div><h2>{fr ? "Nous trouver" : "Find us"}</h2>{profile ? <AddressBlock lang={lang} profile={profile}/> : <p>Montréal, Québec<br/>{official ? fr ? "L’adresse sera publiée par l’équipe." : "The address will be published by the team." : fr ? "Adresse à confirmer" : "Address to be confirmed"}</p>}</div>
         <div><h2>{fr ? "Heures d’ouverture" : "Opening hours"}</h2>{schedule ? <HoursList lang={lang} policy={schedule} short/> : <p>{official ? (fr ? "Les heures seront publiées par l’équipe." : "Hours will be published by the team.") : (fr ? "Horaires à confirmer" : "Hours to be confirmed")}</p>}{instagram && <a href={instagram}>Instagram</a>}</div>
       </div>
