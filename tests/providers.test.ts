@@ -1,37 +1,47 @@
 import Stripe from "stripe";
 import { afterEach, expect, it, vi } from "vitest";
-import { orderNotice, sendResendTestNotice } from "../src/providers/order-notices";
-import { matchesPaidCheckout, verifyTestWebhook } from "../src/providers/stripe";
+import { checkoutLineItems, stripeMode, verifyWebhook } from "../src/providers/stripe";
 
 afterEach(() => vi.unstubAllEnvs());
 
-it("accepts a signed test checkout only when its paid total and reference match", () => {
-  const secret = "whsec_fixture";
+function stubTest() {
   vi.stubEnv("DATABASE_URL", "postgresql://fixture.invalid/test");
   vi.stubEnv("SALUT_STRIPE_TEST_ENABLED", "1");
   vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fixture");
-  vi.stubEnv("STRIPE_WEBHOOK_SECRET", secret);
-  const payload = JSON.stringify({
-    type: "checkout.session.completed",
-    livemode: false,
-    data: { object: {
-      id: "cs_test_fixture", mode: "payment", client_reference_id: "12", currency: "cad",
-      amount_total: 700, payment_status: "paid",
-    } },
-  });
-  const stripe = new Stripe("sk_test_fixture");
-  const signature = stripe.webhooks.generateTestHeaderString({ payload, secret });
-  const event = verifyTestWebhook(payload, signature);
-  expect(matchesPaidCheckout(event, { number: "12", sessionId: "cs_test_fixture", cents: 700 })).toBe(true);
-  expect(matchesPaidCheckout(event, { number: "12", sessionId: "cs_test_fixture", cents: 701 })).toBe(false);
-  expect(() => verifyTestWebhook(payload, "invalid")).toThrow();
+  vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_fixture");
+}
+
+it("verifies webhook signatures and refuses events from the wrong mode", () => {
+  stubTest();
+  const payload = (livemode: boolean) => JSON.stringify({ id: "evt_1", type: "checkout.session.completed", livemode, data: { object: {} } });
+  const sign = (body: string) => new Stripe("sk_test_fixture").webhooks.generateTestHeaderString({ payload: body, secret: "whsec_fixture" });
+  expect(verifyWebhook(payload(false), sign(payload(false))).id).toBe("evt_1");
+  expect(() => verifyWebhook(payload(false), "invalid")).toThrow();
+  expect(() => verifyWebhook(payload(true), sign(payload(true)))).toThrow("mode");
 });
 
-it("formats bilingual notices and refuses to send in a credential-free demo", async () => {
-  vi.stubEnv("DATABASE_URL", "");
-  expect(orderNotice("fr", "ready", "12").subject).toContain("prête pour la cueillette");
-  expect(orderNotice("en", "confirmed", "12").subject).toBe("Order #12 confirmed");
-  await expect(sendResendTestNotice({
-    to: "nobody@example.invalid", lang: "fr", notice: "ready", number: "12", idempotencyKey: "fixture-12-ready",
-  })).rejects.toThrow("disabled");
+it("keeps test and live credentials strictly separate and live approval-gated", () => {
+  stubTest();
+  expect(stripeMode()).toBe("test");
+  vi.stubEnv("STRIPE_MODE", "live");
+  expect(stripeMode()).toBe("disabled");
+  vi.stubEnv("STRIPE_SECRET_KEY", "sk_live_fixture");
+  expect(stripeMode()).toBe("disabled");
+  vi.stubEnv("SALUT_LIVE_PAYMENTS_APPROVED", "1");
+  expect(stripeMode()).toBe("live");
+  vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fixture");
+  expect(stripeMode()).toBe("disabled");
+  vi.stubEnv("STRIPE_MODE", "");
+  vi.stubEnv("SALUT_STRIPE_TEST_ENABLED", "");
+  expect(stripeMode()).toBe("disabled");
+});
+
+it("builds Stripe line items that add up to the server-calculated order total", () => {
+  const order = { number: "12", lang: "fr" as const, taxCents: 150, items: [
+    { name: { fr: "Fraise", en: "Strawberry" }, quantity: 2, subtotal: 1300 },
+    { name: { fr: "Taro", en: "Taro" }, quantity: 1, subtotal: 700 },
+  ] };
+  const total = checkoutLineItems(order).reduce((sum, line) => sum + line.price_data!.unit_amount! * line.quantity!, 0);
+  expect(total).toBe(2150);
+  expect(() => checkoutLineItems({ ...order, items: [{ ...order.items[0], subtotal: 1301 }] })).toThrow("whole cents");
 });

@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:browser": "node tests/browser-smoke.mjs",
     "staff:create": "node scripts/create-staff.mjs",
-    "test:staff": "node tests/staff-browser-smoke.mjs"
+    "test:staff": "node tests/staff-browser-smoke.mjs",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:status": "node scripts/migrate.mjs --status"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.3.16",

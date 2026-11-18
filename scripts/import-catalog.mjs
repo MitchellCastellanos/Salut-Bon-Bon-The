@@ -4,8 +4,8 @@ import pg from "pg";
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const verify = process.argv[2] === "--verify-local";
-if (!verify && !process.env.DATABASE_URL) throw new Error("Set DATABASE_URL to the isolated target branch");
-const db = verify ? new PGlite() : new pg.Client({ connectionString: process.env.DATABASE_URL });
+if (!verify && !(process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL)) throw new Error("Set DATABASE_URL to the isolated target branch");
+const db = verify ? new PGlite() : new pg.Client({ connectionString: (process.env.MIGRATION_DATABASE_URL ?? process.env.DATABASE_URL) });
 try {
   if (verify) await db.exec(await read("db/003-catalog.sql"));
   else await db.connect();

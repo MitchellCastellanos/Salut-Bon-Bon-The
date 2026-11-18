@@ -6,6 +6,7 @@ import { z } from "zod";
 import { language, states } from "../../../src/domain";
 import { demoStaff, signInStaff, signOutStaff, staffRole } from "../../../src/staff";
 import { recordPayment, updateOrder } from "../../../src/orders";
+import { notifyOrder } from "../../../src/notifications";
 
 export async function login(lang: string, form: FormData) {
   if (!language(lang)) return;
@@ -36,6 +37,9 @@ export async function change(lang: string, form: FormData) {
   if (!result.success) return;
   const { number, from, to } = result.data;
   if (to === "PAY") await recordPayment(number);
-  else await updateOrder(number, from, to);
+  else if (await updateOrder(number, from, to)) {
+    if (to === "READY") await notifyOrder(number, ["ready"]);
+    if (to === "CANCELLED") await notifyOrder(number, ["cancelled"]);
+  }
   revalidatePath(`/${lang}/staff`);
 }

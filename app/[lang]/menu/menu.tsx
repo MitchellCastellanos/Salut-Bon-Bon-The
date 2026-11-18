@@ -13,6 +13,7 @@ const errors: Record<string, [string, string]> = {
   RATE: ["Trop de commandes à la fois. Réessaie dans une minute.", "Too many checkout attempts. Try again in a minute."],
   SLOT: ["Choisis une nouvelle heure de cueillette.", "Choose a new pickup time."],
   MENU: ["Vérifie les options de ton panier.", "Check your cart options."],
+  PAYMENT: ["Le paiement en ligne est indisponible. Choisis le paiement à la cueillette.", "Online payment is unavailable. Choose pay at pickup."],
   CONFLICT: ["Cette commande existe déjà avec d’autres détails.", "This order already exists with different details."],
 };
 type MenuProduct = {
@@ -31,9 +32,10 @@ const demoProducts: MenuProduct[] = products.map(product => ({
   prices: { regular: product.price, large: product.price + 100 },
 }));
 
-export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [] }: {
+export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false }: {
   lang: Lang;
   demo: boolean;
+  cardPayments?: boolean;
   photos: Record<string, ReactNode>;
   initialCategory: keyof typeof categories | "all";
   officialProducts?: MenuProduct[];
@@ -113,7 +115,8 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
       if (result.token) {
         save([]);
         try { sessionStorage.removeItem(checkoutKey); } catch { /* Storage can be disabled. */ }
-        router.push(`/${lang}/track/${result.token}`);
+        if (result.redirect) window.location.assign(result.redirect);
+        else router.push(`/${lang}/track/${result.token}`);
         return;
       }
       const localized = errors[result.error ?? "FAILED"];
@@ -176,8 +179,10 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
         }}>
           <label>{fr ? "Nom pour la cueillette" : "Pickup name"}<input name="name" required maxLength={80} autoComplete="given-name"/></label>
           <label>{fr ? "Heure de cueillette" : "Pickup time"}<select required name="pickup" defaultValue=""><option value="" disabled>{fr ? "Choisir une heure" : "Choose a time"}</option>{times.map(time => <option key={time} value={time}>{pickupDate(time, lang)}</option>)}</select></label>
+          <label>{fr ? "Courriel (facultatif)" : "Email (optional)"}<input name="email" type="email" maxLength={254} autoComplete="email" aria-describedby="email-note"/></label>
+          <p id="email-note" className="fine-print">{fr ? "Utilisé seulement pour les messages sur cette commande. Aucune infolettre." : "Used only for messages about this order. No newsletter."}</p>
           <label>{fr ? "Note facultative" : "Optional note"}<input name="notes" maxLength={240}/></label>
-          <label>{fr ? "Paiement" : "Payment"}<select name="method"><option value="pickup">{fr ? "Payer à la cueillette" : "Pay at pickup"}</option>{demo && <option value="demo">{fr ? "Paiement simulé · aucun débit" : "Simulated payment · no charge"}</option>}</select></label>
+          <label>{fr ? "Paiement" : "Payment"}<select name="method"><option value="pickup">{fr ? "Payer à la cueillette" : "Pay at pickup"}</option>{cardPayments && <option value="card">{fr ? "Carte de crédit (en ligne)" : "Credit card (online)"}</option>}{demo && <option value="demo">{fr ? "Paiement simulé · aucun débit" : "Simulated payment · no charge"}</option>}</select></label>
           <button className="button" disabled={busy || !times.length}>{busy ? fr ? "Envoi…" : "Sending…" : fr ? "Passer la commande" : "Place order"}</button>
         </form>
       </>}

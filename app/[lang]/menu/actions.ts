@@ -1,9 +1,13 @@
 "use server";
+import { after } from "next/server";
 import { z } from "zod";
 import { analyticsAllowed, campaignIds } from "../../../src/analytics";
 import { commercialPickupSlots } from "../../../src/store-settings";
 import { checkoutSchema, pickupSlots } from "../../../src/domain";
 import { placeOrder } from "../../../src/orders";
+import { cardCheckoutUrl } from "../../../src/card-checkout";
+import { cardPaymentsEnabled } from "../../../src/providers/stripe";
+import { notifyOrder } from "../../../src/notifications";
 
 export async function slots() {
   if (!process.env.DATABASE_URL) return pickupSlots();
@@ -13,13 +17,22 @@ export async function submitOrder(payload: unknown, campaign?: unknown) {
   const parsed = checkoutSchema.safeParse(payload);
   if (!parsed.success) return { error: "INVALID" } as const;
   if (process.env.DATABASE_URL && parsed.data.method === "demo") return { error: "METHOD" } as const;
+  if (parsed.data.method === "card" && !cardPaymentsEnabled()) return { error: "PAYMENT" } as const;
   try {
     const allowed = await analyticsAllowed();
     const attribution = z.enum(campaignIds).safeParse(campaign);
     const order = await placeOrder(parsed.data, allowed ? { campaign: attribution.success ? attribution.data : null } : undefined);
-    return { number: order.number.toString(), token: order.tracking_token } as const;
+    const number = order.number.toString();
+    if (parsed.data.method === "card") {
+      const redirect = await cardCheckoutUrl(number);
+      if (!redirect) return { error: "PAYMENT" } as const;
+      return { number, token: order.tracking_token, redirect } as const;
+    }
+    // Pickup orders are confirmed now. Card orders are confirmed only once Stripe settles them.
+    if (parsed.data.method === "pickup") after(() => notifyOrder(number, ["customer_confirmation", "store_notification"]));
+    return { number, token: order.tracking_token } as const;
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
-    return { error: ["SLOT", "MENU", "CONFLICT", "RATE", "PRICE"].includes(code) ? code : "FAILED" } as const;
+    return { error: ["SLOT", "MENU", "CONFLICT", "RATE", "PRICE", "PAYMENT"].includes(code) ? code : "FAILED" } as const;
   }
 }
