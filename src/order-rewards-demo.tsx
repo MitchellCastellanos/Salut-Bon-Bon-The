@@ -28,6 +28,7 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
   const [pickup, setPickup] = useState("");
   const [order, setOrder] = useState<ServerOrder | null>(null);
   const [view, setView] = useState<"customer" | "staff">("customer");
+  const [checkoutStep, setCheckoutStep] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const subtotal = useMemo(() => cart.reduce((sum, line) => sum + price(line), 0), [cart]);
@@ -44,6 +45,11 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id"), token = params.get("token");
+    const requestedProduct = params.get("product");
+    if (requestedProduct && catalog.products.some(p => p.id === requestedProduct)) {
+      queueMicrotask(() => { setProduct(requestedProduct); setCart(items => items.some(i => i.product === requestedProduct) ? items : [...items, { product: requestedProduct, size: "regular", topping: "none", quantity: 1 }]); });
+      window.history.replaceState(null, "", window.location.pathname);
+    }
     if (id && token) {
       const saved = { id, token, name: "", lines: [], subtotal: 0, total: 0, points: 0, pickup: "", status: 0 };
       queueMicrotask(() => setOrder(saved)); localStorage.setItem(key, JSON.stringify(saved));
@@ -134,7 +140,15 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
         <h2>{fr ? "3. Cueillette" : "3. Pickup"}</h2>
         <label style={field}>{fr ? "Nom" : "Name"}<input value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder={fr ? "Votre nom" : "Your name"}/></label>
         <label style={field}>{fr ? "Heure de cueillette" : "Pickup time"}<select value={pickup} onChange={e => setPickup(e.target.value)}><option value="">{fr ? "Choisir" : "Choose"}</option>{["14:00","14:30","15:00","15:30"].map(t => <option key={t} value={t}>{t}</option>)}</select></label>
-        <button className="button" type="button" disabled={busy || !name.trim() || !pickup || !cart.length} onClick={place}>{busy ? "…" : fr ? "Confirmer la commande" : "Confirm order"}</button>
+        {!checkoutStep ? <button className="button" type="button" disabled={!name.trim() || !pickup || !cart.length} onClick={() => setCheckoutStep(true)}>{fr ? "Continuer au paiement" : "Continue to payment"}</button> : <div className="checkout-preview" aria-label={fr ? "Paiement" : "Payment"}>
+          <div className="checkout-preview-head"><strong>{fr ? "Paiement sécurisé" : "Secure checkout"}</strong><span>▣</span></div>
+          <p>{fr ? "Récapitulatif" : "Order summary"} · {cart.reduce((n, item) => n + item.quantity, 0)} {fr ? "articles" : "items"}</p>
+          <h2>{money(subtotal + gst + qst, lang)}</h2>
+          <div className="checkout-preview-method"><span>◉</span><strong>{fr ? "Carte bancaire" : "Card"}</strong><span>Visa · Mastercard · Amex</span></div>
+          <p className="checkout-preview-note">{fr ? "Aperçu du paiement. Aucune carte bancaire n’est demandée et aucun montant n’est débité." : "Payment preview. No card details are requested and no charge is made."}</p>
+          <button className="button" type="button" disabled={busy} onClick={place}>{busy ? "…" : fr ? "Finaliser la commande" : "Place order"}</button>
+          <button className="outline" type="button" onClick={() => setCheckoutStep(false)}>{fr ? "Modifier" : "Edit details"}</button>
+        </div>}
       </section>
     </div>}
     {order && <section style={{ ...card, display: "grid", gap: 14 }} aria-live="polite">
