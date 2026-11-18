@@ -1,6 +1,6 @@
 # Architecture
 
-Next.js renders localized routes. The menu client keeps the cart on device and sends validated input to a server action. The order module prices in cents and atomically stores the snapshot and initial event in PostgreSQL. The tracking route queries a minimal projection by random token. The staff page validates its signed cookie before reading the order feed, and the staff action repeats authorization before changing state.
+Next.js renders localized routes. The menu client keeps the cart on device and sends validated input to a server action. The order module prices in cents and atomically stores the snapshot and initial event in PostgreSQL. The tracking route queries a minimal projection by random token. The staff page resolves the Better Auth session and current database role before reading the order feed, and order actions repeat the check before changing state. The local demo has a separate signed cookie and is disabled when PostgreSQL is configured.
 
 ```mermaid
 flowchart LR

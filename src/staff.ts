@@ -1,29 +1,58 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { staffAuth } from "./auth";
 
-export const cookieName = "salut-staff";
-export const demoStaff = () => !process.env.DATABASE_URL && !process.env.STAFF_PASSWORD && !process.env.SESSION_SECRET;
+const demoCookie = "salut-staff-demo";
+const demoPassword = "salut-demo";
+const demoLifetime = 8 * 60 * 60;
 const runtime = globalThis as typeof globalThis & { salutDemoSessionKey?: string };
-const secret = () => demoStaff()
-  ? (runtime.salutDemoSessionKey ??= randomBytes(32).toString("hex"))
-  : process.env.SESSION_SECRET;
-function same(a: string, b: string) {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  return left.length === right.length && timingSafeEqual(left, right);
+
+export const demoStaff = () => !process.env.DATABASE_URL && !process.env.BETTER_AUTH_SECRET && !process.env.BETTER_AUTH_URL &&
+  !process.env.STAFF_PASSWORD && !process.env.SESSION_SECRET;
+export type StaffRole = "STAFF" | "ADMIN";
+
+export function canManageOrders(role: unknown): role is StaffRole {
+  return role === "STAFF" || role === "ADMIN";
 }
-export function session(password: string) {
-  const expected = demoStaff() ? "salut-demo" : process.env.STAFF_PASSWORD;
-  const key = secret();
-  if (!key || !expected || (!demoStaff() && (key.length < 32 || expected.length < 12)) || !same(password, expected)) return;
-  const expiry = (Date.now() + 8 * 3600000).toString();
-  return expiry + "." + createHmac("sha256", key).update(expiry).digest("hex");
+
+function demoDigest(expiry: string) {
+  const key = runtime.salutDemoSessionKey ??= randomBytes(32).toString("hex");
+  return createHmac("sha256", key).update(expiry).digest("hex");
 }
-export async function isStaff() {
-  const raw = (await cookies()).get(cookieName)?.value;
-  const key = secret();
-  if (!raw || !key || (!demoStaff() && (key.length < 32 || (process.env.STAFF_PASSWORD?.length ?? 0) < 12))) return false;
-  const [expiry, digest] = raw.split(".");
-  return /^\d+$/.test(expiry) && Number(expiry) > Date.now() && !!digest &&
-    same(digest, createHmac("sha256", key).update(expiry).digest("hex"));
+
+export async function signInStaff(email: string | undefined, password: string) {
+  if (demoStaff()) {
+    if (password !== demoPassword) return false;
+    const expiry = String(Date.now() + demoLifetime * 1000);
+    (await cookies()).set(demoCookie, expiry + "." + demoDigest(expiry), {
+      httpOnly: true, sameSite: "strict", maxAge: demoLifetime, path: "/",
+    });
+    return true;
+  }
+  const auth = staffAuth();
+  if (!auth || !email) return false;
+  await auth.api.signInEmail({ body: { email, password, rememberMe: false }, headers: await headers() });
+  return true;
+}
+
+export async function signOutStaff() {
+  if (demoStaff()) {
+    (await cookies()).delete(demoCookie);
+    return;
+  }
+  const auth = staffAuth();
+  if (auth) await auth.api.signOut({ headers: await headers() });
+}
+
+export async function staffRole(): Promise<StaffRole | undefined> {
+  if (demoStaff()) {
+    const raw = (await cookies()).get(demoCookie)?.value;
+    const [expiry, digest] = raw?.split(".") ?? [];
+    if (!/^\d+$/.test(expiry) || Number(expiry) <= Date.now() || !/^[a-f0-9]{64}$/.test(digest)) return;
+    if (timingSafeEqual(Buffer.from(digest, "hex"), Buffer.from(demoDigest(expiry), "hex"))) return "STAFF";
+    return;
+  }
+  const auth = staffAuth();
+  const session = await auth?.api.getSession({ headers: await headers() });
+  return canManageOrders(session?.user.role) ? session.user.role : undefined;
 }

@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the French storefront at `/fr`, the English storefront at `/en`, or the staff area at `/en/staff`. In the credential-free local demo the staff password is `salut-demo`. Use synthetic names and notes. Orders persist in the ignored `.salut-data` directory. This shared-password demo must stay on a private instance.
+Open the French storefront at `/fr`, the English storefront at `/en`, or the staff area at `/en/staff`. In the credential-free local demo the staff password is `salut-demo`. Use synthetic names and notes. Orders persist in the ignored `.salut-data` directory. Keep the shared-password demo private. For database-backed individual staff sign-in, use the [staff setup instructions](docs/ENVIRONMENT_SETUP.md#individual-staff-sign-in).
 
 ```sh
 npm run check

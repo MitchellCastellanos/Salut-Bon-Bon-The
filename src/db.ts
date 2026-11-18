@@ -5,10 +5,15 @@ import { Pool } from "pg";
 
 type Row = Record<string, unknown>;
 type Database = { query<T extends Row>(sql: string, args?: unknown[]): Promise<{ rows: T[] }> };
-const cached = globalThis as typeof globalThis & { salutDatabase?: Promise<Database> };
+const cached = globalThis as typeof globalThis & { salutDatabase?: Promise<Database>; salutPostgresPool?: Pool };
+
+export function postgresPool() {
+  if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
+  return cached.salutPostgresPool ??= new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+}
 
 async function connect(): Promise<Database> {
-  if (process.env.DATABASE_URL) return new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+  if (process.env.DATABASE_URL) return postgresPool();
   const local = new PGlite(process.env.SALUT_DATA_DIR || join(process.cwd(), ".salut-data"));
   await local.exec(await readFile(join(process.cwd(), "db/001-orders.sql"), "utf8"));
   return local;

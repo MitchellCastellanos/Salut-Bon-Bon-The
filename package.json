@@ -8,10 +8,13 @@
     "start": "next start",
     "check": "next typegen && tsc --noEmit && eslint .",
     "test": "vitest run",
-    "test:browser": "node tests/browser-smoke.mjs"
+    "test:browser": "node tests/browser-smoke.mjs",
+    "staff:create": "node scripts/create-staff.mjs",
+    "test:staff": "node tests/staff-browser-smoke.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.3.16",
+    "better-auth": "1.7.25",
     "next": "16.4.6",
     "pg": "8.23.1",
     "react": "19.3.1",
