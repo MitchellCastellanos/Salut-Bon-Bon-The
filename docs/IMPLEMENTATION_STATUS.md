@@ -26,3 +26,7 @@ Added: Neon project and branches, migration runner and ledger, migration 005, St
 ## 2026-11-18 update 2
 
 Added: customer accounts (separate Better Auth instance), Récompenses Salut with atomic idempotent engine and QR redemption, ADMIN rewards console, staff QR screen, visual hours editor and exceptional schedules, slot length/advance window/cutoff, price sheet, cart quantity controls, brand component and wiring, BATCH-06 prompts, migrations 006–007, real-PostgreSQL concurrency tests, and a rewards/accounts browser suite. Gift cards are out of scope and absent. Verified state and gaps: [Launch readiness](LAUNCH_READINESS.md).
+
+## 2026-11-18 update 3
+
+Business profile and fiscal configuration implemented (see [Business profile](BUSINESS_PROFILE.md), [Tax](TAX.md)); migration 008; receipts; checkout readiness gate. Open items are in [Launch readiness](LAUNCH_READINESS.md).

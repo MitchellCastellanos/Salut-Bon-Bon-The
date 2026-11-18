@@ -38,8 +38,13 @@ try {
   await pool.query("INSERT INTO catalog_product_modifier_groups VALUES ('401', 'tapioca', 1, 1)");
   await pool.query("INSERT INTO catalog_product_modifiers VALUES ('401', 'tapioca', 'tapioca-tapioca', false)");
   const hours = Object.fromEntries(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => [day, [["00:00", "24:00"]]]));
-  await pool.query("INSERT INTO catalog_store_settings VALUES ('pickup_checkout_enabled', 'true'), ('pickup_policy', $1::jsonb)",
-    [JSON.stringify({ leadMinutes: 15, slotCapacity: 1, hours, taxRates: [1000] })]);
+  // Checkout opens only with a schedule, lead time, capacity, a fiscal status and a business profile. Test-only values: a 1 % GST and no QST
+  // keep the arithmetic simple, and the registration numbers below are not real identifiers.
+  await pool.query("INSERT INTO catalog_store_settings VALUES ('pickup_checkout_enabled', 'true'), ('pickup_policy', $1::jsonb), ('fiscal_settings', $2::jsonb), ('business_profile', $3::jsonb)", [
+    JSON.stringify({ leadMinutes: 15, slotCapacity: 1, hours }),
+    JSON.stringify({ status: "registered", legalName: "Smoke Test Inc.", gstNumber: "123456789 RT 0001", qstNumber: "1234567890 TQ 0001", gstRate: 1000, qstRate: 0 }),
+    JSON.stringify({ displayName: "Smoke Shop", street: "1 Test St", city: "Montréal", province: "Québec", postalCode: "H2X 1Y4", country: "Canada", phone: "+1 514-000-0000", verification: { status: "unverified" } }),
+  ]);
   await page.goto(new URL("/en/catalog?category=matcha", base).href);
   assert.equal(await page.locator(".catalog-grid li").count(), 3);
   await page.locator("#order-401").getByRole("button", { name: /customize/i }).click();

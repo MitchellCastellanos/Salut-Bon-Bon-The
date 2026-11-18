@@ -8,6 +8,7 @@ export type EmailKind = "customer_confirmation" | "store_notification" | "ready"
 type OrderRow = {
   number: string; customer: string; locale: Lang; pickup_at: Date | string; total: number; tax_cents: number;
   payment: string; tracking_token: string;
+  tax_breakdown?: { code: "GST" | "QST"; rate: number; cents: number }[] | null; business_snapshot?: import("./business-core").BusinessSnapshot | null;
   items: { name: { fr: string; en: string }; quantity: number; subtotal: number; size?: string }[];
 };
 
@@ -36,6 +37,7 @@ const copy = {
 export function orderEmail(kind: EmailKind, order: OrderRow, lang: Lang, siteUrl = process.env.SITE_URL ?? "") {
   if (!/^\d+$/.test(String(order.number))) throw new Error("Invalid order number");
   const text = copy[lang];
+  const biz = order.business_snapshot ?? null;
   const head = text[kind](String(order.number));
   const lines = order.items.map(item => `${item.quantity} × ${item.name[lang]}${item.size ? ` (${item.size})` : ""} — ${money(item.subtotal, lang)}`);
   const track = /^[0-9a-f]{64}$/.test(order.tracking_token) && siteUrl ? new URL(`/${lang}/track/${order.tracking_token}`, siteUrl).href : null;
@@ -44,7 +46,7 @@ export function orderEmail(kind: EmailKind, order: OrderRow, lang: Lang, siteUrl
     head.heading, "", head.lead, "",
     `${text.labels.pickup}: ${pickupDate(new Date(order.pickup_at).toISOString(), lang)}`, "",
     ...lines, "",
-    order.tax_cents ? `${text.labels.tax}: ${money(order.tax_cents, lang)}` : "",
+    ...(order.tax_breakdown?.length ? order.tax_breakdown.map(line => `${line.code === "GST" ? (lang === "fr" ? "TPS" : "GST") : (lang === "fr" ? "TVQ" : "QST")}: ${money(line.cents, lang)}`) : order.tax_cents ? [`${text.labels.tax}: ${money(order.tax_cents, lang)}`] : []),
     `${text.labels.total}: ${money(order.total, lang)}`, payment,
     ...(kind === "store_notification" ? ["", `Client: ${order.customer}`] : []),
     ...(track && kind !== "store_notification" ? ["", `${text.labels.track}: ${track}`] : []), "", text.labels.sign,
@@ -59,12 +61,12 @@ export function orderEmail(kind: EmailKind, order: OrderRow, lang: Lang, siteUrl
 <p style="margin:0 0 16px">${escapeHtml(head.lead)}</p>
 <p style="margin:0 0 16px"><strong>${escapeHtml(text.labels.pickup)}:</strong> ${escapeHtml(pickupDate(new Date(order.pickup_at).toISOString(), lang))}</p>
 <ul style="padding-left:18px;margin:0 0 16px">${lines.map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
-${order.tax_cents ? `<p style="margin:0">${escapeHtml(text.labels.tax)}: ${escapeHtml(money(order.tax_cents, lang))}</p>` : ""}
+${order.tax_breakdown?.length ? order.tax_breakdown.map(line => `<p style="margin:0">${escapeHtml(line.code === "GST" ? (lang === "fr" ? "TPS" : "GST") : (lang === "fr" ? "TVQ" : "QST"))}: ${escapeHtml(money(line.cents, lang))}</p>`).join("") : order.tax_cents ? `<p style="margin:0">${escapeHtml(text.labels.tax)}: ${escapeHtml(money(order.tax_cents, lang))}</p>` : ""}
 <p style="margin:4px 0 16px;font-size:18px"><strong>${escapeHtml(text.labels.total)}: ${escapeHtml(money(order.total, lang))}</strong>${payment ? ` · ${escapeHtml(payment)}` : ""}</p>
 ${kind === "store_notification" ? `<p>Client : ${escapeHtml(order.customer)}</p>` : ""}
 ${track && kind !== "store_notification" ? `<p><a href="${escapeHtml(track)}" style="display:inline-block;background:${palette.mango};color:${palette.brown};padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold">${escapeHtml(text.labels.track)}</a></p>` : ""}
 </td></tr>
-<tr><td style="padding:16px 28px;background:${palette.cream};font-size:12px">${escapeHtml(text.labels.sign)}</td></tr>
+<tr><td style="padding:16px 28px;background:${palette.cream};font-size:12px">${escapeHtml(text.labels.sign)}${biz ? `<br>${escapeHtml(biz.displayName)} · ${escapeHtml(biz.street)}, ${escapeHtml(biz.city)} ${escapeHtml(biz.postalCode)} · ${escapeHtml(biz.phone)}${biz.gstNumber ? `<br>${lang === "fr" ? "TPS" : "GST"} ${escapeHtml(biz.gstNumber)}` : ""}${biz.qstNumber ? ` · ${lang === "fr" ? "TVQ" : "QST"} ${escapeHtml(biz.qstNumber)}` : ""}` : ""}</td></tr>
 </table></td></tr></table></body></html>`;
   return { subject: head.subject, text: body, html };
 }
@@ -111,7 +113,7 @@ export async function deliverPendingEmails(options: { limit?: number; db?: Db; f
     }
     try {
       const { rows: [order] } = await connection.query<OrderRow>(
-        "SELECT number::text AS number, customer, locale, pickup_at, total, tax_cents, payment, tracking_token, items FROM orders WHERE number = $1", [mail.order_number]);
+        "SELECT number::text AS number, customer, locale, pickup_at, total, tax_cents, payment, tracking_token, items, tax_breakdown, business_snapshot FROM orders WHERE number = $1", [mail.order_number]);
       const message = orderEmail(mail.kind, order, mail.locale);
       const response = await send("https://api.resend.com/emails", {
         method: "POST",

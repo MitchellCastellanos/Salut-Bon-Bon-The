@@ -16,8 +16,8 @@ Verified 2026-11-18 through the Neon MCP tools. No credentials appear in this re
 | Branch | ID | Purpose | State |
 | --- | --- | --- | --- |
 | `production` (default) | `br-round-mud-bcvgh3ji` | Live data. | **Empty. Nothing applied. Awaiting owner approval.** |
-| `development` | `br-winter-wildflower-bcrow60v` | Preview deployments and QA. | Migrations 001–007 (ledger has 7 rows), official catalog, `salut_app` role. |
-| `migration-test` | `br-rapid-leaf-bcsipgsm` | Disposable rehearsal. Reset from `production` before each rehearsal. | Migrations 001–007, catalog import. |
+| `development` | `br-winter-wildflower-bcrow60v` | Preview deployments and QA. | Migrations 001–008 (ledger has 8 rows), official catalog, `salut_app` role, business profile (unverified). |
+| `migration-test` | `br-rapid-leaf-bcsipgsm` | Disposable rehearsal. Reset from `production` before each rehearsal. | Migrations 001–008, catalog import. |
 
 ## Roles
 
@@ -66,3 +66,7 @@ Applied to `migration-test` first, verified, then applied to `development`. Neon
 5. Create ADMIN users with `npm run staff:create` (password via stdin).
 6. Enter owner-approved prices, hours, capacity and tax settings in `/admin`. Leave `pickup_checkout_enabled` off.
 7. Deploy, smoke-test, then enable checkout only after the readiness gates in `LAUNCH_READINESS.md` pass.
+
+### Migration 008 and business initialisation (2026-11-18)
+
+008 (`orders.tax_breakdown`, `orders.business_snapshot`) was applied to `migration-test` first (columns verified), then `development`. The profile was initialised on `development` with the exact SQL printed by `npm run business:init -- --print-sql`; a second statement with a different display name proved the initialisation does not overwrite (value unchanged, one audit row). `production` was not touched. Prices: `development` has 0 variants (no price data exists anywhere in the project).

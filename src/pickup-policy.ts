@@ -16,13 +16,15 @@ export const exceptionSchema = z.object({
   .refine(e => e.closed || (e.hours?.length ?? 0) > 0, "Special hours need at least one interval");
 
 export const pickupPolicySchema = z.object({
-  leadMinutes: z.number().int().min(5).max(1440),
+  /** Operational values stay unset until the business decides them; pickup is never offered while either is missing. */
+  leadMinutes: z.number().int().min(5).max(1440).optional(),
   slotMinutes: z.number().int().refine(value => [5, 10, 15, 20, 30, 60].includes(value)).optional(),
-  slotCapacity: z.number().int().min(1).max(500),
+  slotCapacity: z.number().int().min(1).max(500).optional(),
   advanceDays: z.number().int().min(1).max(60).optional(),
   sameDayCutoff: clock.nullable().optional(),
   hours: z.partialRecord(z.enum(days), intervals),
-  taxRates: z.array(z.number().int().min(0).max(100000)).max(4),
+  /** Deprecated: tax lives in the fiscal settings (src/business.ts). Ignored if present. */
+  taxRates: z.array(z.number().int().min(0).max(100000)).max(4).optional(),
   exceptions: z.array(exceptionSchema).max(200).optional(),
   /** Legacy single-date closures. Still honoured. */
   closedDates: z.array(calendarDate).max(120).optional(),
@@ -30,6 +32,9 @@ export const pickupPolicySchema = z.object({
 
 export type PickupPolicy = z.infer<typeof pickupPolicySchema>;
 export type Exception = z.infer<typeof exceptionSchema>;
+export type ReadyPickupPolicy = PickupPolicy & { leadMinutes: number; slotCapacity: number };
+export const pickupParametersSet = (policy: PickupPolicy): policy is ReadyPickupPolicy =>
+  policy.leadMinutes !== undefined && policy.slotCapacity !== undefined;
 
 const local = new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit",
@@ -55,6 +60,7 @@ export function intervalsFor(date: string, weekday: Day, policy: PickupPolicy): 
 }
 
 export function eligiblePickup(time: number, policy: PickupPolicy, now = Date.now()) {
+  if (!pickupParametersSet(policy)) return false;
   const slot = slotMinutes(policy) * minute;
   if (!Number.isFinite(time) || time % slot || time < now + policy.leadMinutes * minute || time > now + advanceDays(policy) * day) return false;
   const at = localParts(time);
@@ -68,6 +74,7 @@ export function eligiblePickup(time: number, policy: PickupPolicy, now = Date.no
 }
 
 export function upcomingPickup(policy: PickupPolicy, now = Date.now()) {
+  if (!pickupParametersSet(policy)) return [];
   const slot = slotMinutes(policy) * minute;
   const first = Math.ceil((now + policy.leadMinutes * minute) / slot) * slot;
   const slots: string[] = [];

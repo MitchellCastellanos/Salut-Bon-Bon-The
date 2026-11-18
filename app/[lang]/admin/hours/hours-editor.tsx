@@ -11,7 +11,7 @@ const minutes = (t: string) => t === "24:00" ? 1440 : Number(t.slice(0, 2)) * 60
 
 export function HoursEditor({ lang, initialWeek, initialExceptions, settings, action, enabled }: {
   lang: "fr" | "en"; initialWeek: Week; initialExceptions: Exception[]; enabled: boolean;
-  settings: { lead: number; slot: number; capacity: number; advance: number; cutoff: string; tax1: string; tax2: string };
+  settings: { lead: string; slot: number; capacity: string; advance: number; cutoff: string };
   action: (form: FormData) => void;
 }) {
   const fr = lang === "fr";
@@ -52,16 +52,12 @@ export function HoursEditor({ lang, initialWeek, initialExceptions, settings, ac
       <div className="hours-scale" aria-hidden="true"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
     </fieldset>
     <fieldset className="panel"><legend>{fr ? "Cueillette" : "Pickup"}</legend>
-      <label>{fr ? "Délai de préparation (minutes)" : "Preparation lead time (minutes)"}<input name="lead" type="number" min={5} max={1440} defaultValue={settings.lead} required/></label>
+      <p className="fine-print">{fr ? "Le délai et la capacité restent vides tant que le commerce ne les a pas décidés : la cueillette n’est pas offerte sans eux." : "Lead time and capacity stay empty until the business decides them: pickup is not offered without them."}</p>
+      <label>{fr ? "Délai de préparation (minutes)" : "Preparation lead time (minutes)"}<input name="lead" type="number" min={5} max={1440} defaultValue={settings.lead}/></label>
       <label>{fr ? "Durée d’une plage" : "Slot length"}<select name="slot" defaultValue={settings.slot}>{[5, 10, 15, 20, 30, 60].map(v => <option key={v} value={v}>{v} min</option>)}</select></label>
-      <label>{fr ? "Commandes maximales par plage" : "Maximum orders per slot"}<input name="capacity" type="number" min={1} max={500} defaultValue={settings.capacity} required/></label>
+      <label>{fr ? "Commandes maximales par plage" : "Maximum orders per slot"}<input name="capacity" type="number" min={1} max={500} defaultValue={settings.capacity}/></label>
       <label>{fr ? "Réservation à l’avance (jours)" : "Advance booking window (days)"}<input name="advance" type="number" min={1} max={60} defaultValue={settings.advance} required/></label>
       <label>{fr ? "Heure limite pour commander le jour même (facultatif)" : "Same-day ordering cutoff (optional)"}<input name="cutoff" type="time" defaultValue={settings.cutoff}/></label>
-    </fieldset>
-    <fieldset className="panel"><legend>{fr ? "Taxes de vente (%)" : "Sales taxes (%)"}</legend>
-      <label>{fr ? "Taxe 1 (ex. TPS)" : "Tax 1 (e.g. GST)"}<input name="tax1" inputMode="decimal" pattern="\d{1,2}(\.\d{1,3})?" defaultValue={settings.tax1}/></label>
-      <label>{fr ? "Taxe 2 (ex. TVQ)" : "Tax 2 (e.g. QST)"}<input name="tax2" inputMode="decimal" pattern="\d{1,2}(\.\d{1,3})?" defaultValue={settings.tax2}/></label>
-      <p className="fine-print">{fr ? "Laissez vide tant que l’inscription et le traitement fiscal ne sont pas confirmés." : "Leave blank until registration and tax treatment are confirmed."}</p>
     </fieldset>
     <fieldset className="panel"><legend>{fr ? "Horaires exceptionnels (fermetures, congés, heures spéciales)" : "Exceptional schedules (closures, holidays, special hours)"}</legend>
       {exceptions.map((e, i) => <div key={i} className="hours-row">

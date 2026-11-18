@@ -47,6 +47,7 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
     <p>{fr ? "Saisissez les prix en cents canadiens." : "Enter prices in Canadian cents."}</p>
     <nav className="panel" aria-label={fr ? "Outils d’administration" : "Admin tools"}>
       <Link href={`/${lang}/admin/prices`}>{fr ? "Feuille de prix (tous les produits)" : "Price sheet (all products)"}</Link>{" · "}
+      <Link href={`/${lang}/admin/business`}>{fr ? "Commerce et fiscalité" : "Business and tax"}</Link>{" · "}
       <Link href={`/${lang}/admin/hours`}>{fr ? "Heures, cueillette et fermetures" : "Hours, pickup and closures"}</Link>{" · "}
       <Link href={`/${lang}/admin/rewards`}>{fr ? "Récompenses Salut" : "Salut Rewards"}</Link>{" · "}
       <Link href={`/${lang}/staff/rewards`}>{fr ? "Scanner une carte" : "Scan a card"}</Link>

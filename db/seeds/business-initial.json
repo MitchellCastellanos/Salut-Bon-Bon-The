@@ -1,0 +1,29 @@
+{
+  "_comment": "One-time initialisation data supplied by the owner on 2026-11-18. The application never reads this file; it is loaded once by scripts/init-business.mjs and is then edited in /admin. Opening hours are held back until verified (see docs/BUSINESS_PROFILE.md).",
+  "profile": {
+    "displayName": "Salut Bon Bon Thé",
+    "street": "1175 Rue Notre Dame",
+    "city": "Lachine",
+    "province": "Québec",
+    "postalCode": "H8S 2C5",
+    "country": "Canada",
+    "phone": "+1 514-637-6666",
+    "googlePlaceId": "ChIJNRlHTYMXyUwRdKR_YXvuGHA",
+    "verification": {
+      "status": "unverified",
+      "note": "Owner-supplied on 2026-11-18. Google Maps name: Bon Bon Thé. The cited public pages could not be fetched from the build environment, so the address, phone and hours were not independently confirmed.",
+      "sources": [
+        "https://www.restaurantji.com/qc/lachine/bon-bon-the-/",
+        "https://notredamelachine.ca/nouvelle/bubble-the-sur-la-rue-notre-dame-trois-adresses-a-decouvrir/"
+      ]
+    }
+  },
+  "weeklyHours": {
+    "Mon": [["10:30", "20:00"]],
+    "Tue": [["10:30", "20:00"]],
+    "Wed": [["10:30", "20:00"]],
+    "Thu": [["10:30", "20:00"]],
+    "Fri": [["10:30", "20:00"]],
+    "Sat": [["10:30", "20:00"]]
+  }
+}
