@@ -1,10 +1,10 @@
 import Image from "next/image";
 import { hasPublicImage } from "../../../../../src/storefront-art";
-import { pickupConfiguration } from "../../../../../src/store-settings";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { catalogCategories, catalogProducts } from "../../../../../src/catalog";
-import { officialPrices } from "../../../../../src/catalog-pricing";
+import { displayedCatalogPrices } from "../../../../../src/catalog-display-prices";
 import { language, modifiers, money } from "../../../../../src/domain";
 import { loyaltyProgram, programStages } from "../../../../../src/loyalty";
 import { pointsFor } from "../../../../../src/rewards-math";
@@ -19,9 +19,9 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/catalog
   if (!product) notFound();
   const photo = drinkPhoto(product);
   const category = (await catalogCategories()).find(item => item.id === product.category);
-  const variants = process.env.DATABASE_URL && (await pickupConfiguration()).enabled ? (await officialPrices()).filter(row => row.id === id) : [];
+  const variants = (await displayedCatalogPrices()).filter(row => row.id === id);
   const fr = lang === "fr";
-  // Points hint only next to an official price; always before tax, and labelled as preview while the program is inactive.
+  // Points are estimates until the program is operational.
   const program = variants.length && process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
   const hint = program?.previewVisible && program.pointsPerDollar && !program.earnCategories?.length ? { rate: program.pointsPerDollar, live: programStages(program).accrualOperational, min: program.minOrderCents } : undefined;
   return <section className="wrap catalog-page">
