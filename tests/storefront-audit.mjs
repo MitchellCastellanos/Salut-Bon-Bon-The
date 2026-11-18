@@ -58,7 +58,7 @@ try {
         if (i > 0) await page.getByRole("button", { name: lang === "fr" ? "Promotion suivante" : "Next promotion" }).click();
         await page.waitForTimeout(250);
         const slide = page.locator("#hero");
-        await slide.locator(`img[src*="${encodeURIComponent("/" + c.image)}"], img[src*="${c.image.replace("/", "%2F")}"]`).first().waitFor();
+        await slide.locator(`img[src*="${c.image}"], img[src*="${c.image.replace("/", "%2F")}"]`).first().waitFor();
         const link = slide.getByRole("link", { name: c.cta[lang] });
         assert.equal(await link.getAttribute("href"), `/${lang}/catalog/${c.id}`);
       }
@@ -72,7 +72,7 @@ try {
         const card = page.locator(`#promotions a[href="/${lang}/catalog/${c.id}"]`);
         assert.equal(await card.count(), 1, `${c.id} card`);
         assert.ok(await card.locator("img").count() === 1, `${c.id} card image`);
-        assert.match(await card.locator("img").getAttribute("src"), new RegExp(encodeURIComponent("/" + c.image).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+        assert.match(await card.locator("img").getAttribute("src"), new RegExp(c.image.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace("/", "(?:/|%2F)")));
         await load(page, `/${lang}/catalog/${c.id}`);
         assert.equal(await page.locator(".catalog-grid li").count(), c.products, `${c.id} lists ${c.products} real products`);
         await load(page, `/${lang}`);

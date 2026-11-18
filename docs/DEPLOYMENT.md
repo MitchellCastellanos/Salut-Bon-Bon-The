@@ -15,3 +15,7 @@ Vercel and Neon are target services. The local PGlite demo needs writable disk a
 - Application rollback: promote the previous READY deployment (Vercel Instant Rollback). The last known-good production deployment is `dpl_GFMCzEuLEJ18acQRbdGKfA6G9oKU` (main at `d6860ad`, demo storage, no database). Database changes are additive, so the previous deployment keeps working against a newer schema; restore the Neon branch only for data corruption.
 - Webhook: register `https://<production-domain>/api/stripe/webhook` and keep the production domain reachable without Vercel SSO.
 - Checkout stays disabled until `pickup_checkout_enabled` is turned on by an ADMIN after the gates in `LAUNCH_READINESS.md`.
+
+## Images and the Vercel image optimizer
+
+`next.config.ts` sets `images.unoptimized: true`. Every file in `public/` is already an optimized WebP at its final size, so serving it directly is faster to operate and cannot hit Vercel's image-optimization limits. On the free plan those limits are small and every deployment resets the optimizer cache; when exceeded, `/_next/image` answers **402 Payment Required** and all photos disappear. Re-enable optimization only on a plan with sufficient quota, and keep source files small.
