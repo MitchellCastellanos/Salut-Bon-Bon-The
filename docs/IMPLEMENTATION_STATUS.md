@@ -18,3 +18,7 @@ This demo uses sample products and fixed rolling slots. Keep the demo private. S
 The official dataset, idempotent import, searchable catalog preview and collection landing pages are implemented. ADMIN can edit catalog entries, modifiers and eligibility, collection memberships, image paths, featured positions, prices, availability, campaigns and pickup policy. Checkout resolves approved, available prices on the server, applies configured tax, serializes capacity checks and stays disabled until explicitly enabled. Opt-in first-party analytics includes an ADMIN date filter and campaign breakdown.
 
 Stripe and Resend test adapters are present. Payment and notification orchestration, Twilio, real Neon and Vercel validation, and owner sign-off remain pending. Media prompt files are ready for use. Approved photography and other brand assets remain pending.
+
+## 2026-11-18 update
+
+Added: Neon project and branches, migration runner and ledger, migration 005, Stripe Checkout and webhook reconciliation (test mode), Resend outbox and bilingual templates, closures, staff order search, payment-aware order states, production fail-closed storage guard, CI, asset register, tax and security documentation. Verified state and open items are in [LAUNCH_READINESS.md](LAUNCH_READINESS.md). Migration 002 had its own `BEGIN`/`COMMIT` removed so the runner owns the transaction; it was never applied to a persistent database before this change.
