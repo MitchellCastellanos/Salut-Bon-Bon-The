@@ -73,7 +73,7 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
     const client = await postgresPool().connect();
     try {
       await client.query("BEGIN");
-      await client.query("SELECT pg_advisory_xact_lock(73621, $1::int)", [time / 900000]);
+      await client.query("SELECT pg_advisory_xact_lock(73621, $1::int)", [Math.floor(time / 60000)]);
       const alreadyPlaced = await existing(client);
       if (alreadyPlaced) {
         const receipt = match(alreadyPlaced);
