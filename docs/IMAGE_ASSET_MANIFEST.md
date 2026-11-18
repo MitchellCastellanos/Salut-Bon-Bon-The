@@ -1,13 +1,23 @@
-# Image asset manifest
+# Storefront image asset manifest
 
-Store licensed supplied files at these exact paths. The current storefront uses decorative CSS placeholders.
+## Batch 1 · Homepage carousel and product cards
 
-| File | Placement | Aspect / size | Composition | Text overlay | Priority |
-| --- | --- | --- | --- | --- | --- |
-| public/drinks/hero.webp | First hero slide | 8:7 / 1440×1260 | Serve mango bubble tea against warm mango backdrop with breathing room | None | First |
-| public/drinks/mango.webp | Mango product card | 7:5 / 840×600 | Center cup with full silhouette, warm yellow backdrop | None | First |
-| public/drinks/strawberry.webp | Product and second slide | 7:5 / 1260×900 | Center strawberry tea, soft blush background, safe margins | None | First |
-| public/drinks/taro.webp | Product and third slide | 7:5 / 1260×900 | Center taro milk tea, lilac background, safe margins | None | First |
-| public/drinks/classic.webp | Brown sugar card | 7:5 / 840×600 | Center cup with visible brown sugar streaks, oat background | None | First |
-| public/brand/logo.svg | Future header/footer | Supplied aspect | Official logo asset | None | First, pending wiring |
-| public/store/exterior.webp | Future store-information block | 3:2 / 1200×800 | Supplied storefront photo | None | Later, pending section |
+Generate the five files below in order. These are concept visuals for the demo catalog in [src/domain.ts](../src/domain.ts). Use Fresh & Fruity art direction throughout: unbranded clear cups, soft studio daylight, clean pastel surfaces, a restrained bubble accent, and consistent cup size, perspective, and shadow across the cards. Colors should complement the cream page and coral buttons. Keep cups and straws away from the crop edges. Leave typography, prices, captions, logos, and badges to the website. Review any concept image against the actual drink once the business confirms its menu and presentation. Replace it with approved, representative product photography when needed.
+
+| Order and priority | Exact repo path | Current placement and placeholder | Source aspect and orientation | Composition and crop |
+| --- | --- | --- | --- | --- |
+| 1 · P0 | `public/drinks/hero.webp` | Homepage carousel slide 1, Mango sunshine / Mangue soleil. CSS cup, bubbles and golden stage. | 8:7 landscape, 1440 × 1260 | Center an unbranded mango-toned demo drink in a bright golden scene. Frame wider than a product close-up, keeping straw and cup base clear of the tighter mobile crop and rounded desktop mask. |
+| 2 · P0 | `public/drinks/strawberry.webp` | Homepage slide 2 and strawberry card on Home and Menu. CSS cup and bubbles with a blush stage. | 7:5 landscape, 1680 × 1200 | Center a pink fruit-tea concept on blush. Keep the straw and base within the central area for both the nearly square desktop hero and landscape card. |
+| 3 · P0 | `public/drinks/taro.webp` | Homepage slide 3 and taro card on Home and Menu. CSS cup and bubbles with a lilac stage. | 7:5 landscape, 1680 × 1200 | Center a creamy lilac demo drink on a soft purple surface. Match the strawberry card scale and protect the sides and top for the hero mask. |
+| 4 · P1 | `public/drinks/mango.webp` | Mango product card on Home and Menu. CSS cup and bubbles with a golden stage. | 7:5 landscape, 1120 × 800 | Use the same mango concept as the opening slide. Match the other cards' scale and angle in a simpler yellow set. |
+| 5 · P1 | `public/drinks/classic.webp` | Brown sugar milk tea card on Home and Menu. CSS cup and bubbles with an oat stage. | 7:5 landscape, 1120 × 800 | Center a tea-colored demo cup on an oat background. Use subtle brown-sugar coloration consistent with the demo description. |
+
+All five slots are wired in [Drink](../src/drink.tsx). At inspection the checkout has no `public/` directory or image files. Each slot shows a CSS illustration until its exact file exists. Images use centered cover cropping. [Storefront styles](../app/styles.css) target roughly 1.14:1 for desktop hero, 1.55:1 on mobile, and 1.4:1 for cards, subject to minimum heights. Check mobile card crops as well as the irregular hero corners. Homepage headline and CTA sit beside or above the media, slide names sit below it, and card names and prices sit underneath. No overlay is needed for current slots. The cream page, card surfaces and peach pickup section are CSS backgrounds and require no image exports.
+
+## Later batch · Promotions and business-supplied assets
+
+| Priority and timing | Exact repo path | Purpose and current state | Aspect, composition and text | Replacement or source requirement |
+| --- | --- | --- | --- | --- |
+| P1 · First approved promotion after Batch 1 | `public/promotions/seasonal.webp` | Reserved path for a future homepage seasonal feature. No section or image reference exists yet. | Provisional 16:9 landscape, 1600 × 900. Center the featured drink with space around it for responsive cropping. Plan external bilingual copy and CTAs. Confirm crop and placement when wiring the section. | Use an approved offer and representative drink image. A demo concept may be created once the section has a confirmed purpose. |
+| P0 · Request from owner in parallel | `public/brand/logo.svg` | Reserved for header/footer. Current header and footer use live text. | Official aspect and vector orientation. Preserve supplied color, proportions and clear space. Keep navigation text separate. | Owner-supplied official logo required. Exclude from generation. |
+| P2 · Request from owner when available | `public/store/exterior.webp` | Reserved for future store-information section. No image reference exists yet. | Suggested 3:2 landscape, 1200 × 800. Show actual storefront and signage with space around the entrance. Use separate location copy. | Owner-approved real storefront photo required. Exclude from generation. |
