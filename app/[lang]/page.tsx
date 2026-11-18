@@ -3,29 +3,89 @@ import { notFound } from "next/navigation";
 import { language, money, products } from "../../src/domain";
 import { HeroGallery } from "../../src/hero-gallery";
 import { Drink } from "../../src/drink";
+import { StorefrontArt, StorefrontIcon } from "../../src/storefront-art";
+import { instagramUrl, menuTiles, rewardsName } from "../../src/storefront-content";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   return process.env.SITE_URL ? { alternates: { canonical: `/${lang}`, languages: { "fr-CA": "/fr", "en-CA": "/en", "x-default": "/fr" } } } : {};
 }
+
+const campaigns = [
+  { flavor: "mango", path: "/drinks/hero.webp", fr: ["Série mangue", "Fraîche", "Des boissons rafraîchissantes aux saveurs de mangue et de fruits tropicaux."], en: ["Mango series", "Fresh & Fruity", "Refreshing mango drinks with a taste of tropical fruit."] },
+  { flavor: "strawberry", path: "/promotions/strawberry.webp", fr: ["Série fraise", "Pétillante", "Un thé fruité aux saveurs de fraise et de jasmin."], en: ["Strawberry series", "Bright & Juicy", "A fruit tea with strawberry and jasmine notes."] },
+  { flavor: "taro", path: "/promotions/taro.webp", fr: ["Série taro", "Crémeuse", "Une boisson au lait et aux notes douces de taro."], en: ["Taro series", "Soft & Creamy", "A creamy milk tea with mellow taro notes."] },
+] as const;
+
+const featured = ["classic", "matcha", "taro", "mango", "strawberry"].flatMap(id => products.filter(product => product.id === id));
+
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
   const fr = lang === "fr";
+  const menu = `/${lang}/menu`;
+  const instagram = instagramUrl();
   return <>
-    <section className="wrap hero">
-      <div>
-        <p className="eyebrow">{fr ? "THÉ AUX PERLES · MONTRÉAL" : "BUBBLE TEA · MONTRÉAL"}</p>
-        <h1>{fr ? <>Des bulles.<br/><em>Du bonheur.</em></> : <>A little sip.<br/><em>A lot of joy.</em></>}</h1>
-        <p className="intro">{fr ? "Thés fruités, laits crémeux et perles à croquer. Compose ta boisson, puis passe la chercher." : "Bright fruit teas, creamy milk teas and chewy pearls. Make it yours and pick it up."}</p>
-        <Link className="button" href={`/${lang}/menu`}>{fr ? "Découvrir le menu" : "Explore the menu"} <span aria-hidden="true">↗</span></Link>
+    <HeroGallery lang={lang} slides={campaigns.map(({ flavor, path, ...copy }, index) => {
+      const [title, accent, description] = copy[lang];
+      return { title, scene: <div className={`campaign-slide ${flavor}`}>
+        <div className="campaign-media" aria-hidden="true">
+          <StorefrontArt path={path} sizes="100vw" priority={index === 0}>
+            <div className="campaign-cups"><Drink flavor={flavor} illustrated/><Drink flavor={flavor} illustrated/><Drink flavor={flavor} illustrated/></div>
+          </StorefrontArt>
+        </div>
+        <div className="wrap campaign-inner"><div className="campaign-copy">
+          <p className="campaign-label">{fr ? "Menu démo" : "Demo menu"}</p>
+          <h1>{title}<em>{accent}</em></h1>
+          <p>{description}</p>
+          <Link className="button" href={menu}>{fr ? "Commander maintenant" : "Order now"} <span aria-hidden="true">→</span></Link>
+        </div></div>
+      </div> };
+    })}/>
+
+    <div className="wrap home-content">
+      <section className="home-section" aria-labelledby="explore">
+        <div className="section-head"><h2 id="explore">{fr ? "Explorez notre menu" : "Explore Our Menu"}</h2><Link className="menu-link" href={menu}>{fr ? "Voir le menu complet" : "Explore the menu"} <span aria-hidden="true">→</span></Link></div>
+        <ul className="category-grid">{menuTiles.map(tile => {
+          const content = <><StorefrontIcon name={tile.icon}/><strong>{tile[lang]}</strong></>;
+          return <li key={tile.icon} className={tile.icon}>{"filter" in tile ?
+            <Link className="category-tile" href={`${menu}?category=${tile.filter}`}>{content}</Link> :
+            <div className="category-tile">{content}<small>{fr ? "Aperçu" : "Preview"}</small></div>}</li>;
+        })}</ul>
+      </section>
+
+      <section className="home-section" aria-labelledby="favorites">
+        <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2><span className="demo-label">{fr ? "Menu de démonstration" : "Demo menu"}</span></div>
+        <div className="favorites-grid">{featured.map(product => <Link className="favorite-card" key={product.id} href={`${menu}#${product.id}`}>
+          <Drink flavor={product.color}/><strong>{product.name[lang]}</strong><span>{money(product.price, lang)}</span>
+        </Link>)}</div>
+      </section>
+
+      <div className="home-banners">
+        <section className="promo-banner pickup-banner" id="pickup">
+          <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/pickup.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="phone-art"><StorefrontIcon name="bag"/></span></StorefrontArt></div>
+          <div><h2>{fr ? "Commandez en ligne et récupérez en magasin" : "Order Online and Pick Up In Store"}</h2>
+            <p>{fr ? "Choisissez votre boisson et votre heure de cueillette." : "Choose your drink and pickup time."}</p>
+            <Link className="button" href={menu}>{fr ? "Commander pour emporter" : "Order for pickup"} <span aria-hidden="true">→</span></Link></div>
+        </section>
+        <section className="promo-banner rewards-banner" id="rewards">
+          <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>
+            <p>{fr ? "Cumulez des points à chaque achat admissible et échangez-les contre des récompenses." : "Earn points on eligible purchases and redeem them for rewards."}</p>
+            <a className="button purple" href="#account">{fr ? "Bientôt disponible" : "Coming soon"} <span aria-hidden="true">→</span></a>
+            <div id="account" tabIndex={-1} className="account-status">{fr ? "Les comptes clients et les récompenses seront disponibles prochainement." : "Customer accounts and rewards are coming soon."}</div>
+          </div>
+          <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/rewards.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="rewards-art"><StorefrontIcon name="gift"/><span>★ ★ ★</span></span></StorefrontArt></div>
+        </section>
       </div>
-      <HeroGallery lang={lang} slides={products.slice(0, 3).map((product, index) => ({ title: product.name[lang], scene: <Drink flavor={product.color} hero cover={index === 0}/> }))}/>
-    </section>
-    <section className="wrap section">
-      <div className="section-head"><div><p className="eyebrow">{fr ? "MENU DE DÉMONSTRATION" : "DEMO MENU"}</p><h2>{fr ? "À siroter" : "Find your sip"}</h2></div><Link className="text-link" href={`/${lang}/menu`}>{fr ? "Voir le menu" : "View menu"} ↗</Link></div>
-      <div className="product-grid">{products.map(p => <Link className="product-card" href={`/${lang}/menu#${p.id}`} key={p.id}><Drink flavor={p.color}/><div><strong>{p.name[lang]}</strong><span>{money(p.price, lang)}</span></div><p>{p.description[lang]}</p></Link>)}</div>
-    </section>
-    <section className="pickup" id="pickup"><div className="wrap"><h2>{fr ? "Prêt quand tu l’es." : "Pick up your way."}</h2><p>{fr ? "Choisis ta boisson et ton heure de cueillette. Suis ta commande avec ton lien privé." : "Choose your drink and pickup time. Follow your order with your private link."}</p><Link className="button" href={`/${lang}/menu`}>{fr ? "Commander" : "Start an order"} ↗</Link></div></section>
+      <section className="home-section social" aria-labelledby="social">
+        <div className="section-head"><h2 id="social"><StorefrontIcon name="instagram"/>{instagram ? fr ? "Suivez-nous sur Instagram" : "Follow us on Instagram" : fr ? "Galerie Instagram" : "Instagram gallery"}</h2>
+          {instagram ? <a href={instagram}>Instagram ↗</a> : <span className="demo-label">{fr ? "Aperçu de démonstration" : "Demo preview"}</span>}</div>
+        <ul className="social-gallery" tabIndex={0} aria-label={fr ? "Galerie de boissons défilante" : "Scrollable drink gallery"}>
+          {["matcha", "mango", "strawberry", "classic", "taro"].map(flavor => <li key={flavor}>
+            <StorefrontArt path={`/gallery/${flavor}.webp`} sizes="(max-width: 650px) 43vw, 220px"><Drink flavor={flavor}/></StorefrontArt>
+          </li>)}
+        </ul>
+      </section>
+    </div>
   </>;
 }

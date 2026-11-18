@@ -4,7 +4,7 @@
 
 Branch `feat/salut-plus-foundation`. The first guest pickup workflow remains verified in the private local demo. Staff can also sign in with individual PostgreSQL-backed Better Auth accounts. STAFF and ADMIN can read and update the order queue. Current role checks deny guests, CUSTOMER accounts and demoted sessions. Admin-only management screens are pending. See [status](IMPLEMENTATION_STATUS.md) and [testing](TESTING.md).
 
-The [image manifest](IMAGE_ASSET_MANIFEST.md) lists five wired concept-image slots in generation order. The promotion path is reserved. The logo and storefront photo require owner-supplied files.
+The approved storefront mockup is implemented with demo content and graceful media fallbacks. The [image manifest](IMAGE_ASSET_MANIFEST.md) maps 15 wired image slots to [three Spanish prompt batches](image-prompts/). Run the batches one at a time with the mockup attached, then export the approved images to the exact paths and rebuild. Add the official SVG logo and verified Instagram profile separately. The image-prompts skill archive was unavailable, so the batches use the pasted brief’s format. Récompenses Salut / Salut Rewards is an honest bilingual preview. Customer authentication and points are pending.
 
 ## Database and configuration
 
@@ -12,7 +12,7 @@ The [image manifest](IMAGE_ASSET_MANIFEST.md) lists five wired concept-image slo
 
 ## Next priority
 
-Add admin-only store settings and enforce pickup availability during order creation. Start with `src/auth.ts`, `src/staff.ts`, `src/orders.ts`, `src/domain.ts` and `app/[lang]/menu/actions.ts`. Confirm store hours, pause behavior and capacity with the owner. Preserve guest checkout and tracking. Keep the database authoritative for capacity when orders race or retry. Add login and checkout rate limiting before a public pilot.
+After swapping and reviewing the approved assets, add admin-only store settings and enforce pickup availability during order creation. Start with `src/auth.ts`, `src/staff.ts`, `src/orders.ts`, `src/domain.ts` and `app/[lang]/menu/actions.ts`. Confirm store hours, pause behavior and capacity with the owner. Preserve guest checkout and tracking. Keep the database authoritative for capacity when orders race or retry. Add login and checkout rate limiting before a public pilot.
 
 ## Commands and continuation
 

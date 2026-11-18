@@ -9,3 +9,5 @@
 | Owner | Bilingual public website, local discovery, store information | Responsive layout and verified content with official links |
 
 French Canadian defaults, English Canadian is selectable, prices use CAD and pickup uses Toronto time. Transactions protect payments and loyalty. The pilot uses sample products, temporary artwork and rolling slots. Owner decisions include official brand assets, hours, capacity, menu, taxes, location, contact channels, reward rules and retention. See implementation status for delivery state.
+
+Use **Récompenses Salut** in French and **Salut Rewards** in English whenever displaying the full loyalty program name.

@@ -8,3 +8,5 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 - Added source-ready art direction and ordered image generation requirements for the five wired storefront slots, plus reserved promotion and owner-supplied asset paths.
 - Added individual Better Auth staff accounts, PostgreSQL migration 002, operator provisioning, and server authorization for STAFF and ADMIN order operations.
+
+- Rebuilt the bilingual storefront to match the approved mockup. Added the mango campaign carousel, illustrated category tiles, five demo favorites, pickup and Récompenses Salut / Salut Rewards previews, curated gallery, cart badge, and rich footer. Saved three prompt batches for the 15 wired media slots.

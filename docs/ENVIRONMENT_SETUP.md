@@ -17,3 +17,5 @@ Use Node.js 24. Run `npm ci` and `npm run dev` in the checkout. The credential-f
 4. Sign in at `/fr/staff` or `/en/staff` using the provisioned email and password. Use `STAFF` for staff accounts and `ADMIN` for owners or administrators. Both roles can handle orders. The operator must handle credential resets and role changes through a trusted database workflow until account management is implemented.
 
 Legacy `STAFF_PASSWORD` and `SESSION_SECRET` no longer enable staff access. Remove them when moving to the new configuration. Set `SITE_URL` to an authorized absolute origin for canonical URLs and sitemap. Keep real values out of Git.
+
+Set optional `INSTAGRAM_URL` to the verified official HTTPS Instagram profile. The storefront hides the external link until it is supplied and displays a locally curated gallery.
