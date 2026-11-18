@@ -1,17 +1,29 @@
-# Isolated order + Rewards walkthrough (review build)
+# Isolated, cross-device order and Rewards demonstration
 
-Routes: `/fr/demo-commande` and `/en/demo-order`.
+Routes: `/fr/demo-commande` and `/en/demo-order`. Public CTA in the main navigation.
 
-This is an **interactive, browser-local presentation**, not the live commerce checkout. It deliberately does not call order, payment, STAFF or loyalty server actions. A sample order can be customized, priced, placed, tracked and advanced through five simulated fulfillment states using the same browser's localStorage. Sample reward points are calculated at 10 per whole pre-tax dollar, with the 1,000-point = $5 equivalence. They are **never credited**.
+## Architecture and safety
 
-The owner-provided logo was traced to a transparent vector at `public/brand/logo.svg`; the existing `officialLogo()` helper now resolves it. Verify visual fidelity against the supplied original before merging. Email needs a separate raster PNG.
+- 62 official products are presented from `catalog/official.json`; two sizes and sample toppings. The server **reprices every line** from `catalog_variants` in the dedicated Neon `order-rewards-demo` branch; client estimates are illustrative.
+- `POST /api/demo-orders` creates a **demo-only** record in `demo_orders` on `DEMO_DATABASE_URL`. It never inserts into real `orders`, loyalty accounts, ledgers or payment tables.
+- `GET /api/demo-orders?id=...&token=...` retrieves the private order. `PATCH` advances status for the same bearer token. Share the full link to observe/advance from another device; status refreshes every 5 seconds.
+- Rewards estimate uses `pointsFor(subtotal, 10)`, based on pre-tax sample spend; 1,000 points are worth $5. **No real points are credited or redeemed.**
+- Sample pickup times and GST/QST are for presentation only. No business hours, fiscal registration or prices are approved, and no Stripe/Resend calls are made.
+- Orders expire after 7 days; expired rows are purged during new order creation. Limit 20 creations per hour per pseudonymous IP hash. No account login, emails or phone numbers collected.
+- The shared token grants both tracking and simulation status updates. It is a **demo capability link**, not real STAFF authentication; share only with participants. Demo API responses are no-store; order tokens are stored as SHA-256 hashes in the database.
+- The official logo is at `public/brand/logo.svg`; compare the vector rendering with the owner-provided source. Email raster logo is still pending.
 
-## Important remaining work before claiming a full end-to-end demo
+## Neon / Vercel
 
-- Build an isolated **server-backed** demo database/branch with session-scoped demo orders so two devices can see the same order and real STAFF state updates. The current prototype is single-browser only.
-- Connect a demo cart to the full 62-product catalog and 124 demo variants (currently five illustrative choices), including modifier eligibility, price-change confirmation and sample tax/slot rules.
-- Add a polished home/catalog CTA, mobile styling, and bilingual review of all text.
-- Add tests for pricing, persistence, fake checkout, state transitions, privacy and accessibility; run lint, typecheck, build and browser tests. None have been run for this branch.
-- Provide explicit sandbox controls for resetting sample orders, a demo-only staff access model, and clearly separate live vs sample data.
-- Ensure no actual emails, Stripe calls, real loyalty transactions, production order writes, or operational flags can be triggered by this demo.
-- Do not activate commercial checkout or loyalty. Never copy simulated fiscal settings into real business configuration.
+- Dedicated Neon branch `order-rewards-demo` (`br-jolly-brook-bc5qqlc7`), created from production. Separate `demo_orders` table with a `client_hash` column and rate index.
+- `DEMO_DATABASE_URL` is configured as a sensitive Vercel environment variable for Preview and Production. Never use the live `DATABASE_URL` for the demo endpoint.
+- No migrations to the live production branch. The demo table must exist in the dedicated branch; if recreated, use the DDL in this document's companion setup or re-provision explicitly.
+- `DEMO_RATE_SALT` optional; set to a random secret for stronger IP pseudonymization.
+
+## Verification before merging
+
+Run `npm run check`, `npm test`, `npm run build`, plus a browser test: FR and EN, 62 products, multiple cart lines, subtotal/tax/points, create order, share link on a second device, status progression, reload and expiration. Confirm 429 rate limiting, invalid token 404, no live orders or loyalty writes. Check logo fidelity. Do not claim these tests passed until CI/browser evidence is available.
+
+## Known limitations
+
+The demo offers sample toppings across the catalog; modifier eligibility and surcharge approval are not taken from the official modifier assignment tables. The public staff simulation is token-based, not the operational STAFF panel. The demonstration does not model refunds, discount redemption, real pickup capacity, tax registration, or checkout payment.
