@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { hasPublicImage } from "../../../src/storefront-art";
 import Link from "next/link";
+import { StorefrontIcon } from "../../../src/storefront-art";
 import { catalogCategories, catalogProducts } from "../../../src/catalog";
 import type { Lang } from "../../../src/domain";
 
@@ -25,10 +26,11 @@ export async function CatalogList({ lang, category, search = "", ids, previewPri
     {products.map(product => {
       const photo = product.image;
       return <li key={product.id} id={product.id}>
-      {photo && hasPublicImage(photo) && <Image className="catalog-banner" src={photo} alt="" width={1200} height={1140}/>}
+      <Link className={"catalog-visual catalog-visual--" + product.category} href={`/${lang}/catalog/products/${product.id}`} aria-label={product[lang]}>{photo && hasPublicImage(photo) ? <Image className="catalog-banner" src={photo} alt="" width={1200} height={1140} sizes="(max-width: 640px) 45vw, (max-width: 1000px) 30vw, 260px"/> : <span className="catalog-fallback"><StorefrontIcon name={product.category === "matcha" ? "matcha" : product.category === "smoothies" ? "smoothie" : product.category === "lemonade" ? "lemonade" : product.category === "fruit-tea" ? "fruit" : "milk"}/></span>}</Link>
       <Link href={`/${lang}/catalog/products/${product.id}`}><strong>{product[lang]}</strong></Link>
       <small>{categories.find(item => item.id === product.category)?.[lang]}</small>
-      {previewPrices?.[product.id] && <span className="catalog-preview-price">{(previewPrices[product.id].cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" })}{!previewPrices[product.id].approved && <small>{lang === "fr" ? " · prix indicatif" : " · sample price"}</small>}</span>}
+      {previewPrices?.[product.id] && <span className="catalog-preview-price">{(previewPrices[product.id].cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" })}</span>}
+      <Link className="catalog-add" href={`/${lang}/${lang === "fr" ? "demo-commande" : "demo-order"}?product=${encodeURIComponent(product.id)}`}>{lang === "fr" ? "Ajouter au panier +" : "Add to cart +"}</Link>
       {ids && <Link href={`/${lang}/catalog?category=${product.category}#${product.id}`}>
         {lang === "fr" ? "Voir au menu" : "View on the menu"}
       </Link>}
