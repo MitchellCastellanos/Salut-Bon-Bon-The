@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { catalogCategories, catalogCollections, catalogProducts, visibleCampaigns } from "../../src/catalog";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
+import { loyaltyProgram } from "../../src/loyalty";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, money, products } from "../../src/domain";
@@ -22,14 +23,27 @@ const campaigns = [
 
 const featured = ["classic", "matcha", "taro", "mango", "strawberry"].flatMap(id => products.filter(product => product.id === id));
 
+const categoryIcon: Record<string, "milk" | "fruit" | "matcha" | "smoothie" | "lemonade" | "pearls" | "jelly"> = {
+  "milk-tea": "milk", "fruit-tea": "fruit", matcha: "matcha", smoothies: "smoothie", lemonade: "lemonade",
+  "fresh-mango-series": "pearls", "creme-brulee": "jelly",
+};
+const galleryAlt: Record<string, [string, string]> = {
+  matcha: ["Matcha au lait glacé sur une table ensoleillée", "Iced matcha milk tea on a sunlit table"],
+  mango: ["Thé à la mangue et fruit de la passion avec cubes de mangue", "Mango passion fruit tea with mango cubes"],
+  strawberry: ["Thé à la fraise avec fraises fraîches", "Strawberry tea with fresh strawberries"],
+  classic: ["Thé au lait à la cassonade avec perles", "Brown sugar milk tea with pearls"],
+  taro: ["Thé au lait au taro lavande", "Lavender taro milk tea"],
+};
 export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
   const fr = lang === "fr";
   const menu = `/${lang}/menu`;
   const official = usesOfficialCatalog();
+  const rewardsActive = official ? await loyaltyProgram().then(p => p.active, () => undefined) : undefined;
   const promotions = await visibleCampaigns();
   const mangoHero = promotions.find(campaign => campaign.id === "fresh-mango-series");
+  const heroSlides = promotions.filter(campaign => campaign.id !== "explore-menu" && campaign.image && hasPublicImage(campaign.image));
   const officialTiles = [
     { icon: "milk", category: "milk-tea" }, { icon: "fruit", category: "fruit-tea" },
     { icon: "matcha", category: "matcha" }, { icon: "smoothie", category: "smoothies" },
@@ -39,7 +53,16 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const [categories, collections, highlights] = official ? await Promise.all([catalogCategories(), catalogCollections(), catalogProducts(true)]) : [[], [], []];
   const instagram = instagramUrl();
   return <>
-    {official ? mangoHero && <div className="campaign-slide mango" data-analytics-hero={mangoHero.id}>
+    {official ? heroSlides.length > 1 ? <HeroGallery lang={lang} kind="promotion" slides={heroSlides.map((campaign, index) => ({
+      title: campaign[lang],
+      scene: <div className="campaign-slide mango" data-analytics-hero={campaign.id}>
+        <div className="campaign-media" aria-hidden="true"><StorefrontArt path={campaign.image ?? ""} sizes="100vw" priority={index === 0}><div className="campaign-cups"><Drink flavor="mango" illustrated/></div></StorefrontArt></div>
+        <div className="wrap campaign-inner"><div className="campaign-copy">
+          <h1>{campaign[lang]}</h1>
+          <p>{fr ? campaign.headline_fr : campaign.headline_en}</p>
+          <Link className="button" href={`/${lang}/catalog/${campaign.id}`} data-analytics-event="hero_click" data-analytics-campaign={campaign.id}>{campaign.id === "fresh-mango-series" ? fr ? "Découvrir la série" : "Explore the series" : fr ? "Voir la collection" : "View the collection"}</Link>
+        </div></div>
+      </div> }))}/> : mangoHero && <div className="campaign-slide mango" data-analytics-hero={mangoHero.id}>
       <div className="campaign-media" aria-hidden="true"><StorefrontArt path={mangoHero.image ?? ""} sizes="100vw" priority><div className="campaign-cups"><Drink flavor="mango" illustrated/></div></StorefrontArt></div>
       <div className="wrap campaign-inner"><div className="campaign-copy">
         <h1>{mangoHero[lang]}</h1>
@@ -80,9 +103,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
       {official ? <section className="home-section" aria-labelledby="favorites">
         <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2></div>
-        <ul className="catalog-grid">{highlights.map(product => <li key={product.id}><Link href={`/${lang}/catalog/products/${product.id}`}>
-          {product.image && hasPublicImage(product.image) && <Image className="catalog-banner" src={product.image} width={1200} height={1140} alt=""/>}
-          {product[lang]}</Link></li>)}</ul>
+        <ul className="catalog-grid">{(highlights.some(item => item.image && hasPublicImage(item.image)) ? highlights.filter(item => item.image && hasPublicImage(item.image)) : highlights).map(product => <li key={product.id}><Link href={`/${lang}/catalog/products/${product.id}`}>
+          {product.image && hasPublicImage(product.image) ? <Image className="catalog-banner" src={product.image} width={1200} height={1140} alt="" sizes="(max-width: 650px) 46vw, 240px"/> :
+            <span className="photo-fallback" aria-hidden="true"><StorefrontIcon name={categoryIcon[product.category] ?? "milk"}/></span>}
+          <strong>{product[lang]}</strong></Link></li>)}</ul>
       </section> : <section className="home-section" aria-labelledby="favorites">
         <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2><span className="demo-label">{fr ? "Menu de démonstration" : "Demo menu"}</span></div>
         <div className="favorites-grid">{featured.map(product => <Link className="favorite-card" key={product.id} href={`${menu}#${product.id}`}>
@@ -92,9 +116,13 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
       {promotions.length > 0 && <section className="home-section" id="promotions">
         <h2>{fr ? "Collections à découvrir" : "Explore the collections"}</h2>
-        <ul className="catalog-grid">{promotions.map(collection => <li key={collection.id}>
-          <Link href={`/${lang}/catalog/${collection.id}`} data-analytics-event="campaign_click" data-analytics-campaign={collection.id}><strong>{collection[lang]}</strong></Link>
-          <p>{fr ? collection.headline_fr : collection.headline_en}</p>
+        <ul className="campaign-cards">{promotions.map(collection => <li key={collection.id}>
+          <Link href={`/${lang}/catalog/${collection.id}`} data-analytics-event="campaign_click" data-analytics-campaign={collection.id}>
+            {collection.image && hasPublicImage(collection.image) && <Image className="campaign-card-image" src={collection.image} width={2048} height={768} alt="" sizes="(max-width: 700px) 92vw, 380px"/>}
+            <strong>{collection[lang]}</strong>
+            <span>{fr ? collection.headline_fr : collection.headline_en}</span>
+            <em>{fr ? "Découvrir" : "Discover"} <span aria-hidden="true">→</span></em>
+          </Link>
         </li>)}</ul>
       </section>}
       <div className="home-banners">
@@ -107,18 +135,18 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <section className="promo-banner rewards-banner" id="rewards">
           <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>
             <p>{fr ? "Cumulez des points à chaque achat admissible et échangez-les contre des récompenses." : "Earn points on eligible purchases and redeem them for rewards."}</p>
-            <a className="button purple" href="#account">{fr ? "Bientôt disponible" : "Coming soon"} <span aria-hidden="true">→</span></a>
-            <div id="account" tabIndex={-1} className="account-status">{fr ? "Les comptes clients et les récompenses seront disponibles prochainement." : "Customer accounts and rewards are coming soon."}</div>
+            <Link className="button purple" href={`/${lang}/account/rewards`}>{fr ? "Voir ma carte Récompenses" : "View my rewards card"} <span aria-hidden="true">→</span></Link>
+            <p className="account-status">{rewardsActive === undefined ? (fr ? "Créez un compte pour suivre vos commandes et adhérer au programme." : "Create an account to follow your orders and join the program.") : rewardsActive ? (fr ? "Programme actif : cumulez des points à chaque achat admissible." : "Program active: earn points on every eligible purchase.") : (fr ? "Le programme n’est pas actif pour le moment : aucun point n’est cumulé." : "The program is not active right now: no points are being earned.")}</p>
           </div>
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/rewards.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="rewards-art"><StorefrontIcon name="gift"/><span>★ ★ ★</span></span></StorefrontArt></div>
         </section>
       </div>
       <section className="home-section social" aria-labelledby="social">
-        <div className="section-head"><h2 id="social"><StorefrontIcon name="instagram"/>{instagram ? fr ? "Suivez-nous sur Instagram" : "Follow us on Instagram" : fr ? "Galerie Instagram" : "Instagram gallery"}</h2>
-          {instagram ? <a href={instagram}>Instagram ↗</a> : <span className="demo-label">{fr ? "Aperçu de démonstration" : "Demo preview"}</span>}</div>
+        <div className="section-head"><h2 id="social"><StorefrontIcon name="instagram"/>{instagram ? fr ? "Suivez-nous sur Instagram" : "Follow us on Instagram" : official ? fr ? "En images" : "In pictures" : fr ? "Galerie Instagram" : "Instagram gallery"}</h2>
+          {instagram ? <a href={instagram}>Instagram ↗</a> : !official && <span className="demo-label">{fr ? "Aperçu de démonstration" : "Demo preview"}</span>}</div>
         <ul className="social-gallery" tabIndex={0} aria-label={fr ? "Galerie de boissons défilante" : "Scrollable drink gallery"}>
           {["matcha", "mango", "strawberry", "classic", "taro"].map(flavor => <li key={flavor}>
-            <StorefrontArt path={`/gallery/${flavor}.webp`} sizes="(max-width: 650px) 43vw, 220px"><Drink flavor={flavor}/></StorefrontArt>
+            <StorefrontArt path={`/gallery/${flavor}.webp`} sizes="(max-width: 650px) 43vw, 220px" alt={galleryAlt[flavor][fr ? 0 : 1]}><Drink flavor={flavor}/></StorefrontArt>
           </li>)}
         </ul>
       </section>

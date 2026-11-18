@@ -1,9 +1,13 @@
+import { officialLogo } from "../../../src/brand-server";
+import { cardPaymentsEnabled } from "../../../src/providers/stripe";
 import { pickupConfiguration } from "../../../src/store-settings";
 import { Menu } from "../menu/menu";
 import { officialPrices } from "../../../src/catalog-pricing";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { catalogCategories, catalogCollections } from "../../../src/catalog";
+import Image from "next/image";
+import { catalogCategories, catalogCollections, catalogProducts } from "../../../src/catalog";
+import { hasPublicImage } from "../../../src/storefront-art";
 import { language } from "../../../src/domain";
 import { CatalogList } from "./catalog-list";
 
@@ -23,11 +27,11 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
       prices: Object.fromEntries(variants.map(row => [row.size, row.cents])),
     };
   });
-  const [categories, collections] = await Promise.all([catalogCategories(), catalogCollections()]);
+  const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
   const fr = lang === "fr";
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
-    {!orderable.length && <p>{fr ? "Aperçu du catalogue. Commandes en ligne à venir." : "Catalog preview. Online ordering is coming."}</p>}
+    {!orderable.length && <p role="status">{fr ? "La commande en ligne est indisponible pour le moment : les prix ou les heures de cueillette ne sont pas encore publiés par l’équipe. Vous pouvez parcourir tout le menu ci-dessous." : "Online ordering is unavailable right now: prices or pickup hours have not been published by the team yet. You can browse the full menu below."}</p>}
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
       {collections.map(item => <Link key={item.id} href={`/${lang}/catalog/${item.id}`}>{item[lang]}</Link>)}
     </nav>
@@ -42,7 +46,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
     <CatalogList lang={lang} category={selected} search={search}/>
     {orderable.length > 0 && <section aria-labelledby="orderable">
       <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} photos={{}} initialCategory="all" officialProducts={orderable} taxRates={config?.policy?.taxRates ?? []}/>
+      <Menu lang={lang} demo={false} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" officialProducts={orderable} taxRates={config?.policy?.taxRates ?? []} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
     </section>}
   </section>;
 }

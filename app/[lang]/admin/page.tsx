@@ -1,11 +1,10 @@
-import { pickupConfiguration } from "../../../src/store-settings";
 import { analyticsEnabled } from "../../../src/analytics";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "../../../src/db";
 import { language, modifiers } from "../../../src/domain";
 import { staffRole } from "../../../src/staff";
-import { saveAvailability, saveBulkPricing, saveCampaign, savePickupPolicy, savePricing } from "./actions";
+import { saveAvailability, saveBulkPricing, saveCampaign, savePricing } from "./actions";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -39,7 +38,6 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
     LEFT JOIN LATERAL (SELECT path FROM marketing_campaign_assets WHERE campaign_id = c.id ORDER BY path LIMIT 1) a ON true
     ORDER BY c.homepage_position, c.id
   `);
-  const pickup = await pickupConfiguration();
   const iso = (value: Date | string | null) => value ? new Date(value).toISOString() : "";
   return <section className="wrap catalog-page">
     <Link href={`/${lang}/staff`}>{fr ? "Commandes" : "Orders"}</Link>
@@ -47,18 +45,12 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
     {analyticsEnabled() && <p><Link href={`/${lang}/admin/analytics`}>{fr ? "Mesure d’audience" : "Audience analytics"}</Link></p>}
     <h1>{fr ? "Prix et disponibilité" : "Pricing and availability"}</h1>
     <p>{fr ? "Saisissez les prix en cents canadiens." : "Enter prices in Canadian cents."}</p>
-    <details className="panel">
-      <summary>{fr ? "Paramètres de cueillette et de taxes" : "Pickup and tax settings"}</summary>
-      <form action={savePickupPolicy} className="checkout">
-        <label>{fr ? "Paramètres approuvés (JSON)" : "Approved settings (JSON)"}
-          <textarea name="policy" rows={8} required maxLength={4000} defaultValue={pickup.policy ? JSON.stringify(pickup.policy, null, 2) : undefined}
-            placeholder='{"leadMinutes":null,"slotCapacity":null,"hours":{"Mon":[["HH:MM","HH:MM"]]},"taxRates":[]}'/>
-        </label>
-        <p>{fr ? "Heures de Montréal. Les taux sont des millièmes de pour cent." : "Montréal local time. Tax rates are in thousandths of one percent."}</p>
-        <label><input type="checkbox" name="enabled" defaultChecked={pickup.enabled}/> {fr ? "Activer après approbation de mise en service" : "Enable after launch approval"}</label>
-        <button className="outline">{fr ? "Enregistrer les paramètres" : "Save settings"}</button>
-      </form>
-    </details>
+    <nav className="panel" aria-label={fr ? "Outils d’administration" : "Admin tools"}>
+      <Link href={`/${lang}/admin/prices`}>{fr ? "Feuille de prix (tous les produits)" : "Price sheet (all products)"}</Link>{" · "}
+      <Link href={`/${lang}/admin/hours`}>{fr ? "Heures, cueillette et fermetures" : "Hours, pickup and closures"}</Link>{" · "}
+      <Link href={`/${lang}/admin/rewards`}>{fr ? "Récompenses Salut" : "Salut Rewards"}</Link>{" · "}
+      <Link href={`/${lang}/staff/rewards`}>{fr ? "Scanner une carte" : "Scan a card"}</Link>
+    </nav>
     <details className="panel">
       <summary>{fr ? "Importer des prix en lot" : "Import prices in bulk"}</summary>
       <form className="checkout" action={saveBulkPricing}>

@@ -21,5 +21,5 @@ export async function commercialPickupSlots() {
     GROUP BY pickup_at HAVING count(*) >= $2
   `, [slots, policy.slotCapacity]);
   const full = new Set(rows.map(row => new Date(row.pickup_at).toISOString()));
-  return slots.filter(slot => !full.has(slot)).slice(0, 12);
+  return slots.filter(slot => !full.has(slot)).slice(0, 96);
 }

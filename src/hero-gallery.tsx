@@ -2,7 +2,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { Lang } from "./domain";
 
-export function HeroGallery({ lang, slides }: { lang: Lang; slides: { title: string; scene: ReactNode }[] }) {
+export function HeroGallery({ lang, slides, kind = "drink" }: { lang: Lang; slides: { title: string; scene: ReactNode }[]; kind?: "drink" | "promotion" }) {
   const [active, setActive] = useState(0);
   const start = useRef<number | null>(null);
   const fr = lang === "fr";
@@ -19,8 +19,8 @@ export function HeroGallery({ lang, slides }: { lang: Lang; slides: { title: str
       }}>
       {slides[active].scene}
     </div>
-    <button className="campaign-arrow prev" type="button" onClick={() => move(-1)} aria-label={fr ? "Boisson précédente" : "Previous drink"}>‹</button>
-    <button className="campaign-arrow next" type="button" onClick={() => move(1)} aria-label={fr ? "Boisson suivante" : "Next drink"}>›</button>
+    <button className="campaign-arrow prev" type="button" onClick={() => move(-1)} aria-label={kind === "promotion" ? fr ? "Promotion précédente" : "Previous promotion" : fr ? "Boisson précédente" : "Previous drink"}>‹</button>
+    <button className="campaign-arrow next" type="button" onClick={() => move(1)} aria-label={kind === "promotion" ? fr ? "Promotion suivante" : "Next promotion" : fr ? "Boisson suivante" : "Next drink"}>›</button>
     <div className="campaign-dots">
       {slides.map((slide, index) => <button type="button" key={slide.title} aria-label={slide.title} aria-pressed={index === active} onClick={() => setActive(index)}/>)}
     </div>

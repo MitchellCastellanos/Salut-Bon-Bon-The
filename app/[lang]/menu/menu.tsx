@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { cartKey, cartChanged, officialCartKey } from "../../../src/cart";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,7 @@ const errors: Record<string, [string, string]> = {
   RATE: ["Trop de commandes à la fois. Réessaie dans une minute.", "Too many checkout attempts. Try again in a minute."],
   SLOT: ["Choisis une nouvelle heure de cueillette.", "Choose a new pickup time."],
   MENU: ["Vérifie les options de ton panier.", "Check your cart options."],
+  PAYMENT: ["Le paiement en ligne est indisponible. Choisis le paiement à la cueillette.", "Online payment is unavailable. Choose pay at pickup."],
   CONFLICT: ["Cette commande existe déjà avec d’autres détails.", "This order already exists with different details."],
 };
 type MenuProduct = {
@@ -31,9 +33,11 @@ const demoProducts: MenuProduct[] = products.map(product => ({
   prices: { regular: product.price, large: product.price + 100 },
 }));
 
-export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [] }: {
+export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo }: {
+  logo?: string;
   lang: Lang;
   demo: boolean;
+  cardPayments?: boolean;
   photos: Record<string, ReactNode>;
   initialCategory: keyof typeof categories | "all";
   officialProducts?: MenuProduct[];
@@ -113,7 +117,8 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
       if (result.token) {
         save([]);
         try { sessionStorage.removeItem(checkoutKey); } catch { /* Storage can be disabled. */ }
-        router.push(`/${lang}/track/${result.token}`);
+        if (result.redirect) window.location.assign(result.redirect);
+        else router.push(`/${lang}/track/${result.token}`);
         return;
       }
       const localized = errors[result.error ?? "FAILED"];
@@ -163,9 +168,13 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
       </form>}
       <p role="status">{message}</p>
     </div>
-    <aside className="panel cart" id="cart"><h2>{fr ? "Ton panier" : "Your cart"}</h2>
+    <aside className="panel cart" id="cart"><p className="checkout-brand" aria-hidden="true">{logo ? <Image src={logo} alt="" width={90} height={42} unoptimized/> : "Salut Bon Bon Thé"}</p><h2>{fr ? "Ton panier" : "Your cart"}</h2>
       {!priced.length ? <p>{fr ? "Ton panier est vide." : "Your cart is empty."}</p> : <>
-        <ul className="cart-lines">{priced.map(item => <li key={item.index}><div><strong>{item.quantity} × {item.name[lang]}</strong><small>{modifiers[item.size][lang]} · {item.chosen.length ? item.chosen.map(option => option[lang]).join(", ") : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</small></div><div>{money(item.subtotal, lang)} <button type="button" className="remove" aria-label={fr ? `Retirer ${item.name[lang]}` : `Remove ${item.name[lang]}`} onClick={() => save(cart.filter((_, i) => item.index !== i))}>×</button></div></li>)}</ul>
+        <ul className="cart-lines">{priced.map(item => <li key={item.index}><div><strong>{item.quantity} × {item.name[lang]}</strong><small>{modifiers[item.size][lang]} · {item.chosen.length ? item.chosen.map(option => option[lang]).join(", ") : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</small></div><div className="qty" role="group" aria-label={fr ? `Quantité de ${item.name[lang]}` : `Quantity of ${item.name[lang]}`}>
+            <button type="button" className="outline" aria-label={fr ? `Diminuer la quantité de ${item.name[lang]}` : `Decrease quantity of ${item.name[lang]}`} disabled={item.quantity <= 1} onClick={() => save(cart.map((line, i) => i === item.index ? { ...line, quantity: Math.max(1, line.quantity - 1) } : line))}>−</button>
+            <output aria-live="polite">{item.quantity}</output>
+            <button type="button" className="outline" aria-label={fr ? `Augmenter la quantité de ${item.name[lang]}` : `Increase quantity of ${item.name[lang]}`} disabled={item.quantity >= 10} onClick={() => save(cart.map((line, i) => i === item.index ? { ...line, quantity: Math.min(10, line.quantity + 1) } : line))}>+</button>
+          </div><div>{money(item.subtotal, lang)} <button type="button" className="remove" aria-label={fr ? `Retirer ${item.name[lang]}` : `Remove ${item.name[lang]}`} onClick={() => save(cart.filter((_, i) => item.index !== i))}>×</button></div></li>)}</ul>
         {official && <p>{fr ? "Taxes" : "Sales tax"} · {money(tax, lang)}</p>}
         <p className="total">{official ? "Total" : fr ? "Total démo" : "Demo total"} <strong>{money(total, lang)}</strong></p>
         <form className="checkout" onSubmit={checkout} onFocus={() => {
@@ -176,8 +185,10 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
         }}>
           <label>{fr ? "Nom pour la cueillette" : "Pickup name"}<input name="name" required maxLength={80} autoComplete="given-name"/></label>
           <label>{fr ? "Heure de cueillette" : "Pickup time"}<select required name="pickup" defaultValue=""><option value="" disabled>{fr ? "Choisir une heure" : "Choose a time"}</option>{times.map(time => <option key={time} value={time}>{pickupDate(time, lang)}</option>)}</select></label>
+          <label>{fr ? "Courriel (facultatif)" : "Email (optional)"}<input name="email" type="email" maxLength={254} autoComplete="email" aria-describedby="email-note"/></label>
+          <p id="email-note" className="fine-print">{fr ? "Utilisé seulement pour les messages sur cette commande. Aucune infolettre." : "Used only for messages about this order. No newsletter."}</p>
           <label>{fr ? "Note facultative" : "Optional note"}<input name="notes" maxLength={240}/></label>
-          <label>{fr ? "Paiement" : "Payment"}<select name="method"><option value="pickup">{fr ? "Payer à la cueillette" : "Pay at pickup"}</option>{demo && <option value="demo">{fr ? "Paiement simulé · aucun débit" : "Simulated payment · no charge"}</option>}</select></label>
+          <label>{fr ? "Paiement" : "Payment"}<select name="method"><option value="pickup">{fr ? "Payer à la cueillette" : "Pay at pickup"}</option>{cardPayments && <option value="card">{fr ? "Carte de crédit (en ligne)" : "Credit card (online)"}</option>}{demo && <option value="demo">{fr ? "Paiement simulé · aucun débit" : "Simulated payment · no charge"}</option>}</select></label>
           <button className="button" disabled={busy || !times.length}>{busy ? fr ? "Envoi…" : "Sending…" : fr ? "Passer la commande" : "Place order"}</button>
         </form>
       </>}

@@ -7,10 +7,10 @@ export function hasPublicImage(path: string) {
     Boolean(statSync(join(process.cwd(), "public", path), { throwIfNoEntry: false })?.isFile());
 }
 
-export function StorefrontArt({ path, sizes, children, priority = false }: {
-  path: string; sizes: string; children?: React.ReactNode; priority?: boolean;
+export function StorefrontArt({ path, sizes, children, priority = false, alt = "" }: {
+  path: string; sizes: string; children?: React.ReactNode; priority?: boolean; alt?: string;
 }) {
-  return hasPublicImage(path) ? <Image src={path} alt="" fill sizes={sizes} preload={priority}/> : children;
+  return hasPublicImage(path) ? <Image src={path} alt={alt} fill sizes={sizes} preload={priority}/> : children;
 }
 
 const cup = <><path d="M8 13h32l-4 29H12Z"/><path d="M6 13h36M26 13l5-8h7"/><circle cx="18" cy="32" r="2"/><circle cx="27" cy="36" r="2"/><circle cx="32" cy="28" r="2"/></>;

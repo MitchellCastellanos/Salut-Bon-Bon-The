@@ -7,15 +7,16 @@ import type { z } from "zod";
 import { database, postgresPool } from "./db";
 import { checkoutSchema, quote, transitions, type State } from "./domain";
 
-type Payment = "UNPAID" | "PAID_AT_PICKUP" | "DEMO_PAID";
+type Payment = "UNPAID" | "PAID_AT_PICKUP" | "DEMO_PAID" | "PAID_ONLINE" | "PAYMENT_FAILED" | "REFUND_REQUIRED";
 type Order = {
   number: string; customer: string; notes: string; pickup_at: Date; created_at: Date; status: State;
   payment: Payment; total: number; items: ReturnType<typeof quote> | Awaited<ReturnType<typeof quoteOfficial>>;
 };
 type Receipt = { number: string; tracking_token: string; request_fingerprint: string };
+const settled = "('PAID_AT_PICKUP', 'PAID_ONLINE', 'DEMO_PAID')";
 
-export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytics?: { campaign: string | null }) {
-  const { request, lang, name, notes, pickup, method, lines } = input;
+export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytics?: { campaign: string | null }, customerUserId?: string) {
+  const { request, lang, name, notes, pickup, method, lines, email } = input;
   const fingerprint = createHash("sha256").update(JSON.stringify(input)).digest("hex");
   const db = await database();
   const existing = async (connection = db) => (await connection.query<Receipt>(
@@ -53,27 +54,26 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
   const token = randomBytes(32).toString("hex");
   const conversion = official && analytics ? `, conversion AS (
     INSERT INTO marketing_events (event, campaign_id)
-    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $12) FROM inserted
+    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $15) FROM inserted
   )` : "";
   const insert = (connection = db) => connection.query<Receipt>(`
     WITH inserted AS (
-      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment${official ? ", tax_cents" : ""})
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10${official ? ", $11" : ""})
+      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment, tax_cents, customer_email, payment_method, customer_user_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       ON CONFLICT (request_id) DO NOTHING
       RETURNING number, tracking_token, request_fingerprint
     ), event AS (
       INSERT INTO order_events (order_number, status) SELECT number, 'RECEIVED' FROM inserted
     ) ${conversion} SELECT * FROM inserted`, [
       request, fingerprint, token, lang, name, notes, pickup, JSON.stringify(items),
-      total, method === "demo" ? "DEMO_PAID" : "UNPAID",
-      ...(official ? [tax] : []),
+      total, method === "demo" ? "DEMO_PAID" : "UNPAID", tax, email ?? null, method, customerUserId ?? null,
       ...(conversion ? [analytics?.campaign ?? null] : []),
     ]);
   if (policy) {
     const client = await postgresPool().connect();
     try {
       await client.query("BEGIN");
-      await client.query("SELECT pg_advisory_xact_lock(73621, $1::int)", [time / 900000]);
+      await client.query("SELECT pg_advisory_xact_lock(73621, $1::int)", [Math.floor(time / 60000)]);
       const alreadyPlaced = await existing(client);
       if (alreadyPlaced) {
         const receipt = match(alreadyPlaced);
@@ -107,18 +107,24 @@ export async function trackOrder(token: string) {
     "SELECT number, status, pickup_at FROM orders WHERE tracking_token = $1", [token]
   )).rows[0];
 }
-export async function listOrders() {
-  return (await (await database()).query<Order>(`
-    SELECT number, customer, notes, pickup_at, created_at, status, payment, total, items
-    FROM orders ORDER BY (status IN ('COMPLETED','CANCELLED')), created_at DESC LIMIT 100
-  `)).rows;
+export async function listOrders(filter: { q?: string; status?: string } = {}) {
+  return (await (await database()).query<Order & { tax_cents: number; payment_method: string }>(`
+    SELECT number, customer, notes, pickup_at, created_at, status, payment, total, items, tax_cents, payment_method
+    FROM orders
+    WHERE ($2 = '' OR status = $2)
+      AND ($1 = '' OR number::text = $1 OR position(lower($1) in lower(customer)) > 0)
+    ORDER BY (status IN ('COMPLETED','CANCELLED')), created_at DESC LIMIT 100
+  `, [filter.q ?? "", filter.status ?? ""])).rows;
 }
 export async function updateOrder(number: string, from: State, to: State) {
   if (!transitions[from].includes(to)) return false;
   const result = await (await database()).query(`
     WITH changed AS (
-      UPDATE orders SET status = $3
-      WHERE number = $1 AND status = $2 AND ($3 <> 'COMPLETED' OR payment <> 'UNPAID')
+      UPDATE orders SET status = $3,
+        payment = CASE WHEN $3 = 'CANCELLED' AND payment = 'PAID_ONLINE' THEN 'REFUND_REQUIRED' ELSE payment END
+      WHERE number = $1 AND status = $2
+        AND ($3 <> 'COMPLETED' OR payment IN ${settled})
+        AND ($3 <> 'CONFIRMED' OR payment_method <> 'card' OR payment = 'PAID_ONLINE')
       RETURNING number
     )
     INSERT INTO order_events (order_number, status) SELECT number, $3 FROM changed RETURNING id

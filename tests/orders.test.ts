@@ -1,14 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it, vi } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
-import { readFile } from "node:fs/promises";
 import { checkoutSchema, pickupSlots, quote, type Line } from "../src/domain";
 import { listOrders, placeOrder, recordPayment, trackOrder, updateOrder } from "../src/orders";
 
 const local = vi.hoisted(() => ({ current: undefined as PGlite | undefined }));
 vi.mock("../src/db", async () => {
   local.current = new PGlite();
-  await local.current.exec(await readFile("db/001-orders.sql", "utf8"));
+  await (await vi.importActual<typeof import("../src/db")>("../src/db")).applyLocalMigrations(local.current);
   return { database: async () => local.current };
 });
 afterAll(async () => local.current?.close());

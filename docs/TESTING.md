@@ -32,3 +32,24 @@ Use `node scripts/import-catalog.mjs --verify-local` for the disposable import c
 `npm audit --omit=dev` continues to report GHSA-fc5q-39xc-vjpf via Vitest and its dependency tree. npm offered a major downgrade with `--force`. Dependency versions were preserved. Review a supported dependency update before launch.
 
 The expanded suite includes Montréal pickup policy and tax tests plus synthetic Stripe webhook verification and a demo email guard. Run the catalog browser smoke with `CATALOG_SMOKE_ANALYTICS=1` against an app configured with `SALUT_ANALYTICS_ENABLED=1` to verify initial opt-out and campaign attribution to an accepted order. The staff smoke can verify ADMIN catalog edits and rejection after a role change. Provider network calls and hosted Neon remain unverified.
+
+## Running the full suite (2026-11-18)
+
+```bash
+npm run check                       # types + lint
+TEST_DATABASE_URL=postgresql://… npm test   # unit tests; the 7 real-PostgreSQL tests run when this is set
+npm run build
+```
+
+`TEST_DATABASE_URL` must point at a **disposable** PostgreSQL migrated with `node scripts/migrate.mjs` and imported with `node scripts/import-catalog.mjs` (CI provides one as a service container). Without it the concurrency suites (`tests/loyalty-concurrency.test.ts`, `tests/pickup-capacity.test.ts`) are skipped.
+
+Browser suites (need a built app and a Chromium path in `CHROMIUM_PATH`). `npm run test:storefront` (needs only a running official-catalog app and `SMOKE_BASE_URL`) audits images, campaign links, accessibility structure and placeholder copy on 14 pages at desktop and mobile widths.
+
+| Suite | Command | Needs |
+| --- | --- | --- |
+| Demo storefront | `npm run test:browser` | App without `DATABASE_URL` on port 3100. |
+| Catalog | `node tests/catalog-browser-smoke.mjs` | `CATALOG_SMOKE_DATABASE_URL`, `CATALOG_SMOKE_BASE_URL`. |
+| Staff authorization | `npm run test:staff` | `STAFF_SMOKE_DATABASE_URL`, `STAFF_SMOKE_BASE_URL`. |
+| Rewards, accounts, hours, menu | `npm run test:rewards` | `E2E_DATABASE_URL`, `E2E_MAIL_DIR`, optional `SMOKE_BASE_URL`; database with ADMIN `admin@example.invalid` / `AdminPassw0rd!x` and STAFF `staff@example.invalid` / `StaffPassw0rd!x` created with `npm run staff:create`; app started with `SALUT_EMAIL_CAPTURE_DIR` (non-deployed only, writes account emails to files instead of sending), `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` and `SITE_URL` on the same localhost origin. Reset the database between runs. |
+
+The rewards suite was also run with the app connected as the least-privilege `salut_app` role. Run tests only against disposable local or CI databases, never `production`.

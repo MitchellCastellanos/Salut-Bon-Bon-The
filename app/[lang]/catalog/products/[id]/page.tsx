@@ -22,6 +22,6 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/catalog
     {variants.length ? <>
       <ul>{variants.map(row => <li key={row.size}>{modifiers[row.size][lang]} · {money(row.cents, lang)}</li>)}</ul>
       <Link className="button" href={`/${lang}/catalog#order-${id}`}>{fr ? "Personnaliser pour la cueillette" : "Customize for pickup"}</Link>
-    </> : <p>{fr ? "Indisponible pour la commande en ligne." : "Unavailable for online ordering."}</p>}
+    </> : <p role="status">{fr ? "Indisponible pour la commande en ligne : le prix ou les heures de cueillette ne sont pas encore publiés." : "Unavailable for online ordering: the price or pickup hours have not been published yet."}</p>}
   </section>;
 }
