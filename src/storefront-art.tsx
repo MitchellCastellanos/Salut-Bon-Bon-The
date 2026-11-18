@@ -1,9 +1,10 @@
-import { existsSync } from "node:fs";
+import { statSync } from "node:fs";
 import { join } from "node:path";
 import Image from "next/image";
 
 export function hasPublicImage(path: string) {
-  return existsSync(join(process.cwd(), "public", path));
+  return /^\/[a-z0-9/_-]+\.(webp|svg)$/i.test(path) &&
+    Boolean(statSync(join(process.cwd(), "public", path), { throwIfNoEntry: false })?.isFile());
 }
 
 export function StorefrontArt({ path, sizes, children, priority = false }: {

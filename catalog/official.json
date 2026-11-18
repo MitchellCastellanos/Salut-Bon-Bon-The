@@ -1,0 +1,761 @@
+{
+  "categories": [
+    {
+      "id": "milk-tea",
+      "fr": "Bubble thé au lait",
+      "en": "Milk bubble tea"
+    },
+    {
+      "id": "fruit-tea",
+      "fr": "Thé aux fruits",
+      "en": "Fruit tea"
+    },
+    {
+      "id": "matcha",
+      "fr": "Matcha",
+      "en": "Matcha"
+    },
+    {
+      "id": "smoothies",
+      "fr": "Smoothies",
+      "en": "Smoothies"
+    },
+    {
+      "id": "lemonade",
+      "fr": "Limonade maison",
+      "en": "House lemonade"
+    },
+    {
+      "id": "fresh-mango-series",
+      "fr": "Série Mangue Fraîche",
+      "en": "Fresh Mango Series"
+    },
+    {
+      "id": "creme-brulee",
+      "fr": "Crème Brûlée",
+      "en": "Crème Brûlée"
+    }
+  ],
+  "products": [
+    {
+      "id": "201",
+      "code": "201",
+      "category": "milk-tea",
+      "fr": "Fraise",
+      "en": "Strawberry",
+      "source_fr": "Fraise",
+      "source_badge": null
+    },
+    {
+      "id": "202",
+      "code": "202",
+      "category": "milk-tea",
+      "fr": "Ananas",
+      "en": "Pineapple",
+      "source_fr": "Ananas",
+      "source_badge": null
+    },
+    {
+      "id": "203",
+      "code": "203",
+      "category": "milk-tea",
+      "fr": "Mangue",
+      "en": "Mango",
+      "source_fr": "Mangue",
+      "source_badge": null
+    },
+    {
+      "id": "204",
+      "code": "204",
+      "category": "milk-tea",
+      "fr": "Melon miel",
+      "en": "Honeydew",
+      "source_fr": "Melon miel",
+      "source_badge": null
+    },
+    {
+      "id": "205",
+      "code": "205",
+      "category": "milk-tea",
+      "fr": "Noix de coco",
+      "en": "Coconut",
+      "source_fr": "Noix de coco",
+      "source_badge": null
+    },
+    {
+      "id": "206",
+      "code": "206",
+      "category": "milk-tea",
+      "fr": "Fruits de la passion",
+      "en": "Passion Fruit",
+      "source_fr": "Fruits de la passion",
+      "source_badge": null
+    },
+    {
+      "id": "207",
+      "code": "207",
+      "category": "milk-tea",
+      "fr": "Taro",
+      "en": "Taro",
+      "source_fr": "Taro",
+      "source_badge": null
+    },
+    {
+      "id": "208",
+      "code": "208",
+      "category": "milk-tea",
+      "fr": "Kiwi ananas",
+      "en": "Kiwi Pineapple",
+      "source_fr": "Kiwi ananas",
+      "source_badge": null
+    },
+    {
+      "id": "209",
+      "code": "209",
+      "category": "milk-tea",
+      "fr": "Bleuets",
+      "en": "Blueberry",
+      "source_fr": "Bleuets",
+      "source_badge": null
+    },
+    {
+      "id": "210",
+      "code": "210",
+      "category": "milk-tea",
+      "fr": "Pêche",
+      "en": "Peach",
+      "source_fr": "Pêche",
+      "source_badge": null
+    },
+    {
+      "id": "211",
+      "code": "211",
+      "category": "milk-tea",
+      "fr": "Banane",
+      "en": "Banana",
+      "source_fr": "Banane",
+      "source_badge": null
+    },
+    {
+      "id": "212",
+      "code": "212",
+      "category": "milk-tea",
+      "fr": "Hokkaido",
+      "en": "Hokkaido",
+      "source_fr": "Hokkaido",
+      "source_badge": null
+    },
+    {
+      "id": "213",
+      "code": "213",
+      "category": "milk-tea",
+      "fr": "Litchi",
+      "en": "Lychee",
+      "source_fr": "Litchi",
+      "source_badge": null
+    },
+    {
+      "id": "214",
+      "code": "214",
+      "category": "milk-tea",
+      "fr": "Thai",
+      "en": "Thai",
+      "source_fr": "Thai",
+      "source_badge": null
+    },
+    {
+      "id": "215",
+      "code": "215",
+      "category": "milk-tea",
+      "fr": "Melon d'eau",
+      "en": "Watermelon",
+      "source_fr": "Melon d'eau",
+      "source_badge": null
+    },
+    {
+      "id": "216",
+      "code": "216",
+      "category": "milk-tea",
+      "fr": "Fruit du dragon",
+      "en": "Dragon Fruit",
+      "source_fr": "Fruit du dragon",
+      "source_badge": null
+    },
+    {
+      "id": "217",
+      "code": "217",
+      "category": "milk-tea",
+      "fr": "Framboise",
+      "en": "Raspberry",
+      "source_fr": "Framboise",
+      "source_badge": null
+    },
+    {
+      "id": "218",
+      "code": "218",
+      "category": "milk-tea",
+      "fr": "Cantaloup",
+      "en": "Cantaloupe",
+      "source_fr": "Cantaloup",
+      "source_badge": null
+    },
+    {
+      "id": "219",
+      "code": "219",
+      "category": "milk-tea",
+      "fr": "Chocolat",
+      "en": "Chocolate",
+      "source_fr": "Chocolat",
+      "source_badge": null
+    },
+    {
+      "id": "220",
+      "code": "220",
+      "category": "milk-tea",
+      "fr": "Piña colada",
+      "en": "Piña Colada",
+      "source_fr": "Pina colada",
+      "source_badge": null
+    },
+    {
+      "id": "301",
+      "code": "301",
+      "category": "fruit-tea",
+      "fr": "Ananas",
+      "en": "Pineapple",
+      "source_fr": "Ananas",
+      "source_badge": null
+    },
+    {
+      "id": "302",
+      "code": "302",
+      "category": "fruit-tea",
+      "fr": "Mangue",
+      "en": "Mango",
+      "source_fr": "Mangue",
+      "source_badge": null
+    },
+    {
+      "id": "303",
+      "code": "303",
+      "category": "fruit-tea",
+      "fr": "Fruits de la passion",
+      "en": "Passion Fruit",
+      "source_fr": "Fruits de la passion",
+      "source_badge": null
+    },
+    {
+      "id": "304",
+      "code": "304",
+      "category": "fruit-tea",
+      "fr": "Fruit du dragon",
+      "en": "Dragon Fruit",
+      "source_fr": "Fruit du dragon",
+      "source_badge": null
+    },
+    {
+      "id": "305",
+      "code": "305",
+      "category": "fruit-tea",
+      "fr": "Fraise",
+      "en": "Strawberry",
+      "source_fr": "Fraise",
+      "source_badge": null
+    },
+    {
+      "id": "306",
+      "code": "306",
+      "category": "fruit-tea",
+      "fr": "Pêche",
+      "en": "Peach",
+      "source_fr": "Pêche",
+      "source_badge": null
+    },
+    {
+      "id": "307",
+      "code": "307",
+      "category": "fruit-tea",
+      "fr": "Bleuet",
+      "en": "Blueberry",
+      "source_fr": "Bleuet",
+      "source_badge": null
+    },
+    {
+      "id": "308",
+      "code": "308",
+      "category": "fruit-tea",
+      "fr": "Litchi",
+      "en": "Lychee",
+      "source_fr": "Litchi",
+      "source_badge": null
+    },
+    {
+      "id": "309",
+      "code": "309",
+      "category": "fruit-tea",
+      "fr": "Grenade",
+      "en": "Pomegranate",
+      "source_fr": "Pomegranate",
+      "source_badge": null
+    },
+    {
+      "id": "310",
+      "code": "310",
+      "category": "fruit-tea",
+      "fr": "Melon d'eau",
+      "en": "Watermelon",
+      "source_fr": "Melon d'eau",
+      "source_badge": null
+    },
+    {
+      "id": "311",
+      "code": "311",
+      "category": "fruit-tea",
+      "fr": "Pamplemousse rouge",
+      "en": "Ruby Red Grapefruit",
+      "source_fr": "Pamplemousse rouge",
+      "source_badge": null
+    },
+    {
+      "id": "312",
+      "code": "312",
+      "category": "fruit-tea",
+      "fr": "Pomme verte",
+      "en": "Green Apple",
+      "source_fr": "Pomme vert",
+      "source_badge": null
+    },
+    {
+      "id": "313",
+      "code": "313",
+      "category": "fruit-tea",
+      "fr": "Raisin vert",
+      "en": "Green Grape",
+      "source_fr": "Raisins vert",
+      "source_badge": "Nouveau"
+    },
+    {
+      "id": "401",
+      "code": "401",
+      "category": "matcha",
+      "fr": "Matcha au lait",
+      "en": "Matcha Milk Tea",
+      "source_fr": "Matcha au lait",
+      "source_badge": null
+    },
+    {
+      "id": "402",
+      "code": "402",
+      "category": "matcha",
+      "fr": "Matcha à l'avoine",
+      "en": "Oat Milk Matcha",
+      "source_fr": "Matcha à l'avoine",
+      "source_badge": null
+    },
+    {
+      "id": "403",
+      "code": "403",
+      "category": "matcha",
+      "fr": "Matcha frappé",
+      "en": "Matcha Frappé",
+      "source_fr": "Matcha frappé",
+      "source_badge": null
+    },
+    {
+      "id": "601",
+      "code": "601",
+      "category": "smoothies",
+      "fr": "Fraise",
+      "en": "Strawberry",
+      "source_fr": "Fraise",
+      "source_badge": null
+    },
+    {
+      "id": "602",
+      "code": "602",
+      "category": "smoothies",
+      "fr": "Fraise banane",
+      "en": "Strawberry Banana",
+      "source_fr": "Fraise banane",
+      "source_badge": null
+    },
+    {
+      "id": "603",
+      "code": "603",
+      "category": "smoothies",
+      "fr": "Mangue",
+      "en": "Mango",
+      "source_fr": "Mangue",
+      "source_badge": null
+    },
+    {
+      "id": "604",
+      "code": "604",
+      "category": "smoothies",
+      "fr": "Bleuet",
+      "en": "Blueberry",
+      "source_fr": "Bleuet",
+      "source_badge": null
+    },
+    {
+      "id": "605",
+      "code": "605",
+      "category": "smoothies",
+      "fr": "Pêche",
+      "en": "Peach",
+      "source_fr": "Pêche",
+      "source_badge": null
+    },
+    {
+      "id": "606",
+      "code": "606",
+      "category": "smoothies",
+      "fr": "Mangue ananas",
+      "en": "Mango Pineapple",
+      "source_fr": "Mangue ananas",
+      "source_badge": null
+    },
+    {
+      "id": "607",
+      "code": "607",
+      "category": "smoothies",
+      "fr": "Fraise mangue",
+      "en": "Strawberry Mango",
+      "source_fr": "Fraise mangue",
+      "source_badge": null
+    },
+    {
+      "id": "608",
+      "code": "608",
+      "category": "smoothies",
+      "fr": "Mixberries",
+      "en": "Mixed Berries",
+      "source_fr": "Mixberries",
+      "source_badge": null
+    },
+    {
+      "id": "609",
+      "code": "609",
+      "category": "smoothies",
+      "fr": "Tropicale",
+      "en": "Tropical",
+      "source_fr": "Tropicale",
+      "source_badge": null
+    },
+    {
+      "id": "610",
+      "code": "610",
+      "category": "smoothies",
+      "fr": "Avocat",
+      "en": "Avocado",
+      "source_fr": "Avocat",
+      "source_badge": null
+    },
+    {
+      "id": "701",
+      "code": "701",
+      "category": "lemonade",
+      "fr": "Pêche",
+      "en": "Peach Lemonade",
+      "source_fr": "Pêche",
+      "source_badge": null
+    },
+    {
+      "id": "702",
+      "code": "702",
+      "category": "lemonade",
+      "fr": "Melon d'eau",
+      "en": "Watermelon Lemonade",
+      "source_fr": "Melon d'eau",
+      "source_badge": null
+    },
+    {
+      "id": "704",
+      "code": "704",
+      "category": "lemonade",
+      "fr": "Fraise",
+      "en": "Strawberry Lemonade",
+      "source_fr": "Fraise",
+      "source_badge": null
+    },
+    {
+      "id": "705",
+      "code": "705",
+      "category": "lemonade",
+      "fr": "Bleuets",
+      "en": "Blueberry Lemonade",
+      "source_fr": "Bleuets",
+      "source_badge": null
+    },
+    {
+      "id": "706",
+      "code": "706",
+      "category": "lemonade",
+      "fr": "Framboise",
+      "en": "Raspberry Lemonade",
+      "source_fr": "Framboise",
+      "source_badge": null
+    },
+    {
+      "id": "707",
+      "code": "707",
+      "category": "lemonade",
+      "fr": "Framboise bleue",
+      "en": "Blue Raspberry Lemonade",
+      "source_fr": "Framboise bleu",
+      "source_badge": null
+    },
+    {
+      "id": "MANGO-01",
+      "category": "fresh-mango-series",
+      "fr": "Mangue coco avec gelée de coco",
+      "en": "Mango Coconut with Coconut Jelly",
+      "source_fr": "Mangue coco avec gelée de coco",
+      "image": "/catalog/MANGO-01.webp"
+    },
+    {
+      "id": "MANGO-02",
+      "category": "fresh-mango-series",
+      "fr": "Slush de mangue fraîche avec gelée de coco",
+      "en": "Fresh Mango Slush with Coconut Jelly",
+      "source_fr": "Slush de mangue fraîche avec gelée de coco",
+      "image": "/catalog/MANGO-02.webp"
+    },
+    {
+      "id": "MANGO-03",
+      "category": "fresh-mango-series",
+      "fr": "Mangue et litchi avec gelée de litchi",
+      "en": "Mango Lychee with Lychee Jelly",
+      "source_fr": "Mangue et litchi avec gelée de litchi",
+      "image": "/catalog/MANGO-03.webp"
+    },
+    {
+      "id": "MANGO-04",
+      "category": "fresh-mango-series",
+      "fr": "Mangue au Yakult avec gelée de litchi",
+      "en": "Mango Yakult with Lychee Jelly",
+      "source_fr": "Mangue au Yakult avec gelée de litchi",
+      "image": "/catalog/MANGO-04.webp"
+    },
+    {
+      "id": "MANGO-05",
+      "category": "fresh-mango-series",
+      "fr": "Mangue, litchi et pamplemousse avec gelée de litchi",
+      "en": "Mango, Lychee & Grapefruit with Lychee Jelly",
+      "source_fr": "Mangue, litchi et pamplemousse avec gelée de litchi",
+      "image": "/catalog/MANGO-05.webp"
+    },
+    {
+      "id": "BRULEE-01",
+      "category": "creme-brulee",
+      "fr": "Matcha crème brûlée",
+      "en": "Matcha Crème Brûlée",
+      "source_fr": "Matcha Crème Brûlée",
+      "image": "/catalog/BRULEE-01.webp"
+    },
+    {
+      "id": "BRULEE-02",
+      "category": "creme-brulee",
+      "fr": "Taro crème brûlée",
+      "en": "Taro Crème Brûlée",
+      "source_fr": "Taro Crème Brûlée",
+      "image": "/catalog/BRULEE-02.webp"
+    },
+    {
+      "id": "BRULEE-03",
+      "category": "creme-brulee",
+      "fr": "Lait à la cassonade crème brûlée",
+      "en": "Brown Sugar Milk Crème Brûlée",
+      "source_fr": "Brown Sugar Milk Crème Brûlée",
+      "image": "/catalog/BRULEE-03.webp"
+    },
+    {
+      "id": "BRULEE-04",
+      "category": "creme-brulee",
+      "fr": "Thé au lait classique crème brûlée",
+      "en": "Classic Milk Tea Crème Brûlée",
+      "source_fr": "Classic Milk Tea Crème Brûlée",
+      "image": "/catalog/BRULEE-04.webp"
+    },
+    {
+      "id": "pineapple-lemonade",
+      "category": "lemonade",
+      "fr": "Limonade à l’ananas",
+      "en": "Pineapple Lemonade",
+      "source_fr": null
+    }
+  ],
+  "modifiers": [
+    {
+      "id": "tapioca-tapioca",
+      "group_id": "tapioca",
+      "fr": "Tapioca",
+      "en": "Tapioca"
+    },
+    {
+      "id": "popping-cherry",
+      "group_id": "popping",
+      "fr": "Cerise",
+      "en": "Cherry"
+    },
+    {
+      "id": "popping-strawberry",
+      "group_id": "popping",
+      "fr": "Fraise",
+      "en": "Strawberry"
+    },
+    {
+      "id": "popping-passion-fruit",
+      "group_id": "popping",
+      "fr": "Fruits de la passion",
+      "en": "Passion Fruit"
+    },
+    {
+      "id": "popping-lychee",
+      "group_id": "popping",
+      "fr": "Litchi",
+      "en": "Lychee"
+    },
+    {
+      "id": "popping-dragon-fruit",
+      "group_id": "popping",
+      "fr": "Fruit du dragon",
+      "en": "Dragon Fruit"
+    },
+    {
+      "id": "popping-mango",
+      "group_id": "popping",
+      "fr": "Mangue",
+      "en": "Mango"
+    },
+    {
+      "id": "popping-green-apple",
+      "group_id": "popping",
+      "fr": "Pomme verte",
+      "en": "Green Apple"
+    },
+    {
+      "id": "popping-peach",
+      "group_id": "popping",
+      "fr": "Pêche",
+      "en": "Peach"
+    },
+    {
+      "id": "brown-sugar-brown-sugar",
+      "group_id": "brown-sugar",
+      "fr": "Brown sugar boba",
+      "en": "Brown Sugar Boba"
+    },
+    {
+      "id": "popping-coconut",
+      "group_id": "popping",
+      "fr": "Noix de coco",
+      "en": "Coconut"
+    },
+    {
+      "id": "popping-kiwi",
+      "group_id": "popping",
+      "fr": "Kiwi",
+      "en": "Kiwi"
+    },
+    {
+      "id": "jelly-rainbow",
+      "group_id": "jelly",
+      "fr": "Rainbow",
+      "en": "Rainbow Jelly"
+    },
+    {
+      "id": "jelly-mango",
+      "group_id": "jelly",
+      "fr": "Mangue",
+      "en": "Mango Jelly"
+    },
+    {
+      "id": "jelly-lychee",
+      "group_id": "jelly",
+      "fr": "Litchi",
+      "en": "Lychee Jelly"
+    },
+    {
+      "id": "jelly-aloe",
+      "group_id": "jelly",
+      "fr": "Aloe vera",
+      "en": "Aloe Vera Jelly"
+    },
+    {
+      "id": "jelly-coconut",
+      "group_id": "jelly",
+      "fr": "Noix de coco",
+      "en": "Coconut Jelly"
+    },
+    {
+      "id": "jelly-green-apple",
+      "group_id": "jelly",
+      "fr": "Pomme verte",
+      "en": "Green Apple Jelly"
+    }
+  ],
+  "collections": [
+    {
+      "id": "fresh-mango-series",
+      "fr": "Série Mangue Fraîche",
+      "en": "Fresh Mango Series",
+      "products": [
+        "MANGO-01",
+        "MANGO-02",
+        "MANGO-03",
+        "MANGO-04",
+        "MANGO-05"
+      ],
+      "headline_fr": "La fraîcheur de la mangue, à chaque gorgée.",
+      "headline_en": "A fresh taste of mango in every sip.",
+      "image": "/drinks/hero.webp"
+    },
+    {
+      "id": "creme-brulee",
+      "fr": "Crème Brûlée",
+      "en": "Crème Brûlée",
+      "products": [
+        "BRULEE-01",
+        "BRULEE-02",
+        "BRULEE-03",
+        "BRULEE-04"
+      ],
+      "headline_fr": "Une touche de douceur, version crème brûlée.",
+      "headline_en": "A little indulgence, crème brûlée style.",
+      "image": "/promotions/creme-brulee.webp"
+    },
+    {
+      "id": "house-lemonade",
+      "fr": "Limonade maison",
+      "en": "House lemonade",
+      "products": [
+        "701",
+        "702",
+        "704",
+        "706",
+        "pineapple-lemonade",
+        "707"
+      ],
+      "headline_fr": "Une pause fruitée et rafraîchissante.",
+      "headline_en": "Your refreshing fruity break.",
+      "image": "/promotions/house-lemonade.webp"
+    },
+    {
+      "id": "explore-menu",
+      "fr": "Explorez le menu",
+      "en": "Explore Our Menu",
+      "products": [],
+      "headline_fr": "Trouvez votre prochaine boisson préférée.",
+      "headline_en": "Find your next favorite drink.",
+      "image": null
+    }
+  ],
+  "featured": [
+    "MANGO-01",
+    "BRULEE-01",
+    "401",
+    "701",
+    "207"
+  ]
+}

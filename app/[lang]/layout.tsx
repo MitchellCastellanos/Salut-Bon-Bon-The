@@ -1,3 +1,6 @@
+import { analyticsAllowed, analyticsEnabled } from "../../src/analytics";
+import { AnalyticsPreference } from "./analytics-client";
+import { usesOfficialCatalog } from "../../src/catalog-mode";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,6 +21,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
   if (!language(lang)) notFound();
   const fr = lang === "fr";
   const home = `/${lang}`;
+  const official = usesOfficialCatalog();
   const instagram = instagramUrl();
   return <>
     <a className="skip" href="#main">{fr ? "Aller au contenu" : "Skip to content"}</a>
@@ -26,13 +30,14 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
       <nav aria-label={fr ? "Navigation principale" : "Main navigation"}>
         <Link href={home}>{fr ? "Accueil" : "Home"}</Link>
         <Link href={`${home}/menu`}>Menu</Link>
+        <Link href={`${home}/catalog`}>{fr ? "Catalogue" : "Catalog"}</Link>
         <Link href={`${home}#promotions`}>Promotions</Link>
         <Link href={`${home}#rewards`}>{fr ? "Récompenses" : "Rewards"}</Link>
         <Link href="#find-us">{fr ? "Nous trouver" : "Find us"}</Link>
       </nav>
       <div className="header-actions">
         <Link className="icon-link" href={`${home}#account`} aria-label={fr ? "Compte client" : "Customer account"}><StorefrontIcon name="account"/></Link>
-        <Link className="icon-link" href={`${home}/menu#cart`} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount/></Link>
+        <Link className="icon-link" href={`${home}/${official ? "catalog" : "menu"}#cart`} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>
         <LanguageLink lang={lang}/>
         <Link className="button header-order" href={`${home}/menu`}><StorefrontIcon name="bag"/>{fr ? "Commander pour emporter" : "Order for pickup"}</Link>
       </div>
@@ -48,6 +53,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
       <div className="wrap footer-legal"><span>© {new Date().getFullYear()} Salut Bon Bon Thé</span>
         <Link href={`${home}/legal/privacy`}>{fr ? "Confidentialité" : "Privacy"}</Link>
         <Link href={`${home}/legal/terms`}>{fr ? "Conditions" : "Terms"}</Link>
+        {analyticsEnabled() && <AnalyticsPreference lang={lang} initial={await analyticsAllowed()}/>}
         <Link href={`${home}/staff`}>{fr ? "Espace équipe" : "Staff area"}</Link>
       </div>
     </footer>

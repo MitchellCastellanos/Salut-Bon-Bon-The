@@ -1,4 +1,5 @@
-import { notFound } from "next/navigation";
+import { usesOfficialCatalog } from "../../../src/catalog-mode";
+import { notFound, redirect } from "next/navigation";
 import { categories, language, products } from "../../../src/domain";
 import { Drink } from "../../../src/drink";
 import { Menu } from "./menu";
@@ -11,6 +12,10 @@ export default async function MenuPage({ params, searchParams }: PageProps<"/[la
   const { lang } = await params;
   if (!language(lang)) notFound();
   const { category } = await searchParams;
+  if (usesOfficialCatalog()) {
+    const mapped = category === "fruit" ? "fruit-tea" : category === "milk" ? "milk-tea" : category;
+    redirect(`/${lang}/catalog${typeof mapped === "string" ? `?category=${encodeURIComponent(mapped)}` : ""}`);
+  }
   const initialCategory = typeof category === "string" && Object.hasOwn(categories, category) ? category as keyof typeof categories : "all";
   return <div className="wrap section">
     <p className="eyebrow">{lang === "fr" ? "MENU DE DÉMONSTRATION" : "DEMO MENU"}</p><h1>Menu<span>.</span></h1>

@@ -1,20 +1,24 @@
+import { pickupConfiguration } from "./store-settings";
+import { eligiblePickup, salesTax } from "./pickup-policy";
+import { quoteOfficial } from "./catalog-pricing";
+import { usesOfficialCatalog } from "./catalog-mode";
 import { createHash, randomBytes } from "node:crypto";
 import type { z } from "zod";
-import { database } from "./db";
+import { database, postgresPool } from "./db";
 import { checkoutSchema, quote, transitions, type State } from "./domain";
 
 type Payment = "UNPAID" | "PAID_AT_PICKUP" | "DEMO_PAID";
 type Order = {
   number: string; customer: string; notes: string; pickup_at: Date; created_at: Date; status: State;
-  payment: Payment; total: number; items: ReturnType<typeof quote>;
+  payment: Payment; total: number; items: ReturnType<typeof quote> | Awaited<ReturnType<typeof quoteOfficial>>;
 };
 type Receipt = { number: string; tracking_token: string; request_fingerprint: string };
 
-export async function placeOrder(input: z.infer<typeof checkoutSchema>) {
+export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytics?: { campaign: string | null }) {
   const { request, lang, name, notes, pickup, method, lines } = input;
   const fingerprint = createHash("sha256").update(JSON.stringify(input)).digest("hex");
   const db = await database();
-  const existing = async () => (await db.query<Receipt>(
+  const existing = async (connection = db) => (await connection.query<Receipt>(
     "SELECT number, tracking_token, request_fingerprint FROM orders WHERE request_id = $1", [request]
   )).rows[0];
   const match = (order: Receipt) => {
@@ -24,22 +28,75 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>) {
   const previous = await existing();
   if (previous) return match(previous);
   const time = Date.parse(pickup);
-  if (time % 900000 || time < Date.now() + 14 * 60000 || time > Date.now() + 3 * 3600000) throw new Error("SLOT");
-  const items = quote(lines);
+  const official = usesOfficialCatalog();
+  const config = official ? await pickupConfiguration() : null;
+  const policy = config?.enabled ? config.policy : null;
+  if (official ? !policy || !eligiblePickup(time, policy) :
+      time % 900000 || time < Date.now() + 14 * 60000 || time > Date.now() + 3 * 3600000) throw new Error("SLOT");
+  if (official && method !== "pickup") throw new Error("MENU");
+  if (official) {
+    const { rows } = await db.query(`
+      INSERT INTO checkout_rate_limit (id, minute, attempts)
+      VALUES (1, date_trunc('minute', now()), 1)
+      ON CONFLICT (id) DO UPDATE SET minute = EXCLUDED.minute,
+        attempts = CASE WHEN checkout_rate_limit.minute = EXCLUDED.minute THEN checkout_rate_limit.attempts + 1 ELSE 1 END
+      WHERE checkout_rate_limit.minute <> EXCLUDED.minute OR checkout_rate_limit.attempts < 60
+      RETURNING id
+    `);
+    if (!rows.length) throw new Error("RATE");
+  }
+  const items = official ? await quoteOfficial(lines) : quote(lines);
+  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+  const tax = policy ? salesTax(subtotal, policy.taxRates) : 0;
+  const total = subtotal + tax;
+  if (official && input.expectedTotal !== total) throw new Error("PRICE");
   const token = randomBytes(32).toString("hex");
-  const result = await db.query<Receipt>(`
+  const conversion = official && analytics ? `, conversion AS (
+    INSERT INTO marketing_events (event, campaign_id)
+    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $12) FROM inserted
+  )` : "";
+  const insert = (connection = db) => connection.query<Receipt>(`
     WITH inserted AS (
-      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment${official ? ", tax_cents" : ""})
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10${official ? ", $11" : ""})
       ON CONFLICT (request_id) DO NOTHING
       RETURNING number, tracking_token, request_fingerprint
     ), event AS (
       INSERT INTO order_events (order_number, status) SELECT number, 'RECEIVED' FROM inserted
-    ) SELECT * FROM inserted`, [
+    ) ${conversion} SELECT * FROM inserted`, [
       request, fingerprint, token, lang, name, notes, pickup, JSON.stringify(items),
-      items.reduce((sum, item) => sum + item.subtotal, 0), method === "demo" ? "DEMO_PAID" : "UNPAID",
+      total, method === "demo" ? "DEMO_PAID" : "UNPAID",
+      ...(official ? [tax] : []),
+      ...(conversion ? [analytics?.campaign ?? null] : []),
     ]);
-  if (result.rows[0]) return result.rows[0];
+  if (policy) {
+    const client = await postgresPool().connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SELECT pg_advisory_xact_lock(73621, $1::int)", [time / 900000]);
+      const alreadyPlaced = await existing(client);
+      if (alreadyPlaced) {
+        const receipt = match(alreadyPlaced);
+        await client.query("COMMIT");
+        return receipt;
+      }
+      const { rows: [slot] } = await client.query<{ reservations: number }>(
+        "SELECT count(*)::int AS reservations FROM orders WHERE pickup_at = $1 AND status <> 'CANCELLED'", [pickup]
+      );
+      if (slot.reservations >= policy.slotCapacity) throw new Error("SLOT");
+      const placed = await insert(client);
+      await client.query("COMMIT");
+      if (placed.rows[0]) return placed.rows[0];
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  } else {
+    const result = await insert();
+    if (result.rows[0]) return result.rows[0];
+  }
   const repeated = await existing();
   if (!repeated) throw new Error("CONFLICT");
   return match(repeated);

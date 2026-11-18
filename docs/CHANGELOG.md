@@ -10,3 +10,10 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 - Added individual Better Auth staff accounts, PostgreSQL migration 002, operator provisioning, and server authorization for STAFF and ADMIN order operations.
 
 - Rebuilt the bilingual storefront to match the approved mockup. Added the mango campaign carousel, illustrated category tiles, five demo favorites, pickup and Récompenses Salut / Salut Rewards previews, curated gallery, cart badge, and rich footer. Saved three prompt batches for the 15 wired media slots.
+
+## Commercial catalog milestone
+
+- Added deterministic official beverage and modifier data, independent catalog migration, isolated import verification and bilingual campaign previews.
+- Added ADMIN variant pricing and product availability, server-side guarded pickup pricing, and two commercial image prompt batches.
+
+- Added catalog administration, Montréal pickup policy, capacity and tax calculations, opt-in campaign analytics and test-only provider adapters.
