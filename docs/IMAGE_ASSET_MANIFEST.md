@@ -67,3 +67,15 @@ Generate in the order in [Batch 1](image-prompts/BATCH-01.md), [Batch 2](image-p
 | `public/catalog/BRULEE-04.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
 | `public/promotions/creme-brulee.webp` | Collection banner | 2400 × 900 | Prompt ready, image pending | 5 | Empty image slot |
 | `public/promotions/house-lemonade.webp` | Collection banner | 2400 × 900 | Prompt ready, image pending | 5 | Empty image slot |
+
+## Asset register (audit 2026-11-18)
+
+The machine-readable register is [`image-manifest.json`](image-manifest.json) (id, batch, file, association, placement, aspect ratio, size, FR/EN alt text, generation and integration status). Run `npm run assets:check` to list what is still missing.
+
+Status: **0 of 27 files exist.** There is no `public/` directory yet, so every slot renders its CSS or SVG fallback (`hasPublicImage` guards each one, and layouts do not shift). All 26 images have finished prompts in `docs/image-prompts/BATCH-01.md` to `BATCH-05.md`, written to be run one image at a time. Nothing was substituted or fabricated.
+
+- Launch-critical for the approved campaigns: `hero.webp`, `creme-brulee.webp`, `house-lemonade.webp` (BATCH-01 image 1, BATCH-05 images 5–6) and the nine product photos in BATCH-04 and BATCH-05 images 1–4.
+- Not launch-critical: BATCH-01 demo drinks, BATCH-02, BATCH-03 gallery. Do not publish demo drinks as the real menu.
+- `public/brand/logo.svg` must be supplied by the owner. No prompt was written because a generated logo would misrepresent the brand.
+- The house-lemonade poster prompt matches the collection exactly (701, 702, 704, 706, pineapple lemonade, 707); the pineapple lemonade has no product photo of its own and none was invented.
+- Drop-in rule: save each file at its exact path, run `npm run assets:check`, then `npm run build`. Images are decorative next to visible product names, so they ship with empty `alt`; the register's alt text is for any future standalone use.
