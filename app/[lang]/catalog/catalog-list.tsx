@@ -4,11 +4,12 @@ import Link from "next/link";
 import { catalogCategories, catalogProducts } from "../../../src/catalog";
 import type { Lang } from "../../../src/domain";
 
-export async function CatalogList({ lang, category, search = "", ids }: {
+export async function CatalogList({ lang, category, search = "", ids, previewPrices }: {
   lang: Lang;
   category?: string;
   search?: string;
   ids?: string[];
+  previewPrices?: Record<string, { cents: number; approved: boolean }>;
 }) {
   const normalize = (value: string) => value.toLocaleLowerCase(lang).normalize("NFD").replace(/\p{Diacritic}/gu, "");
   const query = normalize(search.trim());
@@ -27,6 +28,7 @@ export async function CatalogList({ lang, category, search = "", ids }: {
       {photo && hasPublicImage(photo) && <Image className="catalog-banner" src={photo} alt="" width={1200} height={1140}/>}
       <Link href={`/${lang}/catalog/products/${product.id}`}><strong>{product[lang]}</strong></Link>
       <small>{categories.find(item => item.id === product.category)?.[lang]}</small>
+      {previewPrices?.[product.id] && <span className="catalog-preview-price">{(previewPrices[product.id].cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" })}{!previewPrices[product.id].approved && <small>{lang === "fr" ? " · prix indicatif" : " · sample price"}</small>}</span>}
       {ids && <Link href={`/${lang}/catalog?category=${product.category}#${product.id}`}>
         {lang === "fr" ? "Voir au menu" : "View on the menu"}
       </Link>}
