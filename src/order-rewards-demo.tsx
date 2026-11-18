@@ -99,12 +99,12 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
   const card = { background: "#fffdf9", border: "1px solid #ead8c6", borderRadius: 20, padding: 22 };
   const field = { display: "grid", gap: 6 };
   return <div className="wrap section" style={{ maxWidth: 1000 }}>
-    <p className="eyebrow">{fr ? "Expérience interactive" : "Interactive experience"}</p>
-    <h1>{fr ? "Votre commande, de A à Z" : "Your order, start to finish"}<span>.</span></h1>
-    <p role="note" style={{ ...card, borderLeft: "5px solid #df422f" }}><strong>{fr ? "DÉMONSTRATION — AUCUNE VENTE RÉELLE" : "DEMONSTRATION — NO REAL SALE"}</strong><br/>{fr ? "Catalogue officiel, prix et taxes illustratifs, créneaux fictifs. Aucun paiement, courriel ou point de fidélité réel. Les commandes sont isolées de la boutique et expirent après 7 jours." : "Official catalog; sample prices, taxes and pickup slots. No payment, email or real loyalty credit. Orders are isolated from the store and expire after 7 days."}</p>
+    <p className="eyebrow">{fr ? "Commande en ligne" : "Online ordering"}</p>
+    <h1>{fr ? "Créez votre commande" : "Build your order"}<span>.</span></h1>
+    <p role="note" style={{ ...card, borderLeft: "3px solid #c17b4a" }}><strong>{fr ? "Aperçu de la commande" : "Order preview"}</strong><br/>{fr ? "Les prix et les disponibilités sont provisoires. La commande est enregistrée pour présentation seulement; aucun paiement n'est prélevé." : "Prices and availability are provisional. Orders are saved for preview only; no payment is collected."}</p>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 12, margin: "20px 0" }}>
       <button type="button" className={view === "customer" ? "button" : "outline"} onClick={() => setView("customer")}>{fr ? "Client" : "Customer"}</button>
-      <button type="button" className={view === "staff" ? "button" : "outline"} onClick={() => setView("staff")}>{fr ? "Équipe (démo)" : "Staff (demo)"}</button>
+      <button type="button" className={view === "staff" ? "button" : "outline"} onClick={() => setView("staff")}>{fr ? "Préparation" : "Preparation"}</button>
       <Link className="outline" href={fr ? "/fr/recompenses" : "/en/rewards"}>{fr ? "Programme Récompenses" : "Rewards program"}</Link>
     </div>
     {message && <p role="status" style={{ ...card, overflowWrap: "anywhere" }}>{message}</p>}
@@ -115,7 +115,7 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
           <select value={product} onChange={e => setProduct(e.target.value)}>{catalog.categories.map(category => <optgroup key={category.id} label={category[lang]}>{catalog.products.filter(p => p.category === category.id).map(p => <option key={p.id} value={p.id}>{p.code} · {p[lang]}</option>)}</optgroup>)}</select>
         </label>
         <label style={field}>{fr ? "Format" : "Size"}<select value={size} onChange={e => setSize(e.target.value as Item["size"])}><option value="regular">{fr ? "Régulier" : "Regular"}</option><option value="large">{fr ? "Grand (+1,00 $)" : "Large (+$1.00)"}</option></select></label>
-        <label style={field}>{fr ? "Garniture fictive" : "Sample topping"}<select value={topping} onChange={e => setTopping(e.target.value as Item["topping"])}><option value="none">{fr ? "Aucune" : "None"}</option><option value="pearls">{fr ? "Tapioca (+0,75 $)" : "Tapioca (+$0.75)"}</option><option value="popping">{fr ? "Perles éclatantes (+0,75 $)" : "Popping pearls (+$0.75)"}</option></select></label>
+        <label style={field}>{fr ? "Garniture" : "Topping"}<select value={topping} onChange={e => setTopping(e.target.value as Item["topping"])}><option value="none">{fr ? "Aucune" : "None"}</option><option value="pearls">{fr ? "Tapioca (+0,75 $)" : "Tapioca (+$0.75)"}</option><option value="popping">{fr ? "Perles éclatantes (+0,75 $)" : "Popping pearls (+$0.75)"}</option></select></label>
         <label style={field}>{fr ? "Quantité" : "Quantity"}<input type="number" min="1" max="10" value={quantity} onChange={e => setQuantity(Math.max(1, Math.min(10, Number(e.target.value) || 1)))}/></label>
         <button className="button" type="button" onClick={add}>{fr ? "Ajouter au panier" : "Add to cart"} · {money(price({ product, size, topping, quantity }), lang)}</button>
       </section>
@@ -128,27 +128,27 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
         </div>; })}
         <p>{fr ? "Sous-total" : "Subtotal"}: {money(subtotal, lang)} · TPS/GST: {money(gst, lang)} · TVQ/QST: {money(qst, lang)}</p>
         <h2>{fr ? "Total estimé" : "Estimated total"}: {money(subtotal + gst + qst, lang)}</h2>
-        <p>🎁 <strong>{points} {fr ? "points potentiels" : "potential points"}</strong> · {fr ? "Valeur théorique" : "Theoretical value"} {money(Math.floor(points * 0.5), lang)} · {fr ? "Aucun point n'est crédité" : "No points are credited"}</p>
+        <p>🎁 <strong>{points} {fr ? "points Rewards" : "Rewards points"}</strong> · {fr ? "Valeur estimée" : "Estimated value"} {money(Math.floor(points * 0.5), lang)} · {fr ? "Activation à venir" : "Pending activation"}</p>
       </section>
       <section style={{ ...card, display: "grid", gap: 12 }}>
-        <h2>{fr ? "3. Cueillette fictive" : "3. Sample pickup"}</h2>
+        <h2>{fr ? "3. Cueillette" : "3. Pickup"}</h2>
         <label style={field}>{fr ? "Nom" : "Name"}<input value={name} maxLength={80} onChange={e => setName(e.target.value)} placeholder={fr ? "Votre nom" : "Your name"}/></label>
-        <label style={field}>{fr ? "Créneau fictif" : "Sample slot"}<select value={pickup} onChange={e => setPickup(e.target.value)}><option value="">{fr ? "Choisir" : "Choose"}</option>{["14:00","14:30","15:00","15:30"].map(t => <option key={t} value={t}>{t}</option>)}</select></label>
-        <button className="button" type="button" disabled={busy || !name.trim() || !pickup || !cart.length} onClick={place}>{busy ? "…" : fr ? "Confirmer sans payer" : "Confirm without paying"}</button>
+        <label style={field}>{fr ? "Heure de cueillette" : "Pickup time"}<select value={pickup} onChange={e => setPickup(e.target.value)}><option value="">{fr ? "Choisir" : "Choose"}</option>{["14:00","14:30","15:00","15:30"].map(t => <option key={t} value={t}>{t}</option>)}</select></label>
+        <button className="button" type="button" disabled={busy || !name.trim() || !pickup || !cart.length} onClick={place}>{busy ? "…" : fr ? "Confirmer la commande" : "Confirm order"}</button>
       </section>
     </div>}
     {order && <section style={{ ...card, display: "grid", gap: 14 }} aria-live="polite">
-      <p className="eyebrow">DEMO · {order.id.slice(0, 8).toUpperCase()}</p>
+      <p className="eyebrow">COMMANDE · {order.id.slice(0, 8).toUpperCase()}</p>
       <h2>{view === "staff" ? fr ? "Tableau de préparation" : "Preparation board" : fr ? "Suivi de commande" : "Order tracking"}</h2>
       <p>{order.name} · {order.pickup} · <strong>{money(order.total, lang)}</strong></p>
       <ul>{order.lines.map((line, i) => <li key={i}>{line.quantity} × {line[lang]} · {line.size} · {money(line.subtotal, lang)}</li>)}</ul>
       <ol>{statuses[lang].map((status, i) => <li key={status} style={{ opacity: i <= order.status ? 1 : 0.4, padding: 4 }}>{i <= order.status ? "✓ " : "○ "}{status}</li>)}</ol>
-      <p>🎁 {order.points} {fr ? "points fictifs (non crédités)" : "sample points (not credited)"}</p>
+      <p>🎁 {order.points} {fr ? "points Rewards prévus (non crédités)" : "estimated Rewards points (not credited)"}</p>
       {view === "staff" && <button className="button" type="button" disabled={busy || order.status >= 4} onClick={advance}>{fr ? "Étape suivante" : "Next status"}</button>}
       <button className="outline" type="button" onClick={share}>{fr ? "Copier le lien privé pour un autre appareil" : "Copy private link for another device"}</button>
-      <button className="outline" type="button" onClick={reset}>{fr ? "Nouvelle démonstration" : "Start a new demo"}</button>
+      <button className="outline" type="button" onClick={reset}>{fr ? "Nouvelle commande" : "New order"}</button>
       <small>{fr ? "Le lien donne accès à la simulation et à ses changements d'état. Ne le partagez qu'avec les participants." : "The link grants access to the demo and status updates. Share only with participants."}</small>
     </section>}
-    {!order && view === "staff" && <section style={card}><h2>{fr ? "Aucune commande sélectionnée" : "No order selected"}</h2><p>{fr ? "Créez une commande côté client, puis revenez ici ou ouvrez son lien privé sur un autre appareil." : "Create an order as a customer, then return here or open its private link on another device."}</p></section>}
+    {!order && view === "staff" && <section style={card}><h2>{fr ? "Aucune commande en cours" : "No active order"}</h2><p>{fr ? "Passez une commande, puis consultez son suivi ou ouvrez son lien privé sur un autre appareil." : "Place an order, then view its tracking or open its private link on another device."}</p></section>}
   </div>;
 }
