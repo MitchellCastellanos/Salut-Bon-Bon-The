@@ -3,6 +3,7 @@ import { cardPaymentsEnabled } from "../../../src/providers/stripe";
 import { pickupConfiguration } from "../../../src/store-settings";
 import { Menu } from "../menu/menu";
 import { officialPrices } from "../../../src/catalog-pricing";
+import { database } from "../../../src/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -33,6 +34,8 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
   });
   const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
   const fr = lang === "fr";
+  const demoPriceRows = process.env.DATABASE_URL ? await (await database()).query<{ product_id: string; price_cents: number; approved: boolean }>(`SELECT product_id, price_cents, approved FROM catalog_variants WHERE id = 'regular' AND price_cents IS NOT NULL`).then(result => result.rows) : [];
+  const demoPrices = Object.fromEntries(demoPriceRows.map(row => [row.product_id, { cents: row.price_cents, approved: row.approved }]));
   // Cart rewards hint: only with a configured, publicly visible program. Reading failures simply hide the hint.
   const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
   const linked = program ? Boolean(await customerSession().catch(() => undefined) || await currentGuestCard().catch(() => undefined)) : false;
@@ -41,19 +44,19 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
     minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
-    {!orderable.length && <p role="status">{fr ? "La commande en ligne est indisponible pour le moment : les prix ou les heures de cueillette ne sont pas encore publiés par l’équipe. Vous pouvez parcourir tout le menu ci-dessous." : "Online ordering is unavailable right now: prices or pickup hours have not been published by the team yet. You can browse the full menu below."}</p>}
+    {!orderable.length && <p role="status" className="catalog-notice">{fr ? "Découvrez nos boissons ! Les prix affichés sont indicatifs pour cet aperçu. La commande en ligne sera disponible prochainement." : "Explore our drinks! Prices shown are illustrative for this preview. Online ordering is coming soon."}</p>}
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
       {collections.map(item => <Link key={item.id} href={`/${lang}/catalog/${item.id}`}>{item[lang]}</Link>)}
     </nav>
-    <form className="catalog-filters">
-      <label>{fr ? "Rechercher" : "Search"} <input type="search" name="q" defaultValue={search} maxLength={100}/></label>
-      <label>{fr ? "Catégorie" : "Category"} <select name="category" defaultValue={selected}>
+    <form className="catalog-filters" role="search" aria-label={fr ? "Trouver une boisson" : "Find a drink"}>
+      <label className="catalog-search-field"><span className="catalog-filter-label">{fr ? "Rechercher une boisson" : "Find a drink"}</span><input type="search" name="q" defaultValue={search} maxLength={100} placeholder={fr ? "Nom, saveur..." : "Name, flavour..."}/></label>
+      <label className="catalog-category-field"><span className="catalog-filter-label">{fr ? "Catégorie" : "Category"}</span><select name="category" defaultValue={selected}>
         <option value="">{fr ? "Toutes" : "All categories"}</option>
         {categories.map(item => <option key={item.id} value={item.id}>{item[lang]}</option>)}
       </select></label>
-      <button className="button">{fr ? "Filtrer" : "Filter"}</button>
+      <button className="button catalog-filter-submit">{fr ? "Afficher" : "Show"}</button>
     </form>
-    <CatalogList lang={lang} category={selected} search={search}/>
+    <CatalogList lang={lang} category={selected} search={search} previewPrices={demoPrices}/>
     {orderable.length > 0 && <section aria-labelledby="orderable">
       <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
       <Menu lang={lang} demo={false} rewards={rewardsInfo} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
