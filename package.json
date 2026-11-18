@@ -15,6 +15,7 @@
     "db:status": "node scripts/migrate.mjs --status",
     "assets:check": "node scripts/check-assets.mjs",
     "test:rewards": "node tests/rewards-browser-smoke.mjs",
+    "test:rewards-public": "node tests/rewards-public-smoke.mjs",
     "test:storefront": "node tests/storefront-audit.mjs",
     "business:init": "node scripts/init-business.mjs"
   },

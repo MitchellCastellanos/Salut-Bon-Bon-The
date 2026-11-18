@@ -17,3 +17,7 @@ Migration 003 adds categories, products, two translation rows per seeded product
 - [007](../db/007-append-only-history.sql): append-only history (revokes and `loyalty_transactions_append_only` trigger).
 
 The pickup policy stored in `catalog_store_settings.pickup_policy` gained `slotMinutes`, `advanceDays`, `sameDayCutoff` and `exceptions` (see [Scheduling](SCHEDULING.md)); older documents remain valid.
+
+## Migration 009 (Salut Rewards 5 %)
+
+[009](../db/009-rewards-five-percent.sql): lifecycle flags on `loyalty_program` (`preview_visible`, `accrual_enabled`, `redemption_enabled`, `commercial_authorized` with who/when); `loyalty_rewards.discount_cents` and `preview_visible`; preview seed (rate 10, reward `rabais-5` = 1,000 points / 500 cents, **not offered**, program inactive); guest cards (`loyalty_accounts.user_id` nullable, `guest_secret_hash`, `linked_at`, `merged_into`, status `merged`); `orders.loyalty_account_id`; `loyalty_transactions.eligible_cents` and kind `reverse`; append-only `loyalty_refund_events`; `loyalty_post` replaced by a 10-argument version (the old 9-argument one is dropped); `loyalty_redeem` honours `redemption_enabled`; new `loyalty_reverse_refund` and `loyalty_link_guest`. Applied and tested on local PostgreSQL 16 (empty database, plus a least-privilege `salut_app` check); **not applied to Neon**.

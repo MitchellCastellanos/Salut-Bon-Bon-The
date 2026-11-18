@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { catalogCategories, catalogCollections, catalogProducts, visibleCampaigns } from "../../src/catalog";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
-import { loyaltyProgram } from "../../src/loyalty";
+import { publicRewards } from "../../src/loyalty";
+import { rewardsPath } from "../../src/rewards-paths";
 import { pickupConfiguration } from "../../src/store-settings";
 import { AddressBlock, businessJsonLd, HoursList } from "../../src/business-view";
 import Link from "next/link";
@@ -42,7 +43,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const fr = lang === "fr";
   const menu = `/${lang}/menu`;
   const official = usesOfficialCatalog();
-  const rewardsActive = official ? await loyaltyProgram().then(p => p.active, () => undefined) : undefined;
+  const rewards = official || process.env.DATABASE_URL ? await publicRewards().catch(() => undefined) : undefined;
+  const pct = rewards?.percent ? new Intl.NumberFormat(fr ? "fr-CA" : "en-CA").format(rewards.percent) : null;
   const promotions = await visibleCampaigns();
   const config = official ? await pickupConfiguration().catch(() => null) : null;
   const profile = config?.profile ?? null;
@@ -138,14 +140,15 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
             {!official && <p>{fr ? "Choisissez votre boisson et votre heure de cueillette." : "Choose your drink and pickup time."}</p>}
             <Link className="button" href={menu}>{official ? fr ? "Voir le catalogue" : "Browse the catalog" : fr ? "Commander pour emporter" : "Order for pickup"} <span aria-hidden="true">→</span></Link></div>
         </section>
-        <section className="promo-banner rewards-banner" id="rewards">
+        {(!rewards || rewards.previewVisible) && <section className="promo-banner rewards-banner" id="rewards">
           <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>
-            <p>{fr ? "Cumulez des points à chaque achat admissible et échangez-les contre des récompenses." : "Earn points on eligible purchases and redeem them for rewards."}</p>
-            <Link className="button purple" href={`/${lang}/account/rewards`}>{fr ? "Voir ma carte Récompenses" : "View my rewards card"} <span aria-hidden="true">→</span></Link>
-            <p className="account-status">{rewardsActive === undefined ? (fr ? "Créez un compte pour suivre vos commandes et adhérer au programme." : "Create an account to follow your orders and join the program.") : rewardsActive ? (fr ? "Programme actif : cumulez des points à chaque achat admissible." : "Program active: earn points on every eligible purchase.") : (fr ? "Le programme n’est pas actif pour le moment : aucun point n’est cumulé." : "The program is not active right now: no points are being earned.")}</p>
+            <p>{pct ? (fr ? `Récupérez ${pct} % de vos achats admissibles en points, puis échangez-les au comptoir contre des rabais.` : `Get ${pct}% of your eligible purchases back in points, then redeem them at the counter for discounts.`) :
+              (fr ? "Cumulez des points à chaque achat admissible et échangez-les contre des récompenses." : "Earn points on eligible purchases and redeem them for rewards.")}</p>
+            <Link className="button purple" href={rewardsPath[lang]}>{fr ? "Découvrir le programme" : "Discover the program"} <span aria-hidden="true">→</span></Link>
+            <p className="account-status">{!rewards ? (fr ? "Créez un compte ou obtenez une carte invité pour suivre vos points." : "Create an account or get a guest card to follow your points.") : rewards.accrualOperational ? (fr ? "Programme actif : cumulez des points à chaque achat admissible." : "Program active: earn points on every eligible purchase.") : (fr ? "Aperçu : le programme n’est pas encore actif, aucun point n’est cumulé." : "Preview: the program is not active yet, no points are being earned.")}</p>
           </div>
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/rewards.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="rewards-art"><StorefrontIcon name="gift"/><span>★ ★ ★</span></span></StorefrontArt></div>
-        </section>
+        </section>}
       </div>
       {profile && <section className="home-section visit" id="visit" aria-labelledby="visit-title">
         <h2 id="visit-title">{fr ? "Venez nous voir" : "Come see us"}</h2>

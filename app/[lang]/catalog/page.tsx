@@ -10,6 +10,10 @@ import { catalogCategories, catalogCollections, catalogProducts } from "../../..
 import { hasPublicImage } from "../../../src/storefront-art";
 import { language } from "../../../src/domain";
 import { CatalogList } from "./catalog-list";
+import { customerSession } from "../../../src/customer";
+import { currentGuestCard } from "../../../src/guest-card";
+import { loyaltyProgram, programStages } from "../../../src/loyalty";
+import { cardPath, rewardsPath } from "../../../src/rewards-paths";
 
 export default async function CatalogPage({ params, searchParams }: PageProps<"/[lang]/catalog">) {
   const { lang } = await params;
@@ -29,6 +33,12 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
   });
   const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
   const fr = lang === "fr";
+  // Cart rewards hint: only with a configured, publicly visible program. Reading failures simply hide the hint.
+  const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
+  const linked = program ? Boolean(await customerSession().catch(() => undefined) || await currentGuestCard().catch(() => undefined)) : false;
+  const rewardsInfo = program?.previewVisible && program.pointsPerDollar ? {
+    pointsPerDollar: program.pointsPerDollar, operational: programStages(program).accrualOperational, allEligible: !program.earnCategories?.length,
+    minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
     {!orderable.length && <p role="status">{fr ? "La commande en ligne est indisponible pour le moment : les prix ou les heures de cueillette ne sont pas encore publiés par l’équipe. Vous pouvez parcourir tout le menu ci-dessous." : "Online ordering is unavailable right now: prices or pickup hours have not been published by the team yet. You can browse the full menu below."}</p>}
@@ -46,7 +56,7 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
     <CatalogList lang={lang} category={selected} search={search}/>
     {orderable.length > 0 && <section aria-labelledby="orderable">
       <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
+      <Menu lang={lang} demo={false} rewards={rewardsInfo} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
     </section>}
   </section>;
 }

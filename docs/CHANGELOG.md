@@ -17,3 +17,7 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 - Added ADMIN variant pricing and product availability, server-side guarded pickup pricing, and two commercial image prompt batches.
 
 - Added catalog administration, Montréal pickup policy, capacity and tax calculations, opt-in campaign analytics and test-only provider adapters.
+
+## Salut Rewards 5 % (2026-11-18)
+
+- Added migration 009, the public pages `/fr/recompenses` and `/en/rewards` (hero, three steps, calculator driven by the real configuration, reward states, ways to participate, FAQ, final CTA), the guest card (no account), refund reversal, guest-to-account linking, the five program states in ADMIN, cart and product points hints, header/footer/home integration, localized metadata and sitemap, the commercial proposal and the new tests. See [Rewards](REWARDS.md).

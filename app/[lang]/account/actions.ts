@@ -12,6 +12,7 @@ import { database } from "../../../src/db";
 import { language } from "../../../src/domain";
 import { enroll, accountForUser, issueQr } from "../../../src/loyalty";
 import { allow, clientAddress } from "../../../src/rate-limit";
+import { currentGuestCard } from "../../../src/guest-card";
 
 const email = z.email().max(254).transform(value => value.trim().toLowerCase());
 const password = z.string().min(12).max(128);
@@ -113,11 +114,12 @@ export async function joinRewards(lang: string) {
 /** Issues a fresh single-use QR. The QR carries only a random token, never personal data or credentials. */
 export async function newQr(lang: string): Promise<{ svg: string; expiresAt: string } | { error: "AUTH" | "RATE" | "ENROLL" }> {
   if (!language(lang)) return { error: "AUTH" };
+  // A signed-in member's own account first; otherwise the guest card held by this browser.
   const session = await customerSession();
-  if (!session) return { error: "AUTH" };
-  const account = await accountForUser(session.id);
-  if (!account || account.status !== "active") return { error: "ENROLL" };
-  if (!await allow("qr-user", session.id, 20, 600)) return { error: "RATE" };
+  const account = (session ? await accountForUser(session.id) : undefined) ?? (await currentGuestCard())?.account;
+  if (!account) return { error: session ? "ENROLL" : "AUTH" };
+  if (account.status !== "active") return { error: "ENROLL" };
+  if (!await allow("qr-user", account.id, 20, 600)) return { error: "RATE" };
   const { token, expiresAt } = await issueQr(account.id);
   const h = await headers();
   const origin = process.env.SITE_URL || `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;

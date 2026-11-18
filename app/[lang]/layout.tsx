@@ -11,6 +11,8 @@ import { StorefrontIcon } from "../../src/storefront-art";
 import { instagramUrl, rewardsName } from "../../src/storefront-content";
 import { pickupConfiguration } from "../../src/store-settings";
 import { AddressBlock, HoursList } from "../../src/business-view";
+import { loyaltyProgram } from "../../src/loyalty";
+import { rewardsPath } from "../../src/rewards-paths";
 
 export default async function LanguageLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
@@ -20,6 +22,8 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
   const official = usesOfficialCatalog();
   const instagram = instagramUrl();
   const config = official ? await pickupConfiguration().catch(() => null) : null;
+  // The rewards link follows the ADMIN "public preview visible" switch. If the database is unreachable the link stays visible.
+  const showRewards = official || process.env.DATABASE_URL ? await loyaltyProgram().then(p => p.previewVisible, () => true) : true;
   const schedule = config?.policy ?? null;
   const profile = config?.profile ?? null;
   return <>
@@ -31,7 +35,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
         <Link href={`${home}/menu`}>Menu</Link>
         <Link href={`${home}/catalog`}>{fr ? "Catalogue" : "Catalog"}</Link>
         <Link href={`${home}#promotions`}>Promotions</Link>
-        <Link href={`${home}/account/rewards`}>{fr ? "Récompenses" : "Rewards"}</Link>
+        {showRewards && <Link href={rewardsPath[lang]}>{fr ? "Récompenses" : "Rewards"}</Link>}
         <Link href="#find-us">{fr ? "Nous trouver" : "Find us"}</Link>
       </nav>
       <div className="header-actions">
@@ -45,7 +49,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
     <footer className="bottom rich-footer" id="find-us">
       <div className="wrap footer-grid">
         <div><Brand href={home}/></div>
-        <div><h2>Menu</h2><Link href={`${home}/menu?category=milk`}>{fr ? "Bubble thé au lait" : "Milk bubble tea"}</Link><Link href={`${home}/menu?category=fruit`}>{fr ? "Thés aux fruits" : "Fruit teas"}</Link><Link href={`${home}/menu?category=matcha`}>Matcha</Link><Link href={`${home}#rewards`}>{rewardsName[lang]}</Link></div>
+        <div><h2>Menu</h2><Link href={`${home}/menu?category=milk`}>{fr ? "Bubble thé au lait" : "Milk bubble tea"}</Link><Link href={`${home}/menu?category=fruit`}>{fr ? "Thés aux fruits" : "Fruit teas"}</Link><Link href={`${home}/menu?category=matcha`}>Matcha</Link>{showRewards && <Link href={rewardsPath[lang]}>{rewardsName[lang]}</Link>}</div>
         <div><h2>{fr ? "Nous trouver" : "Find us"}</h2>{profile ? <AddressBlock lang={lang} profile={profile}/> : <p>Montréal, Québec<br/>{official ? fr ? "L’adresse sera publiée par l’équipe." : "The address will be published by the team." : fr ? "Adresse à confirmer" : "Address to be confirmed"}</p>}</div>
         <div><h2>{fr ? "Heures d’ouverture" : "Opening hours"}</h2>{schedule ? <HoursList lang={lang} policy={schedule} short/> : <p>{official ? (fr ? "Les heures seront publiées par l’équipe." : "Hours will be published by the team.") : (fr ? "Horaires à confirmer" : "Hours to be confirmed")}</p>}{instagram && <a href={instagram}>Instagram</a>}</div>
       </div>

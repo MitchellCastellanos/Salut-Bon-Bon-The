@@ -22,11 +22,11 @@ FR **Récompenses Salut**, EN **Salut Rewards**: one loyalty program. Gift cards
 | `loyalty_transactions` | Append-only ledger: `earn`, `redeem`, `adjust`, `balance_after`, unique `idempotency_key`, one `earn` per order, actor, reason. |
 | `loyalty_qr_tokens` | Single-use identification tokens, stored only as SHA-256 hashes. |
 
-**Safe defaults:** the program ships inactive with no rate and no rewards, so nothing can be awarded or redeemed until an ADMIN configures it. The admin cannot activate it without an earning rate.
+**Safe defaults:** the program ships **inactive**. Migration 009 pre-loads the preview terms (10 points per $1 and one unoffered $5 reward, see below), but nothing can be awarded or redeemed until an ADMIN activates the program. The admin cannot activate it without an earning rate, and in production activation also needs the recorded owner authorization.
 
 All balance changes go through two PL/pgSQL functions that lock the rows involved:
 
-- `loyalty_post(...)`: locks the account row, returns the prior result for a repeated idempotency key (and rejects the same key with different values), rejects suspended accounts for earn/redeem, rejects any change that would make the balance negative, inserts the ledger row and updates the balance in one transaction.
+- `loyalty_post(...)` (10 arguments since migration 009, adds the eligible base): locks the account row, returns the prior result for a repeated idempotency key (and rejects the same key with different values), rejects suspended accounts for earn/redeem, rejects any change that would make the balance negative, inserts the ledger row and updates the balance in one transaction.
 - `loyalty_redeem(...)`: locks the token row first, then calls `loyalty_post`; fails with `QR_INVALID`, `QR_USED`, `QR_EXPIRED`, `PROGRAM_INACTIVE`, `REWARD_UNAVAILABLE`, `INSUFFICIENT_POINTS` or `ACCOUNT_SUSPENDED`, and marks the token redeemed in the same transaction.
 
 Migration 007 makes history **append-only**: the runtime role has no UPDATE or DELETE on `loyalty_transactions`, `order_events`, `catalog_audit_history` or `provider_events`, and a trigger rejects any UPDATE/DELETE on `loyalty_transactions` for every role.
@@ -57,3 +57,93 @@ Program activation, points per dollar, minimum purchase, earning categories; rew
 ## Verification
 
 `tests/loyalty.test.ts` (enrolment, defaults, earning rules, QR lifetime, redemption, replay, insufficient balance, isolation, adjustments), `tests/loyalty-concurrency.test.ts` (real PostgreSQL: parallel redemptions never overspend, one scan wins per token, same-key parallel submits deduct once, parallel earn once), and `tests/rewards-browser-smoke.mjs` (full browser flow, see [Testing](TESTING.md)).
+
+
+---
+
+# Salut Rewards 5 % (migration 009, 2026-11-18)
+
+Commercial comparison of the two proposals: [Loyalty commercial proposal](LOYALTY_COMMERCIAL_PROPOSAL.md) (French). **Option B (this program) is the one implemented for the preview; option A (9 + 1 stamp card) is a proposal only and has no code.**
+
+## 1. Real architecture
+
+PostgreSQL stays the single source of truth; no second rewards store exists. The pure arithmetic lives in `src/rewards-math.ts` (no I/O, shared by the server, the public calculator and the tests). `src/loyalty.ts` owns reads, earning, refund reversal, guest cards and configuration saving. SQL functions do every balance change. Pages: public `/fr/recompenses` and `/en/rewards` (`src/rewards-page.tsx`), guest card `/fr/recompenses/carte` and `/en/rewards/card` (`src/guest-card-page.tsx`), customer `/account/rewards` (reused, now also links guest cards), STAFF `/staff/rewards`, ADMIN `/admin/rewards`.
+
+## 2. Data model (additions)
+
+| Object | Purpose |
+| --- | --- |
+| `loyalty_program.preview_visible / accrual_enabled / redemption_enabled / commercial_authorized(+_at,_by)` | Separate lifecycle flags. `active` remains the master operations switch. |
+| `loyalty_rewards.discount_cents / preview_visible` | Monetary value of a reward (informational, applied at the counter) and public listing. Seed: `rabais-5`, 1,000 points, 500 cents, **not offered**. |
+| `loyalty_accounts.user_id` nullable, `guest_secret_hash`, `linked_at`, `merged_into`, status `merged` | Guest cards. A guest account has no user; its secret is stored only as SHA-256. |
+| `orders.loyalty_account_id` | Online order attached to a guest card (never overrides a signed-in member's order). |
+| `loyalty_transactions.eligible_cents`, kind `reverse` | The eligible base recorded on each order earn; refund reversals. |
+| `loyalty_refund_events` (append-only) | One row per recorded refund: pre-tax refunded cents, points reversed, shortfall, idempotency key, reason, actor. |
+| Functions `loyalty_reverse_refund`, `loyalty_link_guest` | Atomic refund reversal and guest-to-account link. |
+
+## 3. Points formula and 4. rounding
+
+`points = floor(eligible_cents × points_per_dollar / 100)`, computed **once per order** on the whole eligible pre-tax subtotal (never per line, never rounded up), in integer cents. With 10 points per $1: `floor(cents / 10)`; 10.99 $ → 109 points; 0.09 $ → 0. The effective return is derived, not hard-coded: `points_per_dollar × reward discount ÷ reward cost` = 10 × 500 ÷ 1,000 = **5 %**. Excluded: taxes, tips, discounts (the base is the order's pre-tax item subtotal; in store, staff enter the amount after discounts and without tip), redeemed rewards, refunded amounts and cancelled orders. Eligible categories and a minimum purchase are optional ADMIN settings.
+
+## 5. Earning flow
+
+- **Online:** staff mark the order COMPLETED → `earnForOrder` (only COMPLETED orders earn; one earn per order by key `earn:order:<n>` and a unique index). The order must be linked to a verified member (`customer_user_id`) or a guest card (`loyalty_account_id`). An order completed while earning is off or the program is inactive earns nothing and is **not** back-filled later.
+- **In store:** staff identify the QR, enter the pre-tax amount (after discounts, excluding tip); idempotency key per form render.
+
+## 6. Redemption flow
+
+Counter only. The customer shows a single-use QR (5 minutes); staff identify it (first name, member code and balance; guests appear as "Invité / Guest"), confirm the redemption (points deducted atomically; reward name and staff actor recorded) and apply the discount in the till (the reward shows its dollar value). **The discount is not applied to online checkout totals**, so pricing, tax and payment logic are untouched, and the site never claims otherwise. Redemption requires: program active, `redemption_enabled`, reward offered, enough points, live unused QR, account active.
+
+## 7. Guest experience (no login)
+
+Discovery needs no login: the public page and calculator use no personal data. **Participation without an account** uses a *guest card*: `POST` from `/recompenses/carte` creates an account row with `user_id NULL` and a random 256-bit secret. The secret is kept in an httpOnly, SameSite=Lax cookie and shown once as a **backup code**; the database stores only its hash (authoritative; local storage is not used). The card issues the same short-lived QR as a member. Online orders placed from that browser attach to the card. Evaluated and **not** implemented: claiming a purchase from a receipt/tracking code (anyone holding the private tracking link could claim it) and any phone-number identification. Lost cookie and lost backup code mean a lost card (documented limitation; linking to an account early avoids it).
+
+**Link to an account** (`/account/rewards` while signed in with a guest card on the browser): `loyalty_link_guest` locks both accounts; with no existing member account the card becomes that account; otherwise the balance is moved through two ledger `adjust` entries (`link-out:`/`link-in:` keys), pending orders follow, the card is marked `merged` and its secret erased. A second attempt fails with `GUEST_NOT_FOUND`; points are never copied.
+
+## 8. QR and identification
+
+Unchanged engine: random 32-byte token, SHA-256 at rest, 5-minute single-use, superseded by a newer one, payload is only a URL with the token. The member code is **not** a credential anywhere (restore and staff lookup reject it). Staff screens now explain an unusable scanned code instead of silently ignoring it.
+
+## 9. Security and privacy
+
+No names, emails, balances, account or order data on public pages (tested by rendering both pages next to seeded private rows). No enumeration: guest/restore responses reveal nothing about other cards; restore is rate limited (10/15 min per address), card creation 5/h per address, linking 10/h per customer. 256-bit secrets cannot be brute-forced; the staff-only member code is 8 characters from a 32-symbol alphabet and is never accepted as proof. Append-only ledger and refund history (trigger plus revoked UPDATE/DELETE for `salut_app`). The least-privilege role needs `UPDATE` on `orders` (already required by the app) for `loyalty_link_guest`.
+
+## 10. Refunds and reversal
+
+ADMIN records a refund of the **pre-tax** amount against an online order that earned points (`/admin/rewards`, idempotency key per form). `points kept = floor(earned × (eligible − cumulative refunds) ÷ eligible)`; reversed points = earned − kept − already reversed, so a full refund removes every point and several partial refunds converge to the same total without rounding drift. The balance is never negative: points already spent are recorded as **shortfall** (visible to the admin, no negative balance, no automatic clawback). Cumulative refunds above the eligible base are refused (`REFUND_EXCEEDS_PURCHASE`). In-store purchases and non-earning orders use a manual audited ADMIN adjustment. Nothing links Stripe refunds to this automatically (no refund API integration exists in the app; payment state `REFUND_REQUIRED` is only a flag).
+
+## 11. ADMIN configuration
+
+`/{lang}/admin/rewards`: five-state panel; program form (preview visible, active, earning allowed, redemption allowed, commercial authorization, points per dollar, minimum purchase, categories); reward form (names, descriptions, cost, dollar value, eligibility, offered, preview visible); refund form; customer lookup (members and guest cards by member code) with audited adjustments, suspension and history. Every program/reward/account change writes `catalog_audit_history` with the actor. In production (`VERCEL_ENV=production`) activating requires the authorization box; that box records who and when.
+
+## 12. STAFF operations
+
+Scan or paste the link, identify, award points on the pre-tax amount, confirm a redemption (then apply the dollar discount in the till), with clear localized errors (`QR_INVALID/USED/EXPIRED`, insufficient points, program inactive, earning/redemption disabled, suspended, rate limit). Double submits are idempotent. STAFF cannot reach ADMIN pages or actions.
+
+## 13. Tests
+
+`tests/rewards-five-percent.test.ts` (31: arithmetic, rounding, seed state, states, 5 % earning, duplicates, cancelled orders, guests, secure identification, link, QR expiry, duplicate redemption, insufficient points, inactive program/reward, refunds, ADMIN config); `tests/rewards-public.test.tsx` (rendered public pages FR/EN, no private data, metadata); `tests/rewards-permissions.test.ts` (STAFF/visitor/customer role gates); `tests/loyalty-concurrency.test.ts` (real PostgreSQL, now also parallel refunds and parallel guest links); `tests/rewards-public-smoke.mjs` (browser at 390 px and 1280 px, FR/EN, guest card, counter flow, cart hint). See [Testing](TESTING.md).
+
+## 14. External dependencies
+
+Neon PostgreSQL (migration 009 must be rehearsed on a test branch first; **not applied to Neon by this change**). Better Auth + Resend for customer accounts (registration stays unavailable until email is configured; **guest cards and the public page need neither**). No payment dependency: online card payment is unchanged and rewards never touch it. No POS integration exists.
+
+## 15. Production state
+
+Nothing is active. Program inactive, reward not offered, authorization not recorded, migration 009 not applied to production. The public page is a labelled preview.
+
+## 16. Owner decisions pending
+
+Rate and reward confirmation, eligible categories, minimum purchase, expiry policy (none today), promotion stacking, commercial authorization and launch date, automatic online discount (not built), legal/privacy copy, accountant opinion on the discount's tax treatment. Details: [commercial proposal](LOYALTY_COMMERCIAL_PROPOSAL.md#6-décisions-attendues-du-propriétaire).
+
+## 17. Preview versus active program
+
+| State | Meaning | Where set |
+| --- | --- | --- |
+| Configured | A rate exists (seed: 10 points/$1) | `points_per_dollar` |
+| Public preview visible | Page, nav, home banner and sitemap show it | `preview_visible` |
+| Earning operational | `active` and `accrual_enabled` and a rate | ADMIN |
+| Redemption operational | `active` and `redemption_enabled` | ADMIN |
+| Commercial activation authorized | Owner sign-off recorded; required to activate in production | ADMIN checkbox |
+
+A reward is shown as *Available* only when the program, redemption and the reward are all on; offered but not operational → *Coming soon*; not offered on an active program → *Unavailable*.

@@ -6,7 +6,7 @@
 | Storefront and menu | Partial | Approved mockup layout implemented with a full-width campaign carousel, seven category tiles, five demo favorites, pickup and rewards banners, Instagram gallery and rich footer. Official menu, photos, logo, social profile, store details and admin editing pending |
 | Orders | Verified demo slice | Guest checkout, persistent cart, server pricing, submission idempotency, pickup and simulated payment, private tracking. Capacity, opening hours, pause, tax and account checkout pending |
 | Store operations | Verified demo slice | Individual STAFF/ADMIN sign-in in PostgreSQL mode, shared local demo, automatic polling, order transitions and pickup settlement. Admin-only management screens, order history pagination, sound and actor audit pending |
-| Customer accounts and Récompenses Salut / Salut Rewards | Preview | Bilingual coming-soon banner. Customer accounts, QR scanning, rewards ledger, favorites and reorder are planned |
+| Customer accounts and Récompenses Salut / Salut Rewards | Implemented, inactive preview | Accounts, QR, ledger, ADMIN and STAFF consoles, public page `/fr/recompenses` and `/en/rewards`, guest cards, refund reversal, 5 % preview terms (10 points/$1, 1,000 points = $5) are built and tested. The program is **not active**: owner approval, authorization and migration 009 on Neon are pending. Automatic online discount, Stripe-refund linkage and POS integration are not built. Favorites and reorder remain planned |
 | Payments and notifications | Partial | Local simulated payment. Stripe, Resend, Twilio, refunds, delivery log and outbox pending |
 | Analytics | Planned | Consent, event collection and reports |
 | Quality and deployment | Partial | Unit and browser smoke coverage, draft legal pages, sitemap and language metadata. Neon and Vercel remain unverified |
@@ -30,3 +30,7 @@ Added: customer accounts (separate Better Auth instance), Récompenses Salut wit
 ## 2026-11-18 update 3
 
 Business profile and fiscal configuration implemented (see [Business profile](BUSINESS_PROFILE.md), [Tax](TAX.md)); migration 008; receipts; checkout readiness gate. Open items are in [Launch readiness](LAUNCH_READINESS.md).
+
+## 2026-11-18 update 4 (Salut Rewards 5 %)
+
+Migration 009, public rewards page, guest cards, refund reversal, program state panel, cart/product hints and tests are implemented; the commercial proposal (two options) is in [LOYALTY_COMMERCIAL_PROPOSAL.md](LOYALTY_COMMERCIAL_PROPOSAL.md). Only option B is implemented; option A is proposed, not built. Operational state: nothing active. See [Rewards](REWARDS.md).

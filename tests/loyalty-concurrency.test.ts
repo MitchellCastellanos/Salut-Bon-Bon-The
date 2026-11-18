@@ -40,7 +40,7 @@ suite("concurrent loyalty changes on real PostgreSQL", () => {
     const results = await Promise.all(tokens.map(token => outcome(loyalty.redeemReward({ token, rewardId: "conc-reward", key: `r-${randomUUID()}`, actor: "staff" }, db))));
     expect(results.filter(r => r === "ok")).toHaveLength(3);
     expect(results.filter(r => r === "INSUFFICIENT_POINTS")).toHaveLength(7);
-    expect((await loyalty.accountForUser(account.user_id, db))!.balance).toBe(10);
+    expect((await loyalty.accountForUser(account.user_id!, db))!.balance).toBe(10);
     const { rows: [sum] } = await pool.query("SELECT sum(points)::int AS s, count(*)::int AS c FROM loyalty_transactions WHERE account_id = $1", [account.id]);
     expect(sum).toEqual({ s: 10, c: 4 }); // +100 funding, 3 x -30
   });
@@ -51,7 +51,7 @@ suite("concurrent loyalty changes on real PostgreSQL", () => {
     const results = await Promise.all(Array.from({ length: 10 }, () => outcome(loyalty.redeemReward({ token, rewardId: "conc-reward", key: `r-${randomUUID()}`, actor: "staff" }, db))));
     expect(results.filter(r => r === "ok")).toHaveLength(1);
     expect(results.filter(r => r === "QR_USED")).toHaveLength(9);
-    expect((await loyalty.accountForUser(account.user_id, db))!.balance).toBe(470);
+    expect((await loyalty.accountForUser(account.user_id!, db))!.balance).toBe(470);
   });
 
   it("treats 10 parallel submissions with the same idempotency key as one redemption", async () => {
@@ -69,6 +69,32 @@ suite("concurrent loyalty changes on real PostgreSQL", () => {
       VALUES (gen_random_uuid(),'f',encode(sha256(convert_to(gen_random_uuid()::text,'UTF8')),'hex'),'en','T','',now(),'[{"product":"x","subtotal":1000}]',1000,'PAID_AT_PICKUP','COMPLETED',$1) RETURNING number::text AS number`, [account.user_id]);
     const awards = await Promise.all(Array.from({ length: 10 }, () => loyalty.earnForOrder(order.number, db)));
     expect(awards.filter(a => a.awarded > 0)).toHaveLength(1);
-    expect((await loyalty.accountForUser(account.user_id, db))!.balance).toBe(1 + 10);
+    expect((await loyalty.accountForUser(account.user_id!, db))!.balance).toBe(1 + 10);
+  });
+
+  it("reverses a refund once under 10 parallel submissions with the same key, and never over-reverses with different keys", async () => {
+    const account = await funded(0 + 1);
+    const { rows: [order] } = await pool.query<{ number: string }>(`INSERT INTO orders (request_id,request_fingerprint,tracking_token,locale,customer,notes,pickup_at,items,total,payment,status,customer_user_id)
+      VALUES (gen_random_uuid(),'f',encode(sha256(convert_to(gen_random_uuid()::text,'UTF8')),'hex'),'en','T','',now(),'[{"product":"x","subtotal":1000}]',1000,'PAID_AT_PICKUP','COMPLETED',$1) RETURNING number::text AS number`, [account.user_id]);
+    await pool.query("UPDATE loyalty_program SET points_per_dollar = 10 WHERE id = 1");
+    await loyalty.earnForOrder(order.number, db);                       // 100 points
+    const key = `refund-${randomUUID()}`;
+    const same = await Promise.all(Array.from({ length: 10 }, () => loyalty.reverseForRefund({ order: order.number, refundCents: 400, reason: "parallel", key, actor: "admin" }, db)));
+    expect(same.filter(r => !r.duplicate)).toHaveLength(1);
+    expect((await loyalty.accountForUser(account.user_id!, db))!.balance).toBe(1 + 100 - 40);
+    // Ten different refunds of 200 against the 600 still refundable: exactly three fit, the rest are refused.
+    const many = await Promise.all(Array.from({ length: 10 }, () => outcome(loyalty.reverseForRefund({ order: order.number, refundCents: 200, reason: "parallel", key: `refund-${randomUUID()}`, actor: "admin" }, db))));
+    expect(many.filter(r => r === "ok")).toHaveLength(3);
+    expect(many.filter(r => r === "REFUND_EXCEEDS_PURCHASE")).toHaveLength(7);
+    expect((await loyalty.accountForUser(account.user_id!, db))!.balance).toBe(1);   // every earned point reversed, none twice
+  });
+
+  it("links one guest card to an account exactly once under parallel attempts", async () => {
+    const { secret, account } = await loyalty.createGuestCard(db);
+    await loyalty.adjustPoints({ accountId: account.id, points: 70, reason: "concurrency test", key: `fund-${randomUUID()}`, actor: "test" }, db);
+    const member = await funded(5);
+    const results = await Promise.all(Array.from({ length: 10 }, () => outcome(loyalty.linkGuestCard(secret, member.user_id!, db))));
+    expect(results.filter(r => r === "ok")).toHaveLength(1);
+    expect((await loyalty.accountForUser(member.user_id!, db))!.balance).toBe(75);
   });
 });

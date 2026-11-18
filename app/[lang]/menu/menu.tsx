@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { useRouter } from "next/navigation";
 import { categories, lineSchema, modifiers, money, pickupDate, products, quote, type Lang, type Line } from "../../../src/domain";
 import { salesTax } from "../../../src/pickup-policy";
+import { pointsFor } from "../../../src/rewards-math";
 import { PickupInstructions } from "../../../src/business-view";
 import { selectionCost, type CatalogOptionGroup } from "../../../src/catalog-options";
 import { selectedCampaign, trackInteraction } from "../analytics-client";
@@ -34,7 +35,11 @@ const demoProducts: MenuProduct[] = products.map(product => ({
   prices: { regular: product.price, large: product.price + 100 },
 }));
 
-export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo }: {
+export type CartRewards = {
+  pointsPerDollar: number; operational: boolean; allEligible: boolean; minOrderCents: number; linked: boolean; rewardsHref: string; cardHref: string; accountHref: string;
+};
+export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
+  rewards?: CartRewards;
   logo?: string;
   pickupInfo?: { displayName: string; street: string; city: string; province: string; postalCode: string; phone: string };
   lang: Lang;
@@ -179,6 +184,15 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
           </div><div>{money(item.subtotal, lang)} <button type="button" className="remove" aria-label={fr ? `Retirer ${item.name[lang]}` : `Remove ${item.name[lang]}`} onClick={() => save(cart.filter((_, i) => item.index !== i))}>×</button></div></li>)}</ul>
         {official && <p>{fr ? "Taxes" : "Sales tax"} · {money(tax, lang)}</p>}
         <p className="total">{official ? "Total" : fr ? "Total démo" : "Demo total"} <strong>{money(total, lang)}</strong></p>
+        {official && rewards && (() => {
+          // Estimate on the pre-tax subtotal only (never tax). Confirmed points exist only once the order is completed.
+          const estimate = rewards.allEligible && subtotal >= rewards.minOrderCents ? pointsFor(subtotal, rewards.pointsPerDollar) : null;
+          return <p className="fine-print" data-testid="points-estimate" role="note">{!rewards.operational ?
+            (fr ? `Aperçu Récompenses Salut : ${estimate === null ? "les points dépendent des produits admissibles" : `environ ${estimate} points`}, mais le programme n’est pas encore actif : aucun point ne sera crédité.` : `Salut Rewards preview: ${estimate === null ? "points depend on eligible products" : `about ${estimate} points`}, but the program is not active yet: no points will be credited.`) :
+            rewards.linked ? (fr ? `Estimation : ${estimate === null ? "points selon les produits admissibles" : `environ ${estimate} points`} (avant taxes). Ils seront confirmés une fois la commande terminée.` : `Estimate: ${estimate === null ? "points based on eligible products" : `about ${estimate} points`} (before tax). They are confirmed once the order is completed.`) :
+            <>{fr ? "Cette commande ne cumulera pas de points sans compte ni carte. " : "This order will not earn points without an account or card. "}<a href={rewards.accountHref}>{fr ? "Se connecter" : "Sign in"}</a> · <a href={rewards.cardHref}>{fr ? "Obtenir une carte invité" : "Get a guest card"}</a></>}
+            {" "}<a href={rewards.rewardsHref}>{fr ? "En savoir plus" : "Learn more"}</a></p>;
+        })()}
         <form className="checkout" onSubmit={checkout} onFocus={() => {
           if (official && !checkoutStarted.current) {
             checkoutStarted.current = true;

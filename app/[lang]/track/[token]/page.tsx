@@ -22,6 +22,7 @@ export default async function Tracking({ params }: PageProps<"/[lang]/track/[tok
       <p role="status" className="pill">{stateLabels[order.status][lang]}</p>
       {order.status !== "CANCELLED" && <ol className="timeline">{states.slice(0, -1).map((status, index) => <li key={status} aria-current={status === order.status ? "step" : undefined} className={index <= states.indexOf(order.status) ? "passed" : ""}>{stateLabels[status][lang]}</li>)}</ol>}
       {profile && <PickupInstructions lang={lang} profile={profile}/>}
+      {order.status === "COMPLETED" && <p className="fine-print">{fr ? "Si cette commande est liée à un compte ou à une carte Récompenses Salut, les points confirmés apparaissent dans l’historique de ce compte ou de cette carte (jamais sur ce lien)." : "If this order is linked to a Salut Rewards account or card, confirmed points appear in that account or card history (never on this link)."}</p>}
       <p><Link href={`/${lang}/track/${token}/receipt`}>{fr ? "Voir le reçu" : "View the receipt"}</Link></p>
       <p>{fr ? "Conserve ce lien pour suivre ta commande." : "Keep this link to follow your order."}</p><CopyLink lang={lang}/>
     </div>

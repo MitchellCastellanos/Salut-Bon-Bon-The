@@ -186,6 +186,8 @@ try {
 
   await admin.goto(`${BASE}/fr/admin/rewards`);
   const program = admin.locator('form[aria-labelledby="program"]');
+  assert.equal(await program.locator('input[name="rate"]').inputValue(), "10", "the preview ships with 10 points per $1");
+  await program.locator('input[name="rate"]').fill("");
   await program.locator('input[name="active"]').check();
   await program.getByRole("button", { name: "Enregistrer le programme" }).click();
   await admin.getByText("Définissez un taux").waitFor();

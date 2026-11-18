@@ -20,3 +20,7 @@ npm run build
 ```
 
 Next.js App Router, strict TypeScript, Tailwind CSS, Zod and PostgreSQL through PGlite or pg. See [status](docs/IMPLEMENTATION_STATUS.md), [handoff](docs/HANDOFF.md), [plan](docs/IMPLEMENTATION_PLAN.md), [setup](docs/ENVIRONMENT_SETUP.md), [architecture](docs/ARCHITECTURE.md), and [demo guide](docs/DEMO_GUIDE.md).
+
+## Salut Rewards (Récompenses Salut)
+
+A public preview of the loyalty program lives at `/fr/recompenses` and `/en/rewards` (no login). Terms loaded by migration 009: 10 points per $1 CAD on the pre-tax eligible subtotal (5 %), 1,000 points = $5 off, redeemed at the counter. The program ships **inactive**: nothing is earned or redeemed until an ADMIN activates it (production also needs the recorded owner authorization). Guest cards work without an account. Details: [Rewards](docs/REWARDS.md); client-facing comparison of both loyalty options (French): [Loyalty commercial proposal](docs/LOYALTY_COMMERCIAL_PROPOSAL.md). Extra checks: `npm run test:rewards` and `npm run test:rewards-public` (see [Testing](docs/TESTING.md)).
