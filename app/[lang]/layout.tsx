@@ -9,8 +9,8 @@ import { LanguageLink } from "../../src/language-link";
 import { language } from "../../src/domain";
 import { StorefrontIcon } from "../../src/storefront-art";
 import { instagramUrl, rewardsName } from "../../src/storefront-content";
-import { days } from "../../src/pickup-policy";
 import { pickupConfiguration } from "../../src/store-settings";
+import { AddressBlock, HoursList } from "../../src/business-view";
 
 export default async function LanguageLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
@@ -19,8 +19,9 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
   const home = `/${lang}`;
   const official = usesOfficialCatalog();
   const instagram = instagramUrl();
-  const schedule = official ? await pickupConfiguration().then(c => c.policy, () => null) : null;
-  const dayLabel: Record<string, [string, string]> = { Mon: ["Lun", "Mon"], Tue: ["Mar", "Tue"], Wed: ["Mer", "Wed"], Thu: ["Jeu", "Thu"], Fri: ["Ven", "Fri"], Sat: ["Sam", "Sat"], Sun: ["Dim", "Sun"] };
+  const config = official ? await pickupConfiguration().catch(() => null) : null;
+  const schedule = config?.policy ?? null;
+  const profile = config?.profile ?? null;
   return <>
     <a className="skip" href="#main">{fr ? "Aller au contenu" : "Skip to content"}</a>
     <header className="top"><div className="wrap storefront-nav">
@@ -45,8 +46,8 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
       <div className="wrap footer-grid">
         <div><Brand href={home}/></div>
         <div><h2>Menu</h2><Link href={`${home}/menu?category=milk`}>{fr ? "Bubble thé au lait" : "Milk bubble tea"}</Link><Link href={`${home}/menu?category=fruit`}>{fr ? "Thés aux fruits" : "Fruit teas"}</Link><Link href={`${home}/menu?category=matcha`}>Matcha</Link><Link href={`${home}#rewards`}>{rewardsName[lang]}</Link></div>
-        <div><h2>{fr ? "Nous trouver" : "Find us"}</h2><p>Montréal, Québec<br/>{fr ? "Adresse communiquée par l’équipe" : "Address provided by the team"}</p></div>
-        <div><h2>{fr ? "Heures d’ouverture" : "Opening hours"}</h2>{schedule ? <ul className="footer-hours">{days.map(day => <li key={day}><span>{dayLabel[day][fr ? 0 : 1]}</span> {schedule.hours[day]?.length ? schedule.hours[day]!.map(([a, b]) => `${a}–${b}`).join(", ") : (fr ? "Fermé" : "Closed")}</li>)}</ul> : <p>{official ? (fr ? "Les heures seront publiées par l’équipe." : "Hours will be published by the team.") : (fr ? "Horaires à confirmer" : "Hours to be confirmed")}</p>}{instagram && <a href={instagram}>Instagram</a>}</div>
+        <div><h2>{fr ? "Nous trouver" : "Find us"}</h2>{profile ? <AddressBlock lang={lang} profile={profile}/> : <p>Montréal, Québec<br/>{official ? fr ? "L’adresse sera publiée par l’équipe." : "The address will be published by the team." : fr ? "Adresse à confirmer" : "Address to be confirmed"}</p>}</div>
+        <div><h2>{fr ? "Heures d’ouverture" : "Opening hours"}</h2>{schedule ? <HoursList lang={lang} policy={schedule} short/> : <p>{official ? (fr ? "Les heures seront publiées par l’équipe." : "Hours will be published by the team.") : (fr ? "Horaires à confirmer" : "Hours to be confirmed")}</p>}{instagram && <a href={instagram}>Instagram</a>}</div>
       </div>
       <div className="wrap footer-legal"><span>© {new Date().getFullYear()} Salut Bon Bon Thé</span>
         <Link href={`${home}/legal/privacy`}>{fr ? "Confidentialité" : "Privacy"}</Link>

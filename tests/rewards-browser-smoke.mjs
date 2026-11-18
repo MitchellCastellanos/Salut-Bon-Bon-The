@@ -97,8 +97,6 @@ try {
   await admin.locator('input[name="lead"]').fill("15");
   await admin.locator('input[name="capacity"]').fill("2");
   await admin.locator('input[name="advance"]').fill("7");
-  await admin.locator('input[name="tax1"]').fill("5");
-  await admin.locator('input[name="tax2"]').fill("9.975");
   await admin.locator('input[name="enabled"]').check();
   const closed = inDays(2);
   await admin.getByRole("button", { name: /Ajouter une fermeture/ }).click();
@@ -107,7 +105,7 @@ try {
   await admin.getByRole("button", { name: /Enregistrer l.horaire/ }).click();
   await admin.getByText("Horaire enregistré").waitFor();
   const policy = (await q("SELECT value FROM catalog_store_settings WHERE key = 'pickup_policy'"))[0].value;
-  assert.equal(policy.slotCapacity, 2); assert.deepEqual(policy.taxRates, [5000, 9975]);
+  assert.equal(policy.slotCapacity, 2); assert.equal(policy.taxRates, undefined, "tax no longer lives in the pickup policy");
   assert.equal(policy.exceptions[0].from, closed); assert.equal(policy.hours.Mon.length, 2);
   await admin.getByText("Fermeture de test").first().waitFor();
   step("business hours, pickup settings and a closure saved and previewed");
@@ -119,6 +117,68 @@ try {
   await admin.getByRole("alert").first().waitFor();
   assert.equal((await q("SELECT value FROM catalog_store_settings WHERE key = 'pickup_policy'"))[0].value.hours.Tue[0][0], "08:00", "an invalid interval (start after end) must not be saved");
   step("invalid schedules are rejected server-side and the previous schedule is kept");
+
+  // ───────── Business profile and fiscal settings ─────────
+  await admin.goto(`${BASE}/fr/admin/hours`);
+  await admin.getByText("La commande en ligne est fermée").waitFor();
+  for (const text of ["statut fiscal", "profil du commerce"]) await admin.getByText(new RegExp(text, "i")).first().waitFor();
+  const closedCatalog = await (await admin.request.get(`${BASE}/fr/catalog`)).text();
+  assert.match(closedCatalog, /commande en ligne est indisponible/i, "checkout stays closed until the fiscal status and profile are set");
+  step("checkout stays closed and the admin lists exactly what is missing (fiscal status, profile)");
+
+  await admin.goto(`${BASE}/fr/admin/business`);
+  const profileForm = admin.locator('form[aria-labelledby="profile"]');
+  await profileForm.locator('input[name="displayName"]').fill("Salut Bon Bon Thé");
+  await profileForm.locator('input[name="street"]').fill("1175 Rue Notre Dame");
+  await profileForm.locator('input[name="city"]').fill("Lachine");
+  await profileForm.locator('input[name="postalCode"]').fill("12345");
+  await profileForm.locator('input[name="phone"]').fill("+1 514-637-6666");
+  await profileForm.getByRole("button", { name: "Enregistrer le profil" }).click();
+  await admin.getByText(/Code postal canadien invalide/).waitFor();
+  await profileForm.locator('input[name="postalCode"]').fill("h8s2c5");
+  await profileForm.locator('input[name="phone"]').fill("+1 514-637-6666");
+  await profileForm.getByRole("button", { name: "Enregistrer le profil" }).click();
+  await admin.waitForURL(/saved=profile/);
+  assert.equal((await q("SELECT value->>'postalCode' AS p FROM catalog_store_settings WHERE key = 'business_profile'"))[0].p, "H8S 2C5");
+  step("business profile: invalid postal code rejected server-side, valid profile saved and normalised");
+
+  const fiscalForm = admin.locator('form[aria-labelledby="fiscal"]');
+  await fiscalForm.locator('select[name="status"]').selectOption("registered");
+  await fiscalForm.getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
+  await admin.getByText(/dénomination sociale est obligatoire/).waitFor();
+  await admin.locator('form[aria-labelledby="fiscal"] select[name="status"]').selectOption("registered");
+  await admin.locator('form[aria-labelledby="fiscal"] input[name="legalName"]').fill("Test Shop Inc.");
+  await admin.locator('form[aria-labelledby="fiscal"] input[name="gstNumber"]').fill("12345");
+  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
+  await admin.getByText(/Numéro de TPS invalide/).waitFor();
+  assert.equal(await q("SELECT 1 FROM catalog_store_settings WHERE key = 'fiscal_settings'").then(r => r.length), 0, "nothing saved while registration numbers are missing or invalid");
+  step("fiscal settings: cannot register for tax without a legal name and valid GST/QST numbers (nothing is saved)");
+  await admin.locator('form[aria-labelledby="fiscal"] select[name="status"]').selectOption("registered");
+  await admin.locator('form[aria-labelledby="fiscal"] input[name="legalName"]').fill("Test Shop Inc.");
+  await admin.locator('form[aria-labelledby="fiscal"] input[name="gstNumber"]').fill("123456789 rt 0001");
+  await admin.locator('form[aria-labelledby="fiscal"] input[name="qstNumber"]').fill("1234567890 TQ 0001");
+  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
+  await admin.waitForURL(/saved=fiscal/);
+  const fiscalRow = (await q("SELECT value FROM catalog_store_settings WHERE key = 'fiscal_settings'"))[0].value;
+  assert.equal(fiscalRow.gstNumber, "123456789 RT 0001"); assert.equal(fiscalRow.gstRate, 5000); assert.equal(fiscalRow.qstRate, 9975);
+  step("fiscal settings saved (test-only registration numbers), GST 5% / QST 9.975% preserved");
+
+  const home = await ctx();
+  await home.goto(`${BASE}/fr`);
+  await home.getByText("1175 Rue Notre Dame").first().waitFor();
+  assert.ok(await home.getByRole("link", { name: "+1 514-637-6666" }).count() >= 1);
+  assert.equal(await home.locator('script[type="application/ld+json"]').count(), 0, "no structured data until the owner confirms the details");
+  await admin.goto(`${BASE}/fr/admin/business`);
+  await admin.locator('form[aria-labelledby="profile"] input[name="confirmed"]').check();
+  await admin.locator('form[aria-labelledby="profile"]').getByRole("button", { name: "Enregistrer le profil" }).click();
+  await admin.waitForURL(/saved=profile/);
+  await home.goto(`${BASE}/en`);
+  const ld = JSON.parse(await home.locator('script[type="application/ld+json"]').first().textContent());
+  assert.equal(ld.address.postalCode, "H8S 2C5"); assert.equal(ld.telephone, "+1 514-637-6666"); assert.equal(ld.email, undefined);
+  assert.ok(ld.openingHoursSpecification.length >= 7, "structured data lists the persisted weekly hours");
+  const footer = await home.locator("footer").innerText();
+  assert.match(footer, /1175 Rue Notre Dame/); assert.match(footer, /\+1 514-637-6666/); assert.match(footer, /08:00/);
+  step("storefront shows the persisted address, phone and hours in footer and Find-us; structured data appears only after owner confirmation");
 
   await admin.goto(`${BASE}/fr/admin/rewards`);
   const program = admin.locator('form[aria-labelledby="program"]');
@@ -223,7 +283,26 @@ try {
   assert.equal(order.customer_email, "ana@example.invalid"); assert.ok(order.customer_user_id);
   const subtotal = order.items.reduce((s, i) => s + i.subtotal, 0);
   assert.equal(order.tax_cents, Math.round(subtotal * 0.05) + Math.round(subtotal * 0.09975)); assert.equal(subtotal, 1350);
+  await ana.getByText("Cueillette en magasin").first().waitFor().catch(() => {});
   step("pickup checkout: server pricing, tax, customer link; slots respect hours and the closure");
+  const [tracked] = await q("SELECT tracking_token, tax_breakdown, business_snapshot FROM orders WHERE number = $1", [order.n]);
+  assert.deepEqual(tracked.tax_breakdown.map(l => l.code), ["GST", "QST"]);
+  assert.equal(tracked.business_snapshot.gstNumber, "123456789 RT 0001");
+  await ana.goto(`${BASE}/fr/track/${tracked.tracking_token}`);
+  await ana.getByText("1175 Rue Notre Dame").first().waitFor();
+  await ana.getByRole("link", { name: "Voir le reçu" }).click();
+  await ana.getByRole("heading", { name: "Reçu" }).waitFor();
+  const receiptText = await ana.locator(".receipt").innerText();
+  for (const expected of ["Salut Bon Bon Thé", "Test Shop Inc.", "1175 Rue Notre Dame", "H8S 2C5", `Facture n° ${order.n}`, "Sous-total avant taxes", "TPS (5 %)", "123456789 RT 0001", "TVQ (9.975 %)", "1234567890 TQ 0001", "Total"]) {
+    assert.ok(receiptText.includes(expected), `receipt shows: ${expected}`);
+  }
+  await admin.goto(`${BASE}/fr/admin/business`);
+  await admin.locator('form[aria-labelledby="fiscal"] input[name="legalName"]').fill("Renamed Inc.");
+  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
+  await admin.waitForURL(/saved=fiscal/);
+  await ana.goto(`${BASE}/fr/track/${tracked.tracking_token}/receipt`);
+  assert.ok((await ana.locator(".receipt").innerText()).includes("Test Shop Inc."), "a past receipt keeps the details it was issued with");
+  step("receipt: establishment, bill number, itemised lines, GST and QST with registration numbers; unchanged by later edits");
 
   // ───────── Staff fulfils; loyalty earns on completion ─────────
   const staff = await ctx();

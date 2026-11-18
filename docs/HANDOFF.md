@@ -17,3 +17,7 @@ Branch `claude/salut-bon-bon-the-launch-6a36qh`, draft PR #4 (the earlier `feat/
 ## Update 2026-11-18 (images merged)
 
 The owner uploaded 27 optimized WebP images to `main` (commit `08c286f`); they were merged into PR #4 without conflicts. The homepage now carries a multi-campaign hero carousel, image-led campaign cards and photo-only favourites; the gallery heading no longer claims Instagram or shows demo labels with the official catalog. Run `npm run assets:check` and `npm run test:storefront` after changing images or campaigns. Still pending: the official logo and the three BATCH-06 images.
+
+## Update 2026-11-18 (business profile, fiscal settings, receipts)
+
+Branch `feat/business-profile-fiscal`. Added the persisted business profile (`business_profile`), fiscal settings (`fiscal_settings`) and their ADMIN screen, a checkout readiness gate with explicit blockers, per-order GST/QST breakdown and business snapshot (migration 008), customer receipts, structured data and pickup instructions from the profile, and an idempotent one-time initialiser (`npm run business:init`). Pickup lead time and capacity are now optional and unset until decided. Findings that need the owner: no prices exist anywhere, the opening hours are unverified and conflict with one source, the phone could not be found publicly, and Revenu Québec billing rules (including a certified sales recording system) need the accountant. Details: [Business profile](BUSINESS_PROFILE.md), [Tax](TAX.md).

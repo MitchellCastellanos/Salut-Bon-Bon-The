@@ -20,7 +20,7 @@ it("uses Montréal hours, the lead time, and intervals that end before closing",
 });
 
 it("rounds separately for each configured tax", () => {
-  expect(salesTax(777, policy.taxRates)).toBe(39 + 74);
+  expect(salesTax(777, policy.taxRates ?? [])).toBe(39 + 74);
 });
 
 it("offers no pickup on an exceptional closure date in Montréal local time", () => {

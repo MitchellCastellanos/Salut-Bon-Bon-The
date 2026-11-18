@@ -21,14 +21,25 @@ Production checkout stays disabled until hosted validation and owner sign-off. T
 - [x] Stripe (test mode) reconciliation, Resend outbox, tax logic, as before.
 - [x] 47 automated tests (7 need a PostgreSQL), lint and types clean, production build, and four browser suites (demo, catalog, staff authorization, and the new rewards/accounts/hours/menu suite, also run with the app connected as the least-privilege role).
 
+## Resolved on 2026-11-18 (business profile and fiscal configuration)
+
+- [x] Business profile (name, address, postal code, phone) persisted in Neon `development` (initialised once, idempotently, flagged *unverified*) and editable in `/admin/business`; footer, "Come see us" section, checkout pickup instructions, tracking page, receipts, emails and structured data (after owner confirmation) all read the same record.
+- [x] Fiscal settings section (legal name, GST and QST numbers, status, rates, receipt note) with server-side validation; tax is collected only when registered with both numbers; GST 5 % and QST 9.975 % preserved; GST and QST amounts stored per order with a business snapshot; customer receipt page.
+- [x] Checkout readiness gate with an explicit list of what is missing (schedule, lead time, capacity, fiscal status, profile, priced product).
+- [x] Migration 008 rehearsed on `migration-test`, applied to `development`; `production` untouched.
+
 ## Blocked on the owner or external systems
 
-- [ ] Owner-approved **prices** (the catalog has none; only the price sheet can make products orderable), **hours**, **capacity**, **lead time**, and loyalty **earning rate, reward list and thresholds**. Nothing was invented.
-- [ ] GST/QST registration status, numbers and per-product treatment ([Tax](TAX.md)).
+- [ ] **Prices: none exist.** `catalog/official.json` has no price fields, no price list exists anywhere in the project, and Neon `development` has 0 variants (all 62 products, no sizes, no prices; 0 modifier surcharges). Nothing was invented or cleared. Enter them in `/admin/prices` (62 products on one page, dollars) or send the price list to be loaded.
+- [ ] **Opening hours:** the supplied hours (Mon–Sat 10:30–20:00, Sun closed) are stored in the seed file but **not applied**, because the cited sources could not be read and a third-party page lists Mon–Thu 11:00–20:00. Confirm, then run `npm run business:init -- --with-hours` or enter them in `/admin/hours`. See [Business profile](BUSINESS_PROFILE.md).
+- [ ] **Pickup lead time and capacity** are intentionally unset (not invented). Checkout stays closed until the business sets them.
+- [ ] **Loyalty rate, rewards and thresholds** (owner is discussing separately). The program stays implemented and inactive.
+- [ ] **Tax registration:** the status gate, legal-name and GST/QST number fields, separate GST/QST amounts and receipts are implemented. Still needed: the legal name and GST/QST numbers (or confirmation the business is not registered), and the accountant's answer on Revenu Québec's **certified sales recording system** for restaurants, which the site receipt does not replace ([Tax](TAX.md)).
 - [ ] Stripe test keys and webhook secret; live keys only with explicit approval.
 - [ ] Resend verified domain, API key, `STORE_NOTIFICATION_EMAIL`, `CRON_SECRET`. **Customer registration stays unavailable until email is configured** (by design).
 - [ ] `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` per Vercel environment (not set; accounts and staff sign-in show an accurate unavailable state until they are).
 - [ ] Production Neon: create `salut_app`, run migrations 001–007 and the import (separate approval), create ADMIN users.
+- [ ] **Profile confirmation:** the address and phone are owner-supplied and unverified (no public source could be read; no phone found for this shop). Tick the confirmation in `/admin/business` once checked.
 - [ ] **Official logo** (`public/brand/logo.svg`, plus `public/brand/logo-email.png` for email) and the 3 BATCH-06 rewards/account images ([manifest](IMAGE_ASSET_MANIFEST.md)). The 26 marketing and product images are present and verified (uploaded to `main`, 27 files including one unused extra). Logo and BATCH-06 slots are wired and fall back (wordmark, or nothing) until the files exist.
 - [ ] Legal and privacy copy (customer accounts and loyalty data), analytics consent review, custom domain and DNS (not touched).
 - [ ] Edge rate limits for checkout and staff sign-in (Vercel Firewall) as defence in depth.

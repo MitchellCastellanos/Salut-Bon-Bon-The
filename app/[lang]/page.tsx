@@ -2,6 +2,8 @@ import Image from "next/image";
 import { catalogCategories, catalogCollections, catalogProducts, visibleCampaigns } from "../../src/catalog";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
 import { loyaltyProgram } from "../../src/loyalty";
+import { pickupConfiguration } from "../../src/store-settings";
+import { AddressBlock, businessJsonLd, HoursList } from "../../src/business-view";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, money, products } from "../../src/domain";
@@ -42,6 +44,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const official = usesOfficialCatalog();
   const rewardsActive = official ? await loyaltyProgram().then(p => p.active, () => undefined) : undefined;
   const promotions = await visibleCampaigns();
+  const config = official ? await pickupConfiguration().catch(() => null) : null;
+  const profile = config?.profile ?? null;
+  const jsonLd = businessJsonLd(profile, config?.policy ?? null, process.env.SITE_URL);
   const mangoHero = promotions.find(campaign => campaign.id === "fresh-mango-series");
   const heroSlides = promotions.filter(campaign => campaign.id !== "explore-menu" && campaign.image && hasPublicImage(campaign.image));
   const officialTiles = [
@@ -53,6 +58,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const [categories, collections, highlights] = official ? await Promise.all([catalogCategories(), catalogCollections(), catalogProducts(true)]) : [[], [], []];
   const instagram = instagramUrl();
   return <>
+    {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }}/>}
     {official ? heroSlides.length > 1 ? <HeroGallery lang={lang} kind="promotion" slides={heroSlides.map((campaign, index) => ({
       title: campaign[lang],
       scene: <div className="campaign-slide mango" data-analytics-hero={campaign.id}>
@@ -141,6 +147,10 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/rewards.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="rewards-art"><StorefrontIcon name="gift"/><span>★ ★ ★</span></span></StorefrontArt></div>
         </section>
       </div>
+      {profile && <section className="home-section visit" id="visit" aria-labelledby="visit-title">
+        <h2 id="visit-title">{fr ? "Venez nous voir" : "Come see us"}</h2>
+        <div className="visit-grid"><AddressBlock lang={lang} profile={profile}/>{config?.policy && <div><h3>{fr ? "Heures d’ouverture" : "Opening hours"}</h3><HoursList lang={lang} policy={config.policy}/></div>}</div>
+      </section>}
       <section className="home-section social" aria-labelledby="social">
         <div className="section-head"><h2 id="social"><StorefrontIcon name="instagram"/>{instagram ? fr ? "Suivez-nous sur Instagram" : "Follow us on Instagram" : official ? fr ? "En images" : "In pictures" : fr ? "Galerie Instagram" : "Instagram gallery"}</h2>
           {instagram ? <a href={instagram}>Instagram ↗</a> : !official && <span className="demo-label">{fr ? "Aperçu de démonstration" : "Demo preview"}</span>}</div>

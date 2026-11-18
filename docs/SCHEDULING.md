@@ -2,14 +2,14 @@
 
 Time zone: **America/Toronto** for every rule. All checks run on the server in `eligiblePickup` (`src/pickup-policy.ts`); the browser only displays the slots the server computed. Changes made in `/{lang}/admin/hours` take effect immediately, with no redeploy (settings are read per request from `catalog_store_settings`).
 
-**Nothing is predefined.** No official hours, capacity or lead time exist in the repository. Until an ADMIN saves a schedule with at least one open interval, no pickup slot is offered and checkout is unavailable.
+**Nothing is predefined.** No official capacity or lead time exists in the repository, and they stay unset until the business decides them. Pickup slots are offered only when a weekly schedule, a lead time and a capacity are all saved, and checkout additionally needs a fiscal status, the business profile and a priced product (see [Business profile](BUSINESS_PROFILE.md)).
 
 ## What the owner can configure
 
 - **Weekly hours:** per weekday an open/closed toggle and up to four non-overlapping intervals (for example 08:00–12:00 and 13:00–22:00). A bar per day draws the schedule; the form warns about unsaved changes.
 - **Pickup:** preparation lead time (5–1440 min), slot length (5, 10, 15, 20, 30 or 60 min), maximum orders per slot, advance booking window (1–60 days), optional same-day cutoff time.
 - **Exceptional schedules:** date ranges that are either **closed** or have **special hours**, each with an optional reason. Later entries override earlier ones, and a range overrides the weekly schedule for those dates. This covers holidays, single closure dates, temporary closures, date ranges and special opening hours.
-- **Sales tax rates** (percent, up to two) and the **pickup ordering enabled** switch. See [Tax](TAX.md).
+- The **pickup ordering enabled** switch. Tax is no longer set here; it lives in the fiscal settings (`/admin/business`, see [Tax](TAX.md)).
 
 The page also lists the next 21 days exactly as customers will see them, so the effect of exceptions is visible.
 

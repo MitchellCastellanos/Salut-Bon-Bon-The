@@ -1,5 +1,6 @@
 import { pickupConfiguration } from "./store-settings";
-import { eligiblePickup, salesTax } from "./pickup-policy";
+import { eligiblePickup } from "./pickup-policy";
+import { businessSnapshot, computeTax, unconfiguredFiscal } from "./business";
 import { quoteOfficial } from "./catalog-pricing";
 import { usesOfficialCatalog } from "./catalog-mode";
 import { createHash, randomBytes } from "node:crypto";
@@ -31,7 +32,7 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
   const time = Date.parse(pickup);
   const official = usesOfficialCatalog();
   const config = official ? await pickupConfiguration() : null;
-  const policy = config?.enabled ? config.policy : null;
+  const policy = config?.enabled ? config.ready : null;
   if (official ? !policy || !eligiblePickup(time, policy) :
       time % 900000 || time < Date.now() + 14 * 60000 || time > Date.now() + 3 * 3600000) throw new Error("SLOT");
   if (official && method !== "pickup") throw new Error("MENU");
@@ -48,18 +49,19 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
   }
   const items = official ? await quoteOfficial(lines) : quote(lines);
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-  const tax = policy ? salesTax(subtotal, policy.taxRates) : 0;
+  const { cents: tax, lines: taxLines } = official && config ? computeTax(subtotal, config.fiscal) : computeTax(subtotal, unconfiguredFiscal);
+  const snapshot = official && config?.profile ? businessSnapshot(config.profile, config.fiscal) : null;
   const total = subtotal + tax;
   if (official && input.expectedTotal !== total) throw new Error("PRICE");
   const token = randomBytes(32).toString("hex");
   const conversion = official && analytics ? `, conversion AS (
     INSERT INTO marketing_events (event, campaign_id)
-    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $15) FROM inserted
+    SELECT 'completed_order', (SELECT id FROM marketing_campaigns WHERE id = $17) FROM inserted
   )` : "";
   const insert = (connection = db) => connection.query<Receipt>(`
     WITH inserted AS (
-      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment, tax_cents, customer_email, payment_method, customer_user_id)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      INSERT INTO orders (request_id, request_fingerprint, tracking_token, locale, customer, notes, pickup_at, items, total, payment, tax_cents, customer_email, payment_method, customer_user_id, tax_breakdown, business_snapshot)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
       ON CONFLICT (request_id) DO NOTHING
       RETURNING number, tracking_token, request_fingerprint
     ), event AS (
@@ -67,6 +69,7 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
     ) ${conversion} SELECT * FROM inserted`, [
       request, fingerprint, token, lang, name, notes, pickup, JSON.stringify(items),
       total, method === "demo" ? "DEMO_PAID" : "UNPAID", tax, email ?? null, method, customerUserId ?? null,
+      official ? JSON.stringify(taxLines) : null, snapshot ? JSON.stringify(snapshot) : null,
       ...(conversion ? [analytics?.campaign ?? null] : []),
     ]);
   if (policy) {
@@ -136,4 +139,18 @@ export async function recordPayment(number: string) {
     UPDATE orders SET payment = 'PAID_AT_PICKUP'
     WHERE number = $1 AND status = 'READY' AND payment = 'UNPAID' RETURNING number
   `, [number])).rows.length);
+}
+
+export type ReceiptDetails = {
+  number: string; created_at: Date | string; pickup_at: Date | string; locale: "fr" | "en"; payment: string; payment_method: string;
+  total: number; tax_cents: number; items: { name: { fr: string; en: string }; quantity: number; size?: string; subtotal: number; selectedModifiers?: { fr: string; en: string }[] }[];
+  tax_breakdown: { code: "GST" | "QST"; rate: number; cents: number }[] | null; business_snapshot: import("./business-core").BusinessSnapshot | null;
+};
+
+/** The customer's receipt, reconstructed only from what was stored when the order was placed. */
+export async function receiptFor(token: string) {
+  if (!/^[0-9a-f]{64}$/.test(token)) return undefined;
+  return (await (await database()).query<ReceiptDetails>(`
+    SELECT number::text AS number, created_at, pickup_at, locale, payment, payment_method, total, tax_cents, items, tax_breakdown, business_snapshot
+    FROM orders WHERE tracking_token = $1`, [token])).rows[0];
 }

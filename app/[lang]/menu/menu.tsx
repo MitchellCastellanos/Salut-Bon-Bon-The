@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "rea
 import { useRouter } from "next/navigation";
 import { categories, lineSchema, modifiers, money, pickupDate, products, quote, type Lang, type Line } from "../../../src/domain";
 import { salesTax } from "../../../src/pickup-policy";
+import { PickupInstructions } from "../../../src/business-view";
 import { selectionCost, type CatalogOptionGroup } from "../../../src/catalog-options";
 import { selectedCampaign, trackInteraction } from "../analytics-client";
 import { slots, submitOrder } from "./actions";
@@ -33,8 +34,9 @@ const demoProducts: MenuProduct[] = products.map(product => ({
   prices: { regular: product.price, large: product.price + 100 },
 }));
 
-export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo }: {
+export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo }: {
   logo?: string;
+  pickupInfo?: { displayName: string; street: string; city: string; province: string; postalCode: string; phone: string };
   lang: Lang;
   demo: boolean;
   cardPayments?: boolean;
@@ -183,6 +185,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
             trackInteraction("checkout_start");
           }
         }}>
+          {pickupInfo && <PickupInstructions lang={lang} profile={pickupInfo}/>}
           <label>{fr ? "Nom pour la cueillette" : "Pickup name"}<input name="name" required maxLength={80} autoComplete="given-name"/></label>
           <label>{fr ? "Heure de cueillette" : "Pickup time"}<select required name="pickup" defaultValue=""><option value="" disabled>{fr ? "Choisir une heure" : "Choose a time"}</option>{times.map(time => <option key={time} value={time}>{pickupDate(time, lang)}</option>)}</select></label>
           <label>{fr ? "Courriel (facultatif)" : "Email (optional)"}<input name="email" type="email" maxLength={254} autoComplete="email" aria-describedby="email-note"/></label>
