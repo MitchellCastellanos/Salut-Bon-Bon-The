@@ -12,3 +12,7 @@
 | Quality and deployment | Partial | Unit and browser smoke coverage, draft legal pages, sitemap and language metadata. Neon and Vercel remain unverified |
 
 This demo uses sample products and fixed rolling slots. Keep the demo private. See [testing](TESTING.md) and [handoff](HANDOFF.md).
+
+## Commercial catalog checkpoint
+
+The official dataset, idempotent import, searchable catalog preview, collection landing pages and ADMIN variant pricing/availability are implemented. Checkout resolves approved, available prices in the database and stays disabled by default. Commercial checkout supports pay at pickup, regular or large variants, and configured modifier groups. The ADMIN console supports atomic bulk prices and bilingual campaign copy, scheduling, publication and homepage positions. Modifier assignments need approved business data and currently require SQL. Tax, pickup operations settings, analytics, and provider integrations remain pending.

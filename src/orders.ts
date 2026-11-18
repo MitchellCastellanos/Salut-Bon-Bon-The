@@ -1,3 +1,5 @@
+import { quoteOfficial } from "./catalog-pricing";
+import { usesOfficialCatalog } from "./catalog-mode";
 import { createHash, randomBytes } from "node:crypto";
 import type { z } from "zod";
 import { database } from "./db";
@@ -6,7 +8,7 @@ import { checkoutSchema, quote, transitions, type State } from "./domain";
 type Payment = "UNPAID" | "PAID_AT_PICKUP" | "DEMO_PAID";
 type Order = {
   number: string; customer: string; notes: string; pickup_at: Date; created_at: Date; status: State;
-  payment: Payment; total: number; items: ReturnType<typeof quote>;
+  payment: Payment; total: number; items: ReturnType<typeof quote> | Awaited<ReturnType<typeof quoteOfficial>>;
 };
 type Receipt = { number: string; tracking_token: string; request_fingerprint: string };
 
@@ -25,7 +27,22 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>) {
   if (previous) return match(previous);
   const time = Date.parse(pickup);
   if (time % 900000 || time < Date.now() + 14 * 60000 || time > Date.now() + 3 * 3600000) throw new Error("SLOT");
-  const items = quote(lines);
+  const official = usesOfficialCatalog();
+  if (official && method !== "pickup") throw new Error("MENU");
+  if (official) {
+    const { rows } = await db.query(`
+      INSERT INTO checkout_rate_limit (id, minute, attempts)
+      VALUES (1, date_trunc('minute', now()), 1)
+      ON CONFLICT (id) DO UPDATE SET minute = EXCLUDED.minute,
+        attempts = CASE WHEN checkout_rate_limit.minute = EXCLUDED.minute THEN checkout_rate_limit.attempts + 1 ELSE 1 END
+      WHERE checkout_rate_limit.minute <> EXCLUDED.minute OR checkout_rate_limit.attempts < 60
+      RETURNING id
+    `);
+    if (!rows.length) throw new Error("RATE");
+  }
+  const items = official ? await quoteOfficial(lines) : quote(lines);
+  const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+  if (official && input.expectedTotal !== total) throw new Error("PRICE");
   const token = randomBytes(32).toString("hex");
   const result = await db.query<Receipt>(`
     WITH inserted AS (
@@ -37,7 +54,7 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>) {
       INSERT INTO order_events (order_number, status) SELECT number, 'RECEIVED' FROM inserted
     ) SELECT * FROM inserted`, [
       request, fingerprint, token, lang, name, notes, pickup, JSON.stringify(items),
-      items.reduce((sum, item) => sum + item.subtotal, 0), method === "demo" ? "DEMO_PAID" : "UNPAID",
+      total, method === "demo" ? "DEMO_PAID" : "UNPAID",
     ]);
   if (result.rows[0]) return result.rows[0];
   const repeated = await existing();

@@ -6,3 +6,10 @@
 4. Test Stripe Checkout and notification providers. Verify retries and idempotency before activating external sends.
 5. Consent-aware website analytics and owner reporting.
 6. Add the approved photos and vector logo using the [image manifest](IMAGE_ASSET_MANIFEST.md) and verify media crops. Verify accessibility, SEO, performance and deployment. Review legal placeholders and business data with the owner.
+
+## Commercial continuation
+
+1. Connect Neon, rehearse all migrations in an isolated branch and verify the official import twice.
+2. Complete admin catalog editing, approved modifier assignments, pickup capacity and tax calculations.
+3. Extend campaign asset management and add consent-aware analytics.
+4. Complete provider adapters and run a private Vercel preview before launch approval.

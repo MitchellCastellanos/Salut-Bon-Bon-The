@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, modifiers, money, pickupDate, stateLabels, transitions } from "../../../src/domain";
 import { demoStaff, staffRole } from "../../../src/staff";
@@ -28,12 +29,13 @@ export default async function Staff({ params, searchParams }: PageProps<"/[lang]
   return <div className="wrap section">
     <Refresh/>
     <div className="section-head"><div><p className="eyebrow">{role === "ADMIN" ? "ADMINISTRATION" : fr ? "ESPACE ÉQUIPE" : "STAFF AREA"}</p><h1>{fr ? "Commandes" : "Orders"}<span>.</span></h1></div><form action={logout.bind(null, lang)}><button className="outline">{fr ? "Déconnexion" : "Sign out"}</button></form></div>
+    {role === "ADMIN" && <Link href={`/${lang}/admin`}>{fr ? "Prix et disponibilité" : "Pricing and availability"}</Link>}
     {!orders.length && <p>{fr ? "Aucune commande." : "No orders yet."}</p>}
     <div className="order-grid">{orders.map(order => <article className="panel" key={order.number.toString()}>
       <div className="section-head"><h2>#{order.number.toString()}</h2><strong className="pill">{stateLabels[order.status][lang]}</strong></div>
       <p><strong>{order.customer}</strong> · {pickupDate(new Date(order.pickup_at).toISOString(), lang)}</p>
       <small>{fr ? "Reçue" : "Received"} {pickupDate(new Date(order.created_at).toISOString(), lang)}</small>
-      <ul>{order.items.map((item, i) => <li key={i}>{item.quantity} × {item.name[lang]} · {modifiers[item.size][lang]} · {modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</li>)}</ul>
+      <ul>{order.items.map((item, i) => <li key={i}>{item.quantity} × {item.name[lang]} · {modifiers[item.size][lang]} · {"selectedModifiers" in item ? item.selectedModifiers.map(option => option[lang]).join(", ") || modifiers.none[lang] : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</li>)}</ul>
       {order.notes && <p>{order.notes}</p>}
       <p>{money(order.total, lang)} · {order.payment === "UNPAID" ? fr ? "À payer" : "Unpaid" : order.payment === "DEMO_PAID" ? fr ? "Paiement simulé" : "Simulated payment" : fr ? "Payée à la cueillette" : "Paid at pickup"}</p>
       <form action={change.bind(null, lang)} className="filters">

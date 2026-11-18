@@ -42,6 +42,7 @@ try {
   await guest.goto(new URL("/en/staff", STAFF_SMOKE_BASE_URL).href);
   await guest.getByLabel("Email").waitFor();
   assert.equal(await guest.getByText(name).count(), 0);
+  assert.equal((await guest.request.get(new URL("/en/admin", STAFF_SMOKE_BASE_URL).href)).status(), 404);
   await signIn(guest, "CUSTOMER");
   await guest.getByRole("alert").filter({ hasText: "Sign-in failed." }).waitFor();
   assert.equal(await guest.getByText(name).count(), 0);
@@ -51,10 +52,17 @@ try {
   const staffCard = staff.locator("article").filter({ hasText: name });
   await staffCard.getByRole("button", { name: "→ Confirmed" }).click();
   await staffCard.getByRole("button", { name: "→ Preparing" }).waitFor();
+  assert.equal((await staff.request.get(new URL("/en/admin", STAFF_SMOKE_BASE_URL).href)).status(), 404);
 
-  const admin = await browser.newPage();
+  const admin = await (await browser.newContext()).newPage();
   await signIn(admin, "ADMIN");
   await admin.getByText("ADMINISTRATION", { exact: true }).waitFor();
+  if (process.env.STAFF_SMOKE_CATALOG === "1") {
+    const page = await admin.context().newPage();
+    await page.goto(new URL("/en/admin", STAFF_SMOKE_BASE_URL).href);
+    await page.getByRole("heading", { name: "Pricing and availability" }).waitFor();
+    await page.close();
+  }
   const adminCard = admin.locator("article").filter({ hasText: name });
   await adminCard.getByRole("button", { name: "→ Preparing" }).click();
   await adminCard.getByRole("button", { name: "→ Ready" }).waitFor();

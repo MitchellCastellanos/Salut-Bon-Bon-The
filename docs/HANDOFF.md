@@ -21,3 +21,7 @@ Use `npm ci`, `npm run dev`, `npm run check`, `npm test` and `npm run build`. Se
 ## Ready-to-paste agent prompt
 
 > Read AGENTS.md, docs/HANDOFF.md, docs/IMPLEMENTATION_STATUS.md and docs/IMPLEMENTATION_PLAN.md. Add versioned PostgreSQL store settings and an ADMIN-only editor for ordering pause, hours, lead time and per-slot capacity. Enforce those settings in server-generated slots and atomically during checkout. Preserve retry idempotency and the credential-free demo. Use an isolated Neon branch to rehearse migrations when access is available. Exercise guest checkout, concurrent slot limits, STAFF denial and ADMIN access. Run type checking, lint, tests, build and both browser smokes. Update the schema, decisions, status, changelog and handoff.
+
+## Official catalog continuation
+
+The commercial branch adds [catalog import](CATALOG_IMPORT_GUIDE.md), bilingual preview pages, ADMIN variant pricing and a guarded pickup path. Start with [Neon setup](NEON_SETUP.md) and [launch readiness](LAUNCH_READINESS.md). New image prompts are BATCH-04.md and BATCH-05.md. The real images are pending.

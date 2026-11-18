@@ -12,6 +12,6 @@ export async function submitOrder(payload: unknown) {
     return { number: order.number.toString(), token: order.tracking_token } as const;
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
-    return { error: ["SLOT", "MENU", "CONFLICT"].includes(code) ? code : "FAILED" } as const;
+    return { error: ["SLOT", "MENU", "CONFLICT", "RATE", "PRICE"].includes(code) ? code : "FAILED" } as const;
   }
 }

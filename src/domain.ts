@@ -30,20 +30,22 @@ export const modifiers = {
   pearls: { fr: "Tapioca", en: "Tapioca" },
 };
 export const lineSchema = z.object({
-  product: z.string(), size: z.enum(["regular", "large"]), sugar: z.enum(["0", "50", "100"]),
+  product: z.string().min(1).max(64), size: z.enum(["regular", "large"]), sugar: z.enum(["0", "50", "100"]),
   ice: z.enum(["0", "50", "100"]), topping: z.enum(["none", "popping", "pearls"]),
+  optionIds: z.array(z.string().min(1).max(64)).max(18).optional(),
   quantity: z.number().int().min(1).max(10),
 });
 export type Line = z.infer<typeof lineSchema>;
 export const checkoutSchema = z.object({
   request: z.uuid(), lang: z.enum(["fr", "en"]), name: z.string().trim().min(1).max(80),
   notes: z.string().trim().max(240), pickup: z.iso.datetime(), method: z.enum(["pickup", "demo"]),
+  expectedTotal: z.number().int().positive().max(380000000).optional(),
   lines: z.array(lineSchema).min(1).max(20),
 });
 export function quote(lines: Line[]) {
   return lines.map(line => {
     const product = products.find(p => p.id === line.product);
-    if (!product || !product.topping.some(topping => topping === line.topping)) throw new Error("MENU");
+    if (line.optionIds?.length || !product || !product.topping.some(topping => topping === line.topping)) throw new Error("MENU");
     return { ...line, name: product.name, subtotal: (product.price + (line.size === "large" ? 100 : 0) + (line.topping === "none" ? 0 : 75)) * line.quantity };
   });
 }

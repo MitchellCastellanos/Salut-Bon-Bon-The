@@ -9,7 +9,7 @@ export function HeroGallery({ lang, slides }: { lang: Lang; slides: { title: str
   function move(direction: number) {
     setActive(previous => (previous + direction + slides.length) % slides.length);
   }
-  return <section id="promotions" className="campaign" aria-label="Promotions">
+  return <section id="hero" className="campaign" aria-label="Promotions">
     <div className="campaign-stage" onTouchStart={event => { start.current = event.touches[0].clientX; }}
       onTouchEnd={event => {
         if (start.current === null) return;

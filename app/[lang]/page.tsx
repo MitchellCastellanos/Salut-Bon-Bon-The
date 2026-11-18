@@ -1,3 +1,5 @@
+import { catalogCategories, catalogCollections, catalogProducts, visibleCampaigns } from "../../src/catalog";
+import { usesOfficialCatalog } from "../../src/catalog-mode";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, money, products } from "../../src/domain";
@@ -24,9 +26,26 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   if (!language(lang)) notFound();
   const fr = lang === "fr";
   const menu = `/${lang}/menu`;
+  const official = usesOfficialCatalog();
+  const promotions = await visibleCampaigns();
+  const mangoHero = promotions.find(campaign => campaign.id === "fresh-mango-series");
+  const officialTiles = [
+    { icon: "milk", category: "milk-tea" }, { icon: "fruit", category: "fruit-tea" },
+    { icon: "matcha", category: "matcha" }, { icon: "smoothie", category: "smoothies" },
+    { icon: "lemonade", category: "lemonade" }, { icon: "pearls", collection: "fresh-mango-series" },
+    { icon: "jelly", collection: "creme-brulee" },
+  ] as const;
+  const highlights = official ? (await catalogProducts()).filter(product => ["MANGO-01", "BRULEE-01", "401", "701", "207"].includes(product.id)) : [];
   const instagram = instagramUrl();
   return <>
-    <HeroGallery lang={lang} slides={campaigns.map(({ flavor, path, ...copy }, index) => {
+    {official ? mangoHero && <div className="campaign-slide mango">
+      <div className="campaign-media" aria-hidden="true"><StorefrontArt path="/drinks/hero.webp" sizes="100vw" priority><div className="campaign-cups"><Drink flavor="mango" illustrated/></div></StorefrontArt></div>
+      <div className="wrap campaign-inner"><div className="campaign-copy">
+        <h1>{mangoHero[lang]}</h1>
+        <p>{fr ? mangoHero.headline_fr : mangoHero.headline_en}</p>
+        <Link className="button" href={`/${lang}/catalog/fresh-mango-series`}>{fr ? "Découvrir la série" : "Explore the series"}</Link>
+      </div></div>
+    </div> : <HeroGallery lang={lang} slides={campaigns.map(({ flavor, path, ...copy }, index) => {
       const [title, accent, description] = copy[lang];
       return { title, scene: <div className={`campaign-slide ${flavor}`}>
         <div className="campaign-media" aria-hidden="true">
@@ -41,12 +60,16 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <Link className="button" href={menu}>{fr ? "Commander maintenant" : "Order now"} <span aria-hidden="true">→</span></Link>
         </div></div>
       </div> };
-    })}/>
+    })}/>}
 
     <div className="wrap home-content">
       <section className="home-section" aria-labelledby="explore">
         <div className="section-head"><h2 id="explore">{fr ? "Explorez notre menu" : "Explore Our Menu"}</h2><Link className="menu-link" href={menu}>{fr ? "Voir le menu complet" : "Explore the menu"} <span aria-hidden="true">→</span></Link></div>
-        <ul className="category-grid">{menuTiles.map(tile => {
+        <ul className="category-grid">{official ? officialTiles.map(tile => {
+          const href = "category" in tile ? `/${lang}/catalog?category=${tile.category}` : `/${lang}/catalog/${tile.collection}`;
+          const item = "category" in tile ? catalogCategories.find(item => item.id === tile.category) : catalogCollections.find(item => item.id === tile.collection);
+          return <li key={tile.icon} className={tile.icon}><Link className="category-tile" href={href}><StorefrontIcon name={tile.icon}/><strong>{item?.[lang]}</strong></Link></li>;
+        }) : menuTiles.map(tile => {
           const content = <><StorefrontIcon name={tile.icon}/><strong>{tile[lang]}</strong></>;
           return <li key={tile.icon} className={tile.icon}>{"filter" in tile ?
             <Link className="category-tile" href={`${menu}?category=${tile.filter}`}>{content}</Link> :
@@ -54,19 +77,29 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         })}</ul>
       </section>
 
-      <section className="home-section" aria-labelledby="favorites">
+      {official ? <section className="home-section" aria-labelledby="favorites">
+        <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2></div>
+        <ul className="catalog-grid">{highlights.map(product => <li key={product.id}><Link href={`/${lang}/catalog/products/${product.id}`}>{product[lang]}</Link></li>)}</ul>
+      </section> : <section className="home-section" aria-labelledby="favorites">
         <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2><span className="demo-label">{fr ? "Menu de démonstration" : "Demo menu"}</span></div>
         <div className="favorites-grid">{featured.map(product => <Link className="favorite-card" key={product.id} href={`${menu}#${product.id}`}>
           <Drink flavor={product.color}/><strong>{product.name[lang]}</strong><span>{money(product.price, lang)}</span>
         </Link>)}</div>
-      </section>
+      </section>}
 
+      {promotions.length > 0 && <section className="home-section" id="promotions">
+        <h2>{fr ? "Collections à découvrir" : "Explore the collections"}</h2>
+        <ul className="catalog-grid">{promotions.map(collection => <li key={collection.id}>
+          <Link href={`/${lang}/catalog/${collection.id}`}><strong>{collection[lang]}</strong></Link>
+          <p>{fr ? collection.headline_fr : collection.headline_en}</p>
+        </li>)}</ul>
+      </section>}
       <div className="home-banners">
         <section className="promo-banner pickup-banner" id="pickup">
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/pickup.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="phone-art"><StorefrontIcon name="bag"/></span></StorefrontArt></div>
-          <div><h2>{fr ? "Commandez en ligne et récupérez en magasin" : "Order Online and Pick Up In Store"}</h2>
-            <p>{fr ? "Choisissez votre boisson et votre heure de cueillette." : "Choose your drink and pickup time."}</p>
-            <Link className="button" href={menu}>{fr ? "Commander pour emporter" : "Order for pickup"} <span aria-hidden="true">→</span></Link></div>
+          <div><h2>{official ? fr ? "Cueillette en magasin" : "In-store pickup" : fr ? "Commandez en ligne et récupérez en magasin" : "Order Online and Pick Up In Store"}</h2>
+            {!official && <p>{fr ? "Choisissez votre boisson et votre heure de cueillette." : "Choose your drink and pickup time."}</p>}
+            <Link className="button" href={menu}>{official ? fr ? "Voir le catalogue" : "Browse the catalog" : fr ? "Commander pour emporter" : "Order for pickup"} <span aria-hidden="true">→</span></Link></div>
         </section>
         <section className="promo-banner rewards-banner" id="rewards">
           <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>

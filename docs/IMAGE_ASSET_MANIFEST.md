@@ -51,3 +51,19 @@ The horizontal gallery uses centered 31:20 landscape crops, 930 × 600. Images h
 - `public/store/exterior.webp` remains a future slot for a real storefront photograph. No current component reads this path. A 3:2 landscape photo is suggested if a store section later uses one.
 
 Generate in the order in [Batch 1](image-prompts/BATCH-01.md), [Batch 2](image-prompts/BATCH-02.md), and [Batch 3](image-prompts/BATCH-03.md). The separate skill archive could not be located. The batches follow the complete format in the redesign brief.
+
+## Official collection imagery
+
+| Path | Purpose | Dimensions | Status | Batch | Replaces placeholder |
+| --- | --- | --- | --- | --- | --- |
+| `public/catalog/MANGO-01.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
+| `public/catalog/MANGO-02.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
+| `public/catalog/MANGO-03.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
+| `public/catalog/MANGO-04.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
+| `public/catalog/MANGO-05.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 4 | Empty image slot |
+| `public/catalog/BRULEE-01.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
+| `public/catalog/BRULEE-02.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
+| `public/catalog/BRULEE-03.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
+| `public/catalog/BRULEE-04.webp` | Specialty product card | 1200 × 1140 | Prompt ready, image pending | 5 | Empty image slot |
+| `public/promotions/creme-brulee.webp` | Collection banner | 2400 × 900 | Prompt ready, image pending | 5 | Empty image slot |
+| `public/promotions/house-lemonade.webp` | Collection banner | 2400 × 900 | Prompt ready, image pending | 5 | Empty image slot |

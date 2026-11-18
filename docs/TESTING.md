@@ -22,3 +22,11 @@ A separate startup check confirmed that configuring PostgreSQL without the Bette
 ## Approved storefront redesign
 
 Type checking, ESLint, all four order tests and a production build passed. The updated browser smoke covered both rewards names, campaign navigation, the matcha category deep link, the live cart badge, cart persistence, checkout and order fulfillment. The separate Better Auth staff browser smoke passed. Both locale homepages passed viewport and navigation overflow checks at 320, 390, 768, 1024 and 1440 pixels. Desktop and phone screenshots were compared with the approved mockup using placeholder artwork. The 15 wired media paths match the manifest and all three prompt batches. Rerun image crop review after the approved media is installed.
+
+## Commercial milestone
+
+TypeScript, ESLint, all four existing order tests, the production build and the original demo browser smoke passed. A fresh local PGlite PostgreSQL-wire fixture applied migrations 001 through 003, imported the official catalog, and accepted a repeat import through pg. The staff browser smoke passed against the fixture with ADMIN page access and guest/STAFF denial. The new catalog browser smoke verified campaign navigation, mobile overflow, unpriced product details, a required modifier, local cart persistence, refreshed pricing and explicit reconfirmation, bilingual stored snapshots, and private tracking.
+
+Use `node scripts/import-catalog.mjs --verify-local` for the disposable import check. On a fresh local fixture with all migrations and the catalog imported, set `CATALOG_SMOKE_DATABASE_URL` and `CATALOG_SMOKE_BASE_URL`, then run `node tests/catalog-browser-smoke.mjs`. This test writes synthetic prices, assignments and orders. Discard the fixture after the test. Add `STAFF_SMOKE_CATALOG=1` to the staff smoke on that fixture to verify the pricing page.
+
+`npm audit --omit=dev` continues to report GHSA-fc5q-39xc-vjpf via Vitest and its dependency tree. npm offered a major downgrade with `--force`. Dependency versions were preserved. Review a supported dependency update before launch.
