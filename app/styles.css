@@ -330,3 +330,27 @@ a.category-tile:hover{box-shadow:inset 0 0 0 2px var(--detail)}
 .brand img{width:74px;height:103px;max-height:none;object-fit:contain;filter:none}
 @media(max-width:780px){.brand img{width:54px;height:75px}}
 .rich-footer .brand img{filter:brightness(0) invert(1)}
+
+/* Visual catalog and checkout preview */
+.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:22px;list-style:none;padding:0}
+.catalog-grid>li{background:#fffdf9;border:1px solid #ead8c6;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;gap:9px;padding:0 0 18px;box-shadow:0 7px 22px #42261b0d}
+.catalog-grid>li>a:not(.catalog-visual),.catalog-grid>li>small,.catalog-grid>li>span{margin-inline:16px}
+.catalog-visual{display:flex;aspect-ratio:1.1;overflow:hidden;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffe6bf,#ffd3c9)}
+.catalog-visual--fruit-tea,.catalog-visual--fresh-mango-series{background:linear-gradient(135deg,#ffe6a6,#ffc5a5)}
+.catalog-visual--matcha{background:linear-gradient(135deg,#e1edce,#c5dfb5)}
+.catalog-visual--milk-tea,.catalog-visual--creme-brulee{background:linear-gradient(135deg,#f9e4d2,#edc5b4)}
+.catalog-visual--smoothies{background:linear-gradient(135deg,#fbd6de,#e8c9f0)}
+.catalog-visual--lemonade{background:linear-gradient(135deg,#fff0ad,#dceebd)}
+.catalog-visual .catalog-banner{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+.catalog-visual:hover .catalog-banner{transform:scale(1.045)}
+.catalog-fallback{display:grid;place-items:center;width:110px;height:110px;color:#70402e}
+.catalog-fallback svg{width:100%;height:100%}
+.catalog-grid .catalog-add{background:#df422f;color:#fff;padding:12px 16px;border-radius:999px;text-align:center;font-weight:700;margin-top:auto}
+.catalog-grid .catalog-add:hover{background:#b92f22}
+.catalog-detail-visual{width:min(100%,440px);border-radius:24px;margin:20px 0}
+.checkout-preview{display:grid;gap:12px;border:1px solid #dedfe5;border-radius:18px;padding:22px;background:#fff;color:#242633}
+.checkout-preview-head{display:flex;justify-content:space-between;align-items:center}
+.checkout-preview-method{display:flex;align-items:center;flex-wrap:wrap;gap:10px;border:2px solid #6558d3;border-radius:10px;padding:16px}
+.checkout-preview-method span:last-child{margin-left:auto;font-size:.8rem}
+.checkout-preview-note{font-size:.83rem;color:#565a67}
+@media(max-width:600px){.catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.catalog-grid>li{border-radius:16px}.catalog-fallback{width:75px;height:75px}.catalog-grid .catalog-add{padding:10px 8px;font-size:.85rem}}
