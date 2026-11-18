@@ -15,7 +15,7 @@ Routes: `/fr/demo-commande` and `/en/demo-order`. Public CTA in the main navigat
 
 ## Neon / Vercel
 
-- Dedicated Neon branch `order-rewards-demo` (`br-jolly-brook-bc5qqlc7`), created from production. Separate `demo_orders` table with a `client_hash` column and rate index.
+- Dedicated Neon branch `order-preview-catalog` (`br-little-mouse-bckb16eb`), created from development with 62 catalog products and 124 provisional priced variants. Separate `demo_orders` table with a `client_hash` column and rate index.
 - `DEMO_DATABASE_URL` is configured as a sensitive Vercel environment variable for Preview and Production. Never use the live `DATABASE_URL` for the demo endpoint.
 - No migrations to the live production branch. The demo table must exist in the dedicated branch; if recreated, use the DDL in this document's companion setup or re-provision explicitly.
 - `DEMO_RATE_SALT` optional; set to a random secret for stronger IP pseudonymization.
@@ -27,3 +27,7 @@ Run `npm run check`, `npm test`, `npm run build`, plus a browser test: FR and EN
 ## Known limitations
 
 The demo offers sample toppings across the catalog; modifier eligibility and surcharge approval are not taken from the official modifier assignment tables. The public staff simulation is token-based, not the operational STAFF panel. The demonstration does not model refunds, discount redemption, real pickup capacity, tax registration, or checkout payment.
+
+## Client-facing presentation
+
+The customer-facing pages use production-style language and the original owner logo, with a concise preview notice instead of repetitive demo terminology. Keep the internal technical demo naming and isolation. Prices, pickup slots, Rewards accrual, and real payments are **not approved or operational** until owner signoff; do not hide this fact from the client. The logo is a tall vector (viewBox 1065 × 1477); display at its natural aspect ratio and verify visually with the owner. The real staff system remains separate.
