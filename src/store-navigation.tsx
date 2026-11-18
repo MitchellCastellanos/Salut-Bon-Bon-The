@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Lang } from "./domain";
+import { rewardsPath } from "./rewards-paths";
 
 export function StoreNavigation({ lang, showRewards }: { lang: Lang; showRewards: boolean }) {
   const [open, setOpen] = useState(false);
@@ -15,12 +16,12 @@ export function StoreNavigation({ lang, showRewards }: { lang: Lang; showRewards
     { href: root, label: fr ? "Accueil" : "Home" },
     { href: `${root}/catalog`, label: "Menu" },
     { href: `${root}#promotions`, label: "Promotions" },
-    ...(showRewards ? [{ href: `${root}/${fr ? "recompenses" : "rewards"}`, label: fr ? "Récompenses" : "Rewards" }] : []),
+    ...(showRewards ? [{ href: rewardsPath[lang], label: fr ? "Récompenses" : "Rewards" }] : []),
     { href: `${root}#find-us`, label: fr ? "Nous trouver" : "Find us" },
   ];
   return <div className="store-nav-shell">
     <button className="store-nav-toggle" type="button" aria-expanded={open} aria-controls="store-nav-links" aria-label={fr ? "Ouvrir le menu de navigation" : "Open navigation menu"} onClick={() => setOpen(!open)}>
-      <span aria-hidden="true">{open ? "✕" : "☰"}</span><span>{fr ? "Menu" : "Menu"}</span>
+      <span aria-hidden="true">{open ? "✕" : "☰"}</span><span>Menu</span>
     </button>
     <nav id="store-nav-links" className={open ? "store-nav-links is-open" : "store-nav-links"} aria-label={fr ? "Navigation principale" : "Main navigation"}>
       {links.map(item => <Link key={item.href} href={item.href} onClick={() => setOpen(false)} aria-current={pathname === item.href ? "page" : undefined}>{item.label}</Link>)}

@@ -380,3 +380,32 @@ a.category-tile:hover{box-shadow:inset 0 0 0 2px var(--detail)}
   .header-actions{gap:1px}
   .header-actions .icon-link{min-width:32px}
 }
+
+/* Header hierarchy: desktop links in the center; mobile utilities then menu at far right. */
+@media(min-width:1021px){
+  .storefront-nav{grid-template-columns:auto minmax(0,1fr) auto}
+  .store-nav-shell{grid-column:2}
+  .store-nav-links{justify-content:center}
+}
+@media(max-width:1020px){
+  .storefront-nav{display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+  .storefront-nav>.brand{flex:0 0 auto}
+  .storefront-nav .header-actions{order:2;margin-left:auto;display:flex;align-items:center}
+  .storefront-nav .store-nav-shell{order:3;flex:0 0 auto;justify-self:auto}
+  .store-nav-toggle{display:inline-flex;min-width:44px;min-height:44px;justify-content:center}
+  .store-nav-links{top:100%;padding:14px 20px 20px;border-radius:0 0 20px 20px}
+  .store-nav-links a:first-child{border-radius:12px 12px 0 0}
+  .store-nav-mobile-order{background:#b93625;color:#fff9f0;border-radius:12px!important;margin-top:12px;text-align:center;font-weight:800}
+  .store-nav-mobile-account{border-bottom:0!important}
+}
+@media(max-width:760px){
+  .storefront-nav .header-actions>.icon-link:first-child{display:none}
+  .storefront-nav .header-order{display:none}
+  .store-nav-toggle{padding:8px 10px}
+}
+@media(max-width:420px){
+  .storefront-nav{gap:4px}
+  .store-nav-toggle span:last-child{display:none}
+  .store-nav-toggle{width:44px;padding:8px}
+  .storefront-nav .header-actions{gap:0}
+}
