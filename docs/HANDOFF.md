@@ -2,6 +2,8 @@
 
 ## Current checkpoint
 
+Branch `feat/salut-plus-foundation`. Verified implementation commit `2d2d05180d9f0b7ea52754176d94354f04d776ca`.
+
 The credential-free demo runs the first guest pickup workflow end to end. See [implementation status](IMPLEMENTATION_STATUS.md) for remaining Salut Plus areas and [testing](TESTING.md) for verification. The local PostgreSQL migration is `db/001-orders.sql`; it initializes automatically in PGlite. Neon migration rehearsal is pending. Demo checkout and staff sign-in work without external credentials. No real payment or notification provider is connected.
 
 ## Next priority
