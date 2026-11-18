@@ -8,4 +8,4 @@ Initial event and order insert share a statement. Every status change compares t
 
 ## Official catalog
 
-Migration 003 adds categories, products, two translation rows per seeded product, variants, modifier group/eligibility tables, reusable collections, image and placement tables, campaign scheduling and localized copy, event storage, store settings and audit history. It adds no columns to orders or Better Auth. Orders retain the bilingual item snapshot and total written at checkout.
+Migration 003 adds categories, products, two translation rows per seeded product, variants, modifier group/eligibility tables, reusable collections, image and placement tables, campaign scheduling and localized copy, event storage, store settings and audit history. Migration 004 adds tax_cents to orders with zero for historical rows. Better Auth is untouched. Orders retain bilingual names and selected modifiers, item subtotals, taxes and the accepted total.

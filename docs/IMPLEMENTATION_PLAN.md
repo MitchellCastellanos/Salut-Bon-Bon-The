@@ -10,6 +10,6 @@
 ## Commercial continuation
 
 1. Connect Neon, rehearse all migrations in an isolated branch and verify the official import twice.
-2. Complete admin catalog editing, approved modifier assignments, pickup capacity and tax calculations.
-3. Extend campaign asset management and add consent-aware analytics.
-4. Complete provider adapters and run a private Vercel preview before launch approval.
+2. Enter approved pricing, availability, modifier eligibility and pickup and tax settings while checkout remains disabled.
+3. Approve campaign imagery and copy, then review analytics privacy and retention.
+4. Connect payment and notification persistence, verify provider test flows and run a private Vercel preview before launch approval.

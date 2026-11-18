@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { pickupPolicySchema } from "../../../src/pickup-policy";
 import { database } from "../../../src/db";
 import { staffRole } from "../../../src/staff";
 
@@ -82,6 +83,9 @@ export async function saveCampaign(form: FormData) {
     position: z.string().regex(/^(|[1-9][0-9]?)$/),
     headlineFr: z.string().trim().min(1).max(200),
     headlineEn: z.string().trim().min(1).max(200),
+    seoFr: z.string().trim().max(250),
+    seoEn: z.string().trim().max(250),
+    image: z.string().regex(/^(|\/(drinks|promotions)\/[a-z0-9_-]+\.webp)$/i),
   }).refine(row => !row.starts || !row.ends || Date.parse(row.starts) < Date.parse(row.ends))
     .parse(Object.fromEntries(form));
   await (await database()).query(`
@@ -90,15 +94,40 @@ export async function saveCampaign(form: FormData) {
         homepage_position = $6 WHERE id = $1 RETURNING id
     ), copy AS (
       UPDATE marketing_campaign_translations AS t
-      SET headline = CASE WHEN t.locale = 'fr' THEN $7 ELSE $8 END
+      SET headline = CASE WHEN t.locale = 'fr' THEN $7 ELSE $8 END,
+          seo_description = NULLIF(CASE WHEN t.locale = 'fr' THEN $9 ELSE $10 END, '')
       FROM changed WHERE t.campaign_id = changed.id
+    ), removed_assets AS (
+      DELETE FROM marketing_campaign_assets a USING changed WHERE a.campaign_id = changed.id AND a.path <> $11
+    ), assets AS (
+      INSERT INTO marketing_campaign_assets SELECT id, $11 FROM changed WHERE $11 <> ''
+      ON CONFLICT DO NOTHING
     )
     INSERT INTO catalog_audit_history (action, subject, details)
     SELECT 'campaign.update', id, '{}'::jsonb FROM changed
   `, [input.id, form.get("published") === "on", form.get("active") === "on",
     input.starts || null, input.ends || null, input.position ? Number(input.position) : null,
-    input.headlineFr, input.headlineEn]);
+    input.headlineFr, input.headlineEn, input.seoFr, input.seoEn, input.image]);
   revalidatePath("/[lang]/admin", "page");
   revalidatePath("/[lang]", "page");
   revalidatePath("/[lang]/catalog/[collection]", "page");
+}
+
+export async function savePickupPolicy(form: FormData) {
+  if (!process.env.DATABASE_URL || await staffRole() !== "ADMIN") throw new Error("Forbidden");
+  const raw = z.string().max(4000).parse(form.get("policy"));
+  const policy = pickupPolicySchema.parse(JSON.parse(raw));
+  const enabled = form.get("enabled") === "on";
+  await (await database()).query(`
+    WITH saved AS (
+      INSERT INTO catalog_store_settings (key, value)
+      VALUES ('pickup_policy', $1::jsonb), ('pickup_checkout_enabled', $2::jsonb)
+      ON CONFLICT (key) DO UPDATE SET value = excluded.value
+      RETURNING key, value
+    )
+    INSERT INTO catalog_audit_history (action, subject, details)
+    SELECT 'store.update', key, value FROM saved
+  `, [JSON.stringify(policy), JSON.stringify(enabled)]);
+  revalidatePath("/[lang]/admin", "page");
+  revalidatePath("/[lang]/catalog", "page");
 }

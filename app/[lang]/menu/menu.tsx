@@ -3,7 +3,9 @@ import { cartKey, cartChanged, officialCartKey } from "../../../src/cart";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { categories, lineSchema, modifiers, money, pickupDate, products, quote, type Lang, type Line } from "../../../src/domain";
+import { salesTax } from "../../../src/pickup-policy";
 import { selectionCost, type CatalogOptionGroup } from "../../../src/catalog-options";
+import { selectedCampaign, trackInteraction } from "../analytics-client";
 import { slots, submitOrder } from "./actions";
 
 const errors: Record<string, [string, string]> = {
@@ -29,12 +31,13 @@ const demoProducts: MenuProduct[] = products.map(product => ({
   prices: { regular: product.price, large: product.price + 100 },
 }));
 
-export function Menu({ lang, demo, photos, initialCategory, officialProducts }: {
+export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [] }: {
   lang: Lang;
   demo: boolean;
   photos: Record<string, ReactNode>;
   initialCategory: keyof typeof categories | "all";
   officialProducts?: MenuProduct[];
+  taxRates?: number[];
 }) {
   const fr = lang === "fr";
   const official = officialProducts !== undefined;
@@ -42,6 +45,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts }: 
   const storageKey = official ? officialCartKey : cartKey;
   const checkoutKey = official ? "salut-official-checkout" : "salut-checkout";
   const router = useRouter();
+  const checkoutStarted = useRef(false);
   const customization = useRef<HTMLFormElement>(null);
   const [category, setCategory] = useState<"all" | keyof typeof categories>(initialCategory);
   const [selected, setSelected] = useState<MenuProduct>();
@@ -83,6 +87,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts }: 
     }
     const line = lineSchema.parse({ ...Object.fromEntries(form), product: selected.id, quantity: Number(form.get("quantity")), ...(official ? { optionIds } : {}) });
     save([...cart, line]);
+    if (official) trackInteraction("add_to_cart");
     setMessage(fr ? "Boisson ajoutée au panier." : "Drink added to cart.");
     setSelected(undefined);
     setSelectionError("");
@@ -104,7 +109,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts }: 
         if (pending?.fingerprint === fingerprint) request = pending.request;
         sessionStorage.setItem(checkoutKey, JSON.stringify({ request, fingerprint }));
       } catch { /* The order remains usable when storage is unavailable. */ }
-      const result = await submitOrder({ ...payload, request });
+      const result = await submitOrder({ ...payload, request }, official ? selectedCampaign() : undefined);
       if (result.token) {
         save([]);
         try { sessionStorage.removeItem(checkoutKey); } catch { /* Storage can be disabled. */ }
@@ -130,7 +135,9 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts }: 
       return [];
     }
   }) : quote(cart).map((line, index) => ({ ...line, index, chosen: [] }));
-  const total = priced.reduce((sum, item) => sum + item.subtotal, 0);
+  const subtotal = priced.reduce((sum, item) => sum + item.subtotal, 0);
+  const tax = official ? salesTax(subtotal, taxRates) : 0;
+  const total = subtotal + tax;
   return <div className="menu-layout">
     <div>
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
@@ -159,8 +166,14 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts }: 
     <aside className="panel cart" id="cart"><h2>{fr ? "Ton panier" : "Your cart"}</h2>
       {!priced.length ? <p>{fr ? "Ton panier est vide." : "Your cart is empty."}</p> : <>
         <ul className="cart-lines">{priced.map(item => <li key={item.index}><div><strong>{item.quantity} × {item.name[lang]}</strong><small>{modifiers[item.size][lang]} · {item.chosen.length ? item.chosen.map(option => option[lang]).join(", ") : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</small></div><div>{money(item.subtotal, lang)} <button type="button" className="remove" aria-label={fr ? `Retirer ${item.name[lang]}` : `Remove ${item.name[lang]}`} onClick={() => save(cart.filter((_, i) => item.index !== i))}>×</button></div></li>)}</ul>
+        {official && <p>{fr ? "Taxes" : "Sales tax"} · {money(tax, lang)}</p>}
         <p className="total">{official ? "Total" : fr ? "Total démo" : "Demo total"} <strong>{money(total, lang)}</strong></p>
-        <form className="checkout" onSubmit={checkout}>
+        <form className="checkout" onSubmit={checkout} onFocus={() => {
+          if (official && !checkoutStarted.current) {
+            checkoutStarted.current = true;
+            trackInteraction("checkout_start");
+          }
+        }}>
           <label>{fr ? "Nom pour la cueillette" : "Pickup name"}<input name="name" required maxLength={80} autoComplete="given-name"/></label>
           <label>{fr ? "Heure de cueillette" : "Pickup time"}<select required name="pickup" defaultValue=""><option value="" disabled>{fr ? "Choisir une heure" : "Choose a time"}</option>{times.map(time => <option key={time} value={time}>{pickupDate(time, lang)}</option>)}</select></label>
           <label>{fr ? "Note facultative" : "Optional note"}<input name="notes" maxLength={240}/></label>

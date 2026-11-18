@@ -510,63 +510,72 @@
       "category": "fresh-mango-series",
       "fr": "Mangue coco avec gelée de coco",
       "en": "Mango Coconut with Coconut Jelly",
-      "source_fr": "Mangue coco avec gelée de coco"
+      "source_fr": "Mangue coco avec gelée de coco",
+      "image": "/catalog/MANGO-01.webp"
     },
     {
       "id": "MANGO-02",
       "category": "fresh-mango-series",
       "fr": "Slush de mangue fraîche avec gelée de coco",
       "en": "Fresh Mango Slush with Coconut Jelly",
-      "source_fr": "Slush de mangue fraîche avec gelée de coco"
+      "source_fr": "Slush de mangue fraîche avec gelée de coco",
+      "image": "/catalog/MANGO-02.webp"
     },
     {
       "id": "MANGO-03",
       "category": "fresh-mango-series",
       "fr": "Mangue et litchi avec gelée de litchi",
       "en": "Mango Lychee with Lychee Jelly",
-      "source_fr": "Mangue et litchi avec gelée de litchi"
+      "source_fr": "Mangue et litchi avec gelée de litchi",
+      "image": "/catalog/MANGO-03.webp"
     },
     {
       "id": "MANGO-04",
       "category": "fresh-mango-series",
       "fr": "Mangue au Yakult avec gelée de litchi",
       "en": "Mango Yakult with Lychee Jelly",
-      "source_fr": "Mangue au Yakult avec gelée de litchi"
+      "source_fr": "Mangue au Yakult avec gelée de litchi",
+      "image": "/catalog/MANGO-04.webp"
     },
     {
       "id": "MANGO-05",
       "category": "fresh-mango-series",
       "fr": "Mangue, litchi et pamplemousse avec gelée de litchi",
       "en": "Mango, Lychee & Grapefruit with Lychee Jelly",
-      "source_fr": "Mangue, litchi et pamplemousse avec gelée de litchi"
+      "source_fr": "Mangue, litchi et pamplemousse avec gelée de litchi",
+      "image": "/catalog/MANGO-05.webp"
     },
     {
       "id": "BRULEE-01",
       "category": "creme-brulee",
       "fr": "Matcha crème brûlée",
       "en": "Matcha Crème Brûlée",
-      "source_fr": "Matcha Crème Brûlée"
+      "source_fr": "Matcha Crème Brûlée",
+      "image": "/catalog/BRULEE-01.webp"
     },
     {
       "id": "BRULEE-02",
       "category": "creme-brulee",
       "fr": "Taro crème brûlée",
       "en": "Taro Crème Brûlée",
-      "source_fr": "Taro Crème Brûlée"
+      "source_fr": "Taro Crème Brûlée",
+      "image": "/catalog/BRULEE-02.webp"
     },
     {
       "id": "BRULEE-03",
       "category": "creme-brulee",
       "fr": "Lait à la cassonade crème brûlée",
       "en": "Brown Sugar Milk Crème Brûlée",
-      "source_fr": "Brown Sugar Milk Crème Brûlée"
+      "source_fr": "Brown Sugar Milk Crème Brûlée",
+      "image": "/catalog/BRULEE-03.webp"
     },
     {
       "id": "BRULEE-04",
       "category": "creme-brulee",
       "fr": "Thé au lait classique crème brûlée",
       "en": "Classic Milk Tea Crème Brûlée",
-      "source_fr": "Classic Milk Tea Crème Brûlée"
+      "source_fr": "Classic Milk Tea Crème Brûlée",
+      "image": "/catalog/BRULEE-04.webp"
     },
     {
       "id": "pineapple-lemonade",
@@ -699,7 +708,8 @@
         "MANGO-05"
       ],
       "headline_fr": "La fraîcheur de la mangue, à chaque gorgée.",
-      "headline_en": "A fresh taste of mango in every sip."
+      "headline_en": "A fresh taste of mango in every sip.",
+      "image": "/drinks/hero.webp"
     },
     {
       "id": "creme-brulee",
@@ -712,7 +722,8 @@
         "BRULEE-04"
       ],
       "headline_fr": "Une touche de douceur, version crème brûlée.",
-      "headline_en": "A little indulgence, crème brûlée style."
+      "headline_en": "A little indulgence, crème brûlée style.",
+      "image": "/promotions/creme-brulee.webp"
     },
     {
       "id": "house-lemonade",
@@ -727,7 +738,8 @@
         "707"
       ],
       "headline_fr": "Une pause fruitée et rafraîchissante.",
-      "headline_en": "Your refreshing fruity break."
+      "headline_en": "Your refreshing fruity break.",
+      "image": "/promotions/house-lemonade.webp"
     },
     {
       "id": "explore-menu",
@@ -735,7 +747,15 @@
       "en": "Explore Our Menu",
       "products": [],
       "headline_fr": "Trouvez votre prochaine boisson préférée.",
-      "headline_en": "Find your next favorite drink."
+      "headline_en": "Find your next favorite drink.",
+      "image": null
     }
+  ],
+  "featured": [
+    "MANGO-01",
+    "BRULEE-01",
+    "401",
+    "701",
+    "207"
   ]
 }

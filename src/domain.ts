@@ -39,7 +39,7 @@ export type Line = z.infer<typeof lineSchema>;
 export const checkoutSchema = z.object({
   request: z.uuid(), lang: z.enum(["fr", "en"]), name: z.string().trim().min(1).max(80),
   notes: z.string().trim().max(240), pickup: z.iso.datetime(), method: z.enum(["pickup", "demo"]),
-  expectedTotal: z.number().int().positive().max(380000000).optional(),
+  expectedTotal: z.number().int().positive().max(1900000000).optional(),
   lines: z.array(lineSchema).min(1).max(20),
 });
 export function quote(lines: Line[]) {

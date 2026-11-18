@@ -1,3 +1,5 @@
+import { analyticsAllowed, analyticsEnabled } from "../../src/analytics";
+import { AnalyticsPreference } from "./analytics-client";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
 import Image from "next/image";
 import Link from "next/link";
@@ -51,6 +53,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
       <div className="wrap footer-legal"><span>© {new Date().getFullYear()} Salut Bon Bon Thé</span>
         <Link href={`${home}/legal/privacy`}>{fr ? "Confidentialité" : "Privacy"}</Link>
         <Link href={`${home}/legal/terms`}>{fr ? "Conditions" : "Terms"}</Link>
+        {analyticsEnabled() && <AnalyticsPreference lang={lang} initial={await analyticsAllowed()}/>}
         <Link href={`${home}/staff`}>{fr ? "Espace équipe" : "Staff area"}</Link>
       </div>
     </footer>

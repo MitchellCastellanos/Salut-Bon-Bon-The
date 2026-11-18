@@ -15,3 +15,5 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 - Added deterministic official beverage and modifier data, independent catalog migration, isolated import verification and bilingual campaign previews.
 - Added ADMIN variant pricing and product availability, server-side guarded pickup pricing, and two commercial image prompt batches.
+
+- Added catalog administration, Montréal pickup policy, capacity and tax calculations, opt-in campaign analytics and test-only provider adapters.

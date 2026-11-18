@@ -24,4 +24,6 @@ Use `npm ci`, `npm run dev`, `npm run check`, `npm test` and `npm run build`. Se
 
 ## Official catalog continuation
 
-The commercial branch adds [catalog import](CATALOG_IMPORT_GUIDE.md), bilingual preview pages, ADMIN variant pricing and a guarded pickup path. Start with [Neon setup](NEON_SETUP.md) and [launch readiness](LAUNCH_READINESS.md). New image prompts are BATCH-04.md and BATCH-05.md. The real images are pending.
+The commercial branch adds [catalog import](CATALOG_IMPORT_GUIDE.md), bilingual preview pages, ADMIN catalog management and a guarded pickup path. The local demo and the commercial database workflow use separate carts. Start with [Neon setup](NEON_SETUP.md) and [launch readiness](LAUNCH_READINESS.md). New image prompts are BATCH-04.md and BATCH-05.md. The real images are pending.
+
+Migrations 001–004 and the repeat import were exercised on a disposable PostgreSQL-wire PGlite database. Neon was unavailable. Hosted migration testing, approved settings, photos, production edge controls and [provider activation](PROVIDER_SETUP.md) are the next steps.

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { catalogCategories, catalogCollections, catalogProducts, visibleCampaigns } from "../../src/catalog";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
 import Link from "next/link";
@@ -5,7 +6,7 @@ import { notFound } from "next/navigation";
 import { language, money, products } from "../../src/domain";
 import { HeroGallery } from "../../src/hero-gallery";
 import { Drink } from "../../src/drink";
-import { StorefrontArt, StorefrontIcon } from "../../src/storefront-art";
+import { hasPublicImage, StorefrontArt, StorefrontIcon } from "../../src/storefront-art";
 import { instagramUrl, menuTiles, rewardsName } from "../../src/storefront-content";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]">) {
@@ -35,15 +36,15 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
     { icon: "lemonade", category: "lemonade" }, { icon: "pearls", collection: "fresh-mango-series" },
     { icon: "jelly", collection: "creme-brulee" },
   ] as const;
-  const highlights = official ? (await catalogProducts()).filter(product => ["MANGO-01", "BRULEE-01", "401", "701", "207"].includes(product.id)) : [];
+  const [categories, collections, highlights] = official ? await Promise.all([catalogCategories(), catalogCollections(), catalogProducts(true)]) : [[], [], []];
   const instagram = instagramUrl();
   return <>
-    {official ? mangoHero && <div className="campaign-slide mango">
-      <div className="campaign-media" aria-hidden="true"><StorefrontArt path="/drinks/hero.webp" sizes="100vw" priority><div className="campaign-cups"><Drink flavor="mango" illustrated/></div></StorefrontArt></div>
+    {official ? mangoHero && <div className="campaign-slide mango" data-analytics-hero={mangoHero.id}>
+      <div className="campaign-media" aria-hidden="true"><StorefrontArt path={mangoHero.image ?? ""} sizes="100vw" priority><div className="campaign-cups"><Drink flavor="mango" illustrated/></div></StorefrontArt></div>
       <div className="wrap campaign-inner"><div className="campaign-copy">
         <h1>{mangoHero[lang]}</h1>
         <p>{fr ? mangoHero.headline_fr : mangoHero.headline_en}</p>
-        <Link className="button" href={`/${lang}/catalog/fresh-mango-series`}>{fr ? "Découvrir la série" : "Explore the series"}</Link>
+        <Link className="button" href={`/${lang}/catalog/fresh-mango-series`} data-analytics-event="hero_click" data-analytics-campaign={mangoHero.id}>{fr ? "Découvrir la série" : "Explore the series"}</Link>
       </div></div>
     </div> : <HeroGallery lang={lang} slides={campaigns.map(({ flavor, path, ...copy }, index) => {
       const [title, accent, description] = copy[lang];
@@ -67,8 +68,8 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         <div className="section-head"><h2 id="explore">{fr ? "Explorez notre menu" : "Explore Our Menu"}</h2><Link className="menu-link" href={menu}>{fr ? "Voir le menu complet" : "Explore the menu"} <span aria-hidden="true">→</span></Link></div>
         <ul className="category-grid">{official ? officialTiles.map(tile => {
           const href = "category" in tile ? `/${lang}/catalog?category=${tile.category}` : `/${lang}/catalog/${tile.collection}`;
-          const item = "category" in tile ? catalogCategories.find(item => item.id === tile.category) : catalogCollections.find(item => item.id === tile.collection);
-          return <li key={tile.icon} className={tile.icon}><Link className="category-tile" href={href}><StorefrontIcon name={tile.icon}/><strong>{item?.[lang]}</strong></Link></li>;
+          const item = "category" in tile ? categories.find(item => item.id === tile.category) : collections.find(item => item.id === tile.collection);
+          return <li key={tile.icon} className={tile.icon}><Link className="category-tile" href={href} data-analytics-event="category_click"><StorefrontIcon name={tile.icon}/><strong>{item?.[lang]}</strong></Link></li>;
         }) : menuTiles.map(tile => {
           const content = <><StorefrontIcon name={tile.icon}/><strong>{tile[lang]}</strong></>;
           return <li key={tile.icon} className={tile.icon}>{"filter" in tile ?
@@ -79,7 +80,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
       {official ? <section className="home-section" aria-labelledby="favorites">
         <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2></div>
-        <ul className="catalog-grid">{highlights.map(product => <li key={product.id}><Link href={`/${lang}/catalog/products/${product.id}`}>{product[lang]}</Link></li>)}</ul>
+        <ul className="catalog-grid">{highlights.map(product => <li key={product.id}><Link href={`/${lang}/catalog/products/${product.id}`}>
+          {product.image && hasPublicImage(product.image) && <Image className="catalog-banner" src={product.image} width={1200} height={1140} alt=""/>}
+          {product[lang]}</Link></li>)}</ul>
       </section> : <section className="home-section" aria-labelledby="favorites">
         <div className="section-head"><h2 id="favorites">{fr ? "Nos coups de cœur" : "Our Favorites"}</h2><span className="demo-label">{fr ? "Menu de démonstration" : "Demo menu"}</span></div>
         <div className="favorites-grid">{featured.map(product => <Link className="favorite-card" key={product.id} href={`${menu}#${product.id}`}>
@@ -90,7 +93,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
       {promotions.length > 0 && <section className="home-section" id="promotions">
         <h2>{fr ? "Collections à découvrir" : "Explore the collections"}</h2>
         <ul className="catalog-grid">{promotions.map(collection => <li key={collection.id}>
-          <Link href={`/${lang}/catalog/${collection.id}`}><strong>{collection[lang]}</strong></Link>
+          <Link href={`/${lang}/catalog/${collection.id}`} data-analytics-event="campaign_click" data-analytics-campaign={collection.id}><strong>{collection[lang]}</strong></Link>
           <p>{fr ? collection.headline_fr : collection.headline_en}</p>
         </li>)}</ul>
       </section>}

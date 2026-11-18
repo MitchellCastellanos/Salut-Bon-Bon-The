@@ -15,4 +15,6 @@ This demo uses sample products and fixed rolling slots. Keep the demo private. S
 
 ## Commercial catalog checkpoint
 
-The official dataset, idempotent import, searchable catalog preview, collection landing pages and ADMIN variant pricing/availability are implemented. Checkout resolves approved, available prices in the database and stays disabled by default. Commercial checkout supports pay at pickup, regular or large variants, and configured modifier groups. The ADMIN console supports atomic bulk prices and bilingual campaign copy, scheduling, publication and homepage positions. Modifier assignments need approved business data and currently require SQL. Tax, pickup operations settings, analytics, and provider integrations remain pending.
+The official dataset, idempotent import, searchable catalog preview and collection landing pages are implemented. ADMIN can edit catalog entries, modifiers and eligibility, collection memberships, image paths, featured positions, prices, availability, campaigns and pickup policy. Checkout resolves approved, available prices on the server, applies configured tax, serializes capacity checks and stays disabled until explicitly enabled. Opt-in first-party analytics includes an ADMIN date filter and campaign breakdown.
+
+Stripe and Resend test adapters are present. Payment and notification orchestration, Twilio, real Neon and Vercel validation, and owner sign-off remain pending. Media prompt files are ready for use. Approved photography and other brand assets remain pending.

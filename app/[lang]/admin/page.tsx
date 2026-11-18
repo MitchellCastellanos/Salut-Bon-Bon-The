@@ -1,9 +1,11 @@
+import { pickupConfiguration } from "../../../src/store-settings";
+import { analyticsEnabled } from "../../../src/analytics";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "../../../src/db";
 import { language, modifiers } from "../../../src/domain";
 import { staffRole } from "../../../src/staff";
-import { saveAvailability, saveBulkPricing, saveCampaign, savePricing } from "./actions";
+import { saveAvailability, saveBulkPricing, saveCampaign, savePickupPolicy, savePricing } from "./actions";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -27,19 +29,36 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
   `, [lang]);
   const { rows: campaigns } = await db.query<{
     id: string; published: boolean; active: boolean; starts_at: Date | string | null; ends_at: Date | string | null;
-    homepage_position: number | null; headline_fr: string; headline_en: string;
+    homepage_position: number | null; headline_fr: string; headline_en: string; seo_fr: string | null; seo_en: string | null; image: string | null;
   }>(`
-    SELECT c.*, fr.headline AS headline_fr, en.headline AS headline_en
+    SELECT c.*, fr.headline AS headline_fr, en.headline AS headline_en,
+      fr.seo_description AS seo_fr, en.seo_description AS seo_en, a.path AS image
     FROM marketing_campaigns c
     JOIN marketing_campaign_translations fr ON fr.campaign_id = c.id AND fr.locale = 'fr'
     JOIN marketing_campaign_translations en ON en.campaign_id = c.id AND en.locale = 'en'
+    LEFT JOIN LATERAL (SELECT path FROM marketing_campaign_assets WHERE campaign_id = c.id ORDER BY path LIMIT 1) a ON true
     ORDER BY c.homepage_position, c.id
   `);
+  const pickup = await pickupConfiguration();
   const iso = (value: Date | string | null) => value ? new Date(value).toISOString() : "";
   return <section className="wrap catalog-page">
     <Link href={`/${lang}/staff`}>{fr ? "Commandes" : "Orders"}</Link>
+    <p><Link href={`/${lang}/admin/catalog`}>{fr ? "Modifier le catalogue" : "Edit the catalog"}</Link></p>
+    {analyticsEnabled() && <p><Link href={`/${lang}/admin/analytics`}>{fr ? "Mesure d’audience" : "Audience analytics"}</Link></p>}
     <h1>{fr ? "Prix et disponibilité" : "Pricing and availability"}</h1>
     <p>{fr ? "Saisissez les prix en cents canadiens." : "Enter prices in Canadian cents."}</p>
+    <details className="panel">
+      <summary>{fr ? "Paramètres de cueillette et de taxes" : "Pickup and tax settings"}</summary>
+      <form action={savePickupPolicy} className="checkout">
+        <label>{fr ? "Paramètres approuvés (JSON)" : "Approved settings (JSON)"}
+          <textarea name="policy" rows={8} required maxLength={4000} defaultValue={pickup.policy ? JSON.stringify(pickup.policy, null, 2) : undefined}
+            placeholder='{"leadMinutes":null,"slotCapacity":null,"hours":{"Mon":[["HH:MM","HH:MM"]]},"taxRates":[]}'/>
+        </label>
+        <p>{fr ? "Heures de Montréal. Les taux sont des millièmes de pour cent." : "Montréal local time. Tax rates are in thousandths of one percent."}</p>
+        <label><input type="checkbox" name="enabled" defaultChecked={pickup.enabled}/> {fr ? "Activer après approbation de mise en service" : "Enable after launch approval"}</label>
+        <button className="outline">{fr ? "Enregistrer les paramètres" : "Save settings"}</button>
+      </form>
+    </details>
     <details className="panel">
       <summary>{fr ? "Importer des prix en lot" : "Import prices in bulk"}</summary>
       <form className="checkout" action={saveBulkPricing}>
@@ -57,6 +76,9 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
         <input type="hidden" name="id" value={campaign.id}/>
         <label>{fr ? "Titre français" : "French headline"}<input name="headlineFr" required maxLength={200} defaultValue={campaign.headline_fr}/></label>
         <label>{fr ? "Titre anglais" : "English headline"}<input name="headlineEn" required maxLength={200} defaultValue={campaign.headline_en}/></label>
+        <label>{fr ? "Description SEO française" : "French SEO description"}<input name="seoFr" maxLength={250} defaultValue={campaign.seo_fr ?? ""}/></label>
+        <label>{fr ? "Description SEO anglaise" : "English SEO description"}<input name="seoEn" maxLength={250} defaultValue={campaign.seo_en ?? ""}/></label>
+        <label>{fr ? "Chemin WebP public" : "Public WebP path"}<input name="image" defaultValue={campaign.image ?? ""}/></label>
         <label>{fr ? "Début (ISO 8601)" : "Start (ISO 8601)"}<input name="starts" defaultValue={iso(campaign.starts_at)} placeholder="YYYY-MM-DDTHH:mm:ssZ"/></label>
         <label>{fr ? "Fin (ISO 8601)" : "End (ISO 8601)"}<input name="ends" defaultValue={iso(campaign.ends_at)} placeholder="YYYY-MM-DDTHH:mm:ssZ"/></label>
         <label>{fr ? "Position sur l’accueil" : "Homepage position"}<input type="number" name="position" min="1" max="99" defaultValue={campaign.homepage_position ?? ""}/></label>

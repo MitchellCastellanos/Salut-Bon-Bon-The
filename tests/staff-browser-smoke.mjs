@@ -57,17 +57,33 @@ try {
   const admin = await (await browser.newContext()).newPage();
   await signIn(admin, "ADMIN");
   await admin.getByText("ADMINISTRATION", { exact: true }).waitFor();
+  let catalogEditor;
   if (process.env.STAFF_SMOKE_CATALOG === "1") {
     const page = await admin.context().newPage();
     await page.goto(new URL("/en/admin", STAFF_SMOKE_BASE_URL).href);
     await page.getByRole("heading", { name: "Pricing and availability" }).waitFor();
-    await page.close();
+    await page.getByRole("link", { name: "Edit the catalog" }).click();
+    await page.getByRole("heading", { name: "Edit the catalog" }).waitFor();
+    await page.locator("summary").getByText("Categories", { exact: true }).click();
+    const form = page.locator("form").filter({ hasText: "milk-tea" }).first();
+    const expected = (await pool.query("SELECT fr, en FROM catalog_categories WHERE id = 'milk-tea'")).rows[0];
+    await form.getByRole("button", { name: "Save", exact: true }).click();
+    await page.waitForLoadState("networkidle");
+    assert.deepEqual((await pool.query("SELECT fr, en FROM catalog_categories WHERE id = 'milk-tea'")).rows[0], expected);
+    assert.ok((await pool.query("SELECT 1 FROM catalog_audit_history WHERE action = 'category.update' AND subject = 'milk-tea'")).rows.length);
+    catalogEditor = { form, expected };
   }
   const adminCard = admin.locator("article").filter({ hasText: name });
   await adminCard.getByRole("button", { name: "→ Preparing" }).click();
   await adminCard.getByRole("button", { name: "→ Ready" }).waitFor();
 
   await pool.query('UPDATE "user" SET role = $1 WHERE email = $2', ["CUSTOMER", email("ADMIN")]);
+  if (catalogEditor) {
+    await catalogEditor.form.getByLabel("EN", { exact: true }).fill("Unauthorized attempt");
+    await catalogEditor.form.getByRole("button", { name: "Save", exact: true }).click();
+    await catalogEditor.form.page().waitForLoadState("networkidle");
+    assert.deepEqual((await pool.query("SELECT fr, en FROM catalog_categories WHERE id = 'milk-tea'")).rows[0], catalogEditor.expected);
+  }
   // The already rendered admin form must still be subject to current server authorization.
   await adminCard.getByRole("button", { name: "→ Ready" }).click();
   await admin.getByLabel("Email").waitFor();

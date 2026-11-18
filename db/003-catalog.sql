@@ -80,3 +80,4 @@ CREATE TABLE IF NOT EXISTS checkout_rate_limit (
   id integer PRIMARY KEY CHECK (id = 1), minute timestamptz NOT NULL,
   attempts integer NOT NULL CHECK (attempts BETWEEN 1 AND 60)
 );
+CREATE INDEX IF NOT EXISTS marketing_events_occurred_idx ON marketing_events (occurred_at);

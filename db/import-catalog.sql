@@ -8,7 +8,7 @@ products AS (
   INSERT INTO catalog_products (id, code, category, source_fr, source_badge)
   SELECT id, code, category, source_fr, source_badge FROM source,
     jsonb_to_recordset(data->'products') AS x(id text, code text, category text, source_fr text, source_badge text)
-  ON CONFLICT (id) DO NOTHING
+  ON CONFLICT (id) DO NOTHING RETURNING id
 ),
 translations AS (
   INSERT INTO catalog_product_translations
@@ -16,8 +16,16 @@ translations AS (
     jsonb_to_recordset(data->'products') AS x(id text, fr text, en text),
     LATERAL (VALUES ('fr', fr), ('en', en)) AS t(locale, name)
   ON CONFLICT DO NOTHING
-),
-groups AS (
+), images AS (
+  INSERT INTO catalog_product_images
+  SELECT id, image, 1 FROM source, jsonb_to_recordset(data->'products') AS x(id text, image text)
+  WHERE image IS NOT NULL AND id IN (SELECT id FROM products) ON CONFLICT DO NOTHING
+), featured AS (
+  INSERT INTO catalog_featured_placements (placement, product_id, position)
+  SELECT 'homepage', product_id, position
+  FROM source, jsonb_array_elements_text(data->'featured') WITH ORDINALITY AS i(product_id, position)
+  WHERE product_id IN (SELECT id FROM products) ON CONFLICT DO NOTHING
+), groups AS (
   INSERT INTO catalog_modifier_groups
   SELECT DISTINCT group_id FROM source, jsonb_to_recordset(data->'modifiers') AS x(group_id text)
   ON CONFLICT DO NOTHING
@@ -31,19 +39,24 @@ modifiers AS (
 collections AS (
   INSERT INTO catalog_collections
   SELECT id, fr, en FROM source, jsonb_to_recordset(data->'collections') AS x(id text, fr text, en text)
-  ON CONFLICT (id) DO NOTHING
+  ON CONFLICT (id) DO NOTHING RETURNING id
 ),
 members AS (
   INSERT INTO catalog_collection_products
   SELECT id, product_id, position FROM source, jsonb_to_recordset(data->'collections') AS x(id text, products jsonb),
     jsonb_array_elements_text(products) WITH ORDINALITY AS m(product_id, position)
+  WHERE id IN (SELECT id FROM collections)
   ON CONFLICT DO NOTHING
 ),
 campaigns AS (
   INSERT INTO marketing_campaigns (id, collection_id, published, active, homepage_position)
   SELECT item->>'id', item->>'id', true, true, position
   FROM source, jsonb_array_elements(data->'collections') WITH ORDINALITY AS c(item, position)
-  ON CONFLICT DO NOTHING
+  ON CONFLICT DO NOTHING RETURNING id
+), assets AS (
+  INSERT INTO marketing_campaign_assets
+  SELECT id, image FROM source, jsonb_to_recordset(data->'collections') AS x(id text, image text)
+  WHERE image IS NOT NULL AND id IN (SELECT id FROM campaigns) ON CONFLICT DO NOTHING
 )
 INSERT INTO marketing_campaign_translations (campaign_id, locale, headline)
 SELECT id, locale, headline FROM source,

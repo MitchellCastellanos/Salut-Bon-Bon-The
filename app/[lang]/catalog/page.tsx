@@ -1,3 +1,4 @@
+import { pickupConfiguration } from "../../../src/store-settings";
 import { Menu } from "../menu/menu";
 import { officialPrices } from "../../../src/catalog-pricing";
 import Link from "next/link";
@@ -12,7 +13,8 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
   const { category, q } = await searchParams;
   const selected = typeof category === "string" ? category : "";
   const search = typeof q === "string" ? q.slice(0, 100) : "";
-  const prices = process.env.DATABASE_URL ? await officialPrices() : [];
+  const config = process.env.DATABASE_URL ? await pickupConfiguration() : null;
+  const prices = config?.enabled ? await officialPrices() : [];
   const orderable = [...new Set(prices.map(row => row.id))].map(id => {
     const variants = prices.filter(row => row.id === id);
     return {
@@ -21,25 +23,26 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
       prices: Object.fromEntries(variants.map(row => [row.size, row.cents])),
     };
   });
+  const [categories, collections] = await Promise.all([catalogCategories(), catalogCollections()]);
   const fr = lang === "fr";
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
     {!orderable.length && <p>{fr ? "Aperçu du catalogue. Commandes en ligne à venir." : "Catalog preview. Online ordering is coming."}</p>}
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
-      {catalogCollections.map(item => <Link key={item.id} href={`/${lang}/catalog/${item.id}`}>{item[lang]}</Link>)}
+      {collections.map(item => <Link key={item.id} href={`/${lang}/catalog/${item.id}`}>{item[lang]}</Link>)}
     </nav>
     <form className="catalog-filters">
       <label>{fr ? "Rechercher" : "Search"} <input type="search" name="q" defaultValue={search} maxLength={100}/></label>
       <label>{fr ? "Catégorie" : "Category"} <select name="category" defaultValue={selected}>
         <option value="">{fr ? "Toutes" : "All categories"}</option>
-        {catalogCategories.map(item => <option key={item.id} value={item.id}>{item[lang]}</option>)}
+        {categories.map(item => <option key={item.id} value={item.id}>{item[lang]}</option>)}
       </select></label>
       <button className="button">{fr ? "Filtrer" : "Filter"}</button>
     </form>
     <CatalogList lang={lang} category={selected} search={search}/>
     {orderable.length > 0 && <section aria-labelledby="orderable">
       <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} photos={{}} initialCategory="all" officialProducts={orderable}/>
+      <Menu lang={lang} demo={false} photos={{}} initialCategory="all" officialProducts={orderable} taxRates={config?.policy?.taxRates ?? []}/>
     </section>}
   </section>;
 }
