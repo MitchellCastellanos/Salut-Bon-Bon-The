@@ -4,13 +4,15 @@ import { z } from "zod";
 import { analyticsAllowed, campaignIds } from "../../../src/analytics";
 import { commercialPickupSlots } from "../../../src/store-settings";
 import { checkoutSchema, pickupSlots } from "../../../src/domain";
+import { demoStorageAllowed } from "../../../src/db";
 import { placeOrder } from "../../../src/orders";
 import { cardCheckoutUrl } from "../../../src/card-checkout";
 import { cardPaymentsEnabled } from "../../../src/providers/stripe";
 import { notifyOrder } from "../../../src/notifications";
 
 export async function slots() {
-  if (!process.env.DATABASE_URL) return pickupSlots();
+  // Deployed environments never offer demo slots without a database.
+  if (!process.env.DATABASE_URL) return demoStorageAllowed() ? pickupSlots() : [];
   return commercialPickupSlots();
 }
 export async function submitOrder(payload: unknown, campaign?: unknown) {
