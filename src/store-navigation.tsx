@@ -15,7 +15,7 @@ export function StoreNavigation({ lang, showRewards }: { lang: Lang; showRewards
     { href: root, label: fr ? "Accueil" : "Home" },
     { href: `${root}/catalog`, label: "Menu" },
     { href: `${root}#promotions`, label: "Promotions" },
-    ...(showRewards ? [{ href: `${root}/recompenses`, label: fr ? "Récompenses" : "Rewards" }] : []),
+    ...(showRewards ? [{ href: `${root}/${fr ? "recompenses" : "rewards"}`, label: fr ? "Récompenses" : "Rewards" }] : []),
     { href: `${root}#find-us`, label: fr ? "Nous trouver" : "Find us" },
   ];
   return <div className="store-nav-shell">
