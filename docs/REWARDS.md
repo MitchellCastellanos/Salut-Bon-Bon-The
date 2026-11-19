@@ -2,6 +2,27 @@
 
 FR **Récompenses Salut**, EN **Salut Rewards**: one loyalty program. Gift cards are out of scope for this phase: there are no gift-card tables, issuance, balances or redemption anywhere in the schema or code.
 
+# Salut Rewards: free-drink stamp card, 9 + 1 (migration 010, 2026-11-19)
+
+**Current program.** Every eligible drink earns one stamp; after 9 stamps the 10th drink is free. This is option A of the [commercial proposal](LOYALTY_COMMERCIAL_PROPOSAL.md) and **replaces** the points scheme (10 points per $1, $5 reward) described in the "5 %" section below, which is kept as history. Where the older text below says "points", read "stamps".
+
+## How it is built
+
+- **Same ledger, new unit.** One stamp is one unit of `loyalty_accounts.balance`. Accounts, guest cards, QR tokens, `loyalty_post`, `loyalty_redeem`, `loyalty_reverse_refund`, `loyalty_link_guest`, append-only history and idempotency are reused unchanged, so every concurrency and permission guarantee still applies.
+- **The reward.** `loyalty_rewards.free-drink` ("Boisson gratuite" / "Free drink") costs **9** stamps (`stampsForReward` in `src/rewards-math.ts`), is offered by default and still only redeemable when an ADMIN activates the program. Redeeming deducts 9; stamps beyond 9 carry over to the next card. The old `rabais-5` reward is withdrawn (not offered, not listed).
+- **Earning online.** When STAFF mark an order COMPLETED, `earnForOrder` credits `min(total drink quantity, maxStampsPerOrder = 10)` stamps (one earn per order, key `earn:order:<n>`). Only items in the ADMIN-selected categories count (none selected = all) and the order must reach the optional minimum purchase. The pre-tax eligible cents are stored on the ledger row so refunds can take stamps back proportionally (`floor(earned x remaining / eligible)`, a full refund takes all, never below zero).
+- **Earning in store.** After the QR scan, STAFF enter the number of eligible drinks bought (1 to 10, free drink excluded) instead of a dollar amount (`awardInStore({ drinks })`). Idempotent per form key.
+- **No earning rate.** `loyalty_program.points_per_dollar` is no longer read or written (the column stays so earlier migrations remain valid). ADMIN program rules are now: active, preview visible, earning allowed, redemption allowed, owner authorization, minimum purchase and drink categories.
+- **Migration 010** clears any balance left from the points preview through the append-only ledger (`adjust`, actor `system:migration-010`). It **aborts** if the program is already commercially authorized and balances exist, so real balances are never silently reinterpreted; convert them by hand in that case.
+
+## Progress bar
+
+`src/stamp-progress.tsx` renders `<StampProgress balance lang/>` from the balance only: a gradient bar (`role="progressbar"`, `aria-valuenow/max`), ten slots (9 stamps + a gift slot for the free drink), a bilingual message ("3 more drinks and your next one is free!", "Your free drink is ready!", extra stamps shown as carried over) and a highlighted state when a free drink is ready. It is used on `/account`, `/account/rewards`, the guest card, the staff counter and, as a clearly labelled illustrative example (6 of 9), on the public page. Optional artwork in `public/rewards/stamp-filled.webp`, `stamp-empty.webp` and `stamp-free.webp` replaces the built-in SVG icons when present (prompts: [BATCH-07](image-prompts/BATCH-07.md)). Cart, product and home copy now speak of stamps; the public calculator was removed because there is no rate to simulate.
+
+## Owner decisions still open
+
+Eligible drinks (categories), maximum value of the free drink, cap per order (10 is a placeholder), combination with promotions, expiry, and refunds after redemption (a shortfall is recorded, never a negative balance).
+
 ## Customer accounts
 
 - Registration, sign-in, sign-out, email verification, password reset, profile (name) and order history live under `/{fr|en}/account`.

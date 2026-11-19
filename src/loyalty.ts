@@ -1,8 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { database } from "./db";
-import { pointsFor, returnPercent, rewardState, type RewardState } from "./rewards-math";
-
-export { pointsFor };
+import { maxStampsPerOrder, rewardState, stampsForItems, stampsForReward, type RewardState } from "./rewards-math";
 
 type Db = { query<T extends Record<string, unknown>>(sql: string, args?: unknown[]): Promise<{ rows: T[] }> };
 
@@ -24,7 +22,7 @@ const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
 export type Program = {
-  active: boolean; pointsPerDollar: number | null; earnCategories: string[] | null; minOrderCents: number;
+  active: boolean; earnCategories: string[] | null; minOrderCents: number;
   previewVisible: boolean; accrualEnabled: boolean; redemptionEnabled: boolean; commercialAuthorized: boolean;
 };
 export type Account = { id: string; user_id: string | null; member_code: string; balance: number; lifetime_earned: number; status: "active" | "suspended" | "merged"; enrolled_at: Date | string };
@@ -33,19 +31,19 @@ export type Reward = { id: string; name_fr: string; name_en: string; description
 /** The five lifecycle states, kept separate on purpose. */
 export function programStages(program: Program) {
   return {
-    configured: program.pointsPerDollar !== null,
+    configured: true,
     previewVisible: program.previewVisible,
-    accrualOperational: program.active && program.accrualEnabled && program.pointsPerDollar !== null,
+    accrualOperational: program.active && program.accrualEnabled,
     redemptionOperational: program.active && program.redemptionEnabled,
     commercialAuthorized: program.commercialAuthorized,
   };
 }
 
 export async function loyaltyProgram(db?: Db): Promise<Program> {
-  const { rows: [row] } = await (db ?? await database()).query<{ active: boolean; points_per_dollar: number | null; earn_categories: string[] | null; min_order_cents: number;
+  const { rows: [row] } = await (db ?? await database()).query<{ active: boolean; earn_categories: string[] | null; min_order_cents: number;
     preview_visible: boolean; accrual_enabled: boolean; redemption_enabled: boolean; commercial_authorized: boolean }>(
-    "SELECT active, points_per_dollar, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized FROM loyalty_program WHERE id = 1");
-  return { active: row.active, pointsPerDollar: row.points_per_dollar, earnCategories: row.earn_categories, minOrderCents: row.min_order_cents,
+    "SELECT active, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized FROM loyalty_program WHERE id = 1");
+  return { active: row.active, earnCategories: row.earn_categories, minOrderCents: row.min_order_cents,
     previewVisible: row.preview_visible, accrualEnabled: row.accrual_enabled, redemptionEnabled: row.redemption_enabled, commercialAuthorized: row.commercial_authorized };
 }
 
@@ -56,7 +54,8 @@ export async function loyaltyProgram(db?: Db): Promise<Program> {
 export type PublicReward = { id: string; nameFr: string; nameEn: string; descriptionFr: string; descriptionEn: string; pointsCost: number; discountCents: number | null; state: RewardState };
 export type PublicRewards = {
   previewVisible: boolean; operational: boolean; accrualOperational: boolean; redemptionOperational: boolean;
-  pointsPerDollar: number | null; minOrderCents: number; categoryRestricted: boolean; percent: number | null;
+  /** Stamps for the free drink (9: the 10th drink is free) and the per-order cap. */
+  stampsRequired: number; maxStampsPerOrder: number; minOrderCents: number; categoryRestricted: boolean;
   featured: PublicReward | null; rewards: PublicReward[];
 };
 export async function publicRewards(db?: Db): Promise<PublicRewards> {
@@ -66,10 +65,10 @@ export async function publicRewards(db?: Db): Promise<PublicRewards> {
   const { rows } = await connection.query<Reward>("SELECT * FROM loyalty_rewards WHERE preview_visible ORDER BY points_cost, id");
   const rewards = rows.map<PublicReward>(r => ({ id: r.id, nameFr: r.name_fr, nameEn: r.name_en, descriptionFr: r.description_fr, descriptionEn: r.description_en,
     pointsCost: r.points_cost, discountCents: r.discount_cents, state: rewardState(r, { active: program.active, redemptionOperational: stages.redemptionOperational }) }));
-  const featured = rewards.find(r => r.discountCents !== null) ?? null;
+  const featured = rewards.find(r => r.id === "free-drink") ?? rewards[0] ?? null;
   return { previewVisible: program.previewVisible, operational: program.active, accrualOperational: stages.accrualOperational, redemptionOperational: stages.redemptionOperational,
-    pointsPerDollar: program.pointsPerDollar, minOrderCents: program.minOrderCents, categoryRestricted: Boolean(program.earnCategories?.length),
-    percent: featured?.discountCents ? returnPercent(program.pointsPerDollar, { pointsCost: featured.pointsCost, discountCents: featured.discountCents }) : null, featured, rewards };
+    stampsRequired: featured?.pointsCost ?? stampsForReward, maxStampsPerOrder, minOrderCents: program.minOrderCents,
+    categoryRestricted: Boolean(program.earnCategories?.length), featured, rewards };
 }
 
 /** Rewards a customer could redeem right now. Empty when the program is inactive. */
@@ -138,42 +137,42 @@ async function post(account: string, kind: "earn" | "adjust", points: number, ke
   } catch (error) { return coded(error); }
 }
 
-/** Awards points for a completed online order. Safe to call repeatedly: one earn per order. */
+/** Awards stamps for a completed online order: one per eligible drink, capped per order. Safe to call repeatedly: one earn per order. */
 export async function earnForOrder(orderNumber: string, db?: Db) {
   const connection = db ?? await database();
   const program = await loyaltyProgram(connection);
-  if (!programStages(program).accrualOperational || !program.pointsPerDollar) return { awarded: 0 };
-  const { rows: [order] } = await connection.query<{ customer_user_id: string | null; loyalty_account_id: string | null; status: string; items: { product: string; subtotal: number }[] }>(
+  if (!programStages(program).accrualOperational) return { awarded: 0 };
+  const { rows: [order] } = await connection.query<{ customer_user_id: string | null; loyalty_account_id: string | null; status: string; items: { product: string; quantity: number; subtotal: number }[] }>(
     "SELECT customer_user_id, loyalty_account_id, status, items FROM orders WHERE number = $1", [orderNumber]);
   // Only COMPLETED orders earn: cancelled or unfinished orders never do. Items carry pre-tax subtotals, so tax is excluded.
   if (!order || order.status !== "COMPLETED" || (!order.customer_user_id && !order.loyalty_account_id)) return { awarded: 0 };
   const account = order.customer_user_id ? await accountForUser(order.customer_user_id, connection)
     : (await connection.query<Account>("SELECT * FROM loyalty_accounts WHERE id = $1", [order.loyalty_account_id])).rows[0];
   if (!account || account.status !== "active") return { awarded: 0 };
-  let eligible = order.items.reduce((sum, item) => sum + item.subtotal, 0);
+  let counted = order.items;
   if (program.earnCategories) {
     const { rows } = await connection.query<{ id: string }>("SELECT id FROM catalog_products WHERE id = ANY($1::text[]) AND category = ANY($2::text[])",
       [order.items.map(item => item.product), program.earnCategories]);
     const ids = new Set(rows.map(row => row.id));
-    eligible = order.items.filter(item => ids.has(item.product)).reduce((sum, item) => sum + item.subtotal, 0);
+    counted = order.items.filter(item => ids.has(item.product));
   }
+  const eligible = counted.reduce((sum, item) => sum + item.subtotal, 0);
   const total = order.items.reduce((sum, item) => sum + item.subtotal, 0);
-  const points = total >= program.minOrderCents ? pointsFor(eligible, program.pointsPerDollar) : 0;
-  if (points <= 0) return { awarded: 0 };
-  const result = await post(account.id, "earn", points, `earn:order:${orderNumber}`, { order: orderNumber, actor: "system", eligible }, connection);
-  return { awarded: result.duplicate ? 0 : points };
+  const stamps = total >= program.minOrderCents ? stampsForItems(counted) : 0;
+  if (stamps <= 0) return { awarded: 0 };
+  // `eligible` (pre-tax cents of the counted drinks) is stored so a refund can take stamps back proportionally.
+  const result = await post(account.id, "earn", stamps, `earn:order:${orderNumber}`, { order: orderNumber, actor: "system", eligible }, connection);
+  return { awarded: result.duplicate ? 0 : stamps };
 }
 
-/** In-store purchase awarded by staff after QR identification. Same rule as online earning. */
-export async function awardInStore(input: { accountId: string; cents: number; key: string; actor: string }, db?: Db) {
+/** In-store purchase: staff enter how many eligible drinks were bought after the QR scan. One stamp per drink. */
+export async function awardInStore(input: { accountId: string; drinks: number; key: string; actor: string }, db?: Db) {
   const connection = db ?? await database();
   const program = await loyaltyProgram(connection);
-  if (!program.active || !program.pointsPerDollar) throw new LoyaltyError("PROGRAM_INACTIVE");
+  if (!program.active) throw new LoyaltyError("PROGRAM_INACTIVE");
   if (!program.accrualEnabled) throw new LoyaltyError("ACCRUAL_DISABLED");
-  if (!Number.isSafeInteger(input.cents) || input.cents < 1 || input.cents > 500000) throw new LoyaltyError("FAILED");
-  const points = pointsFor(input.cents, program.pointsPerDollar);
-  if (points <= 0 || input.cents < program.minOrderCents) return { duplicate: false, balance: undefined, awarded: 0 };
-  return { ...await post(input.accountId, "earn", points, input.key, { actor: input.actor }, connection), awarded: points };
+  if (!Number.isSafeInteger(input.drinks) || input.drinks < 1 || input.drinks > maxStampsPerOrder) throw new LoyaltyError("FAILED");
+  return { ...await post(input.accountId, "earn", input.drinks, input.key, { actor: input.actor }, connection), awarded: input.drinks };
 }
 
 /** ADMIN correction. A reason is mandatory and the entry is permanent history. */
@@ -245,28 +244,26 @@ export async function pointsForOrder(orderNumber: string, db?: Db) {
 }
 
 export type ProgramInput = {
-  active: boolean; rate: number | null; minOrderCents: number; categories: string[];
+  active: boolean; minOrderCents: number; categories: string[];
   previewVisible: boolean; accrualEnabled: boolean; redemptionEnabled: boolean; commercialAuthorized: boolean;
 };
 /** Validates and saves the program configuration with an audit entry. `production` blocks activation without authorization. */
 export async function saveProgramConfig(input: ProgramInput, actor: string, options: { production: boolean }, db?: Db) {
-  if (input.rate !== null && (!Number.isInteger(input.rate) || input.rate < 1 || input.rate > 100)) throw new LoyaltyError("FAILED");
   if (!Number.isInteger(input.minOrderCents) || input.minOrderCents < 0 || input.minOrderCents > 1_000_000) throw new LoyaltyError("FAILED");
-  // An unconfigured program can never be operational, and production operation needs the owner's recorded authorization.
-  if (input.active && input.rate === null) throw new LoyaltyError("PROGRAM_INACTIVE");
+  // Production operation needs the owner's recorded authorization.
   if (input.active && options.production && !input.commercialAuthorized) throw new LoyaltyError("NOT_AUTHORIZED");
   await (db ?? await database()).query(`
     WITH before AS (SELECT commercial_authorized FROM loyalty_program WHERE id = 1),
     saved AS (
-      UPDATE loyalty_program SET active = $1, points_per_dollar = $2,
-        earn_categories = (SELECT CASE WHEN count(*) = 0 THEN NULL ELSE array_agg(id) END FROM catalog_categories WHERE id = ANY($3::text[])),
-        min_order_cents = $4, preview_visible = $6, accrual_enabled = $7, redemption_enabled = $8, commercial_authorized = $9,
-        commercial_authorized_at = CASE WHEN $9::boolean AND NOT (SELECT commercial_authorized FROM before) THEN now()
-          WHEN NOT $9::boolean THEN NULL ELSE commercial_authorized_at END,
-        commercial_authorized_by = CASE WHEN $9::boolean AND NOT (SELECT commercial_authorized FROM before) THEN $5
-          WHEN NOT $9::boolean THEN NULL ELSE commercial_authorized_by END,
-        updated_at = now(), updated_by = $5
-      WHERE id = 1 RETURNING active, points_per_dollar, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized
-    ) INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.program', 'program', to_jsonb(saved) || jsonb_build_object('actor', $5::text) FROM saved
-  `, [input.active, input.rate, input.categories, input.minOrderCents, actor, input.previewVisible, input.accrualEnabled, input.redemptionEnabled, input.commercialAuthorized]);
+      UPDATE loyalty_program SET active = $1,
+        earn_categories = (SELECT CASE WHEN count(*) = 0 THEN NULL ELSE array_agg(id) END FROM catalog_categories WHERE id = ANY($2::text[])),
+        min_order_cents = $3, preview_visible = $5, accrual_enabled = $6, redemption_enabled = $7, commercial_authorized = $8,
+        commercial_authorized_at = CASE WHEN $8::boolean AND NOT (SELECT commercial_authorized FROM before) THEN now()
+          WHEN NOT $8::boolean THEN NULL ELSE commercial_authorized_at END,
+        commercial_authorized_by = CASE WHEN $8::boolean AND NOT (SELECT commercial_authorized FROM before) THEN $4
+          WHEN NOT $8::boolean THEN NULL ELSE commercial_authorized_by END,
+        updated_at = now(), updated_by = $4
+      WHERE id = 1 RETURNING active, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized
+    ) INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.program', 'program', to_jsonb(saved) || jsonb_build_object('actor', $4::text) FROM saved
+  `, [input.active, input.categories, input.minOrderCents, actor, input.previewVisible, input.accrualEnabled, input.redemptionEnabled, input.commercialAuthorized]);
 }

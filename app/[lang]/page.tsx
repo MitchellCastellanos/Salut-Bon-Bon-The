@@ -44,7 +44,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
   const menu = `/${lang}/menu`;
   const official = usesOfficialCatalog();
   const rewards = official || process.env.DATABASE_URL ? await publicRewards().catch(() => undefined) : undefined;
-  const pct = rewards?.percent ? new Intl.NumberFormat(fr ? "fr-CA" : "en-CA").format(rewards.percent) : null;
+  const stamps = rewards?.stampsRequired ?? 9;
   const promotions = await visibleCampaigns();
   const config = official ? await pickupConfiguration().catch(() => null) : null;
   const profile = config?.profile ?? null;
@@ -142,10 +142,9 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
         </section>
         {(!rewards || rewards.previewVisible) && <section className="promo-banner rewards-banner" id="rewards">
           <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>
-            <p>{pct ? (fr ? `Récupérez ${pct} % de vos achats admissibles en points, puis échangez-les au comptoir contre des rabais.` : `Get ${pct}% of your eligible purchases back in points, then redeem them at the counter for discounts.`) :
-              (fr ? "Cumulez des points à chaque achat admissible et échangez-les contre des récompenses." : "Earn points on eligible purchases and redeem them for rewards.")}</p>
+            <p>{fr ? `Achetez ${stamps} boissons, la ${stamps + 1}e est gratuite : suivez vos tampons sur votre carte numérique.` : `Buy ${stamps} drinks, the ${stamps + 1}th is free: follow your stamps on your digital card.`}</p>
             <Link className="button purple" href={rewardsPath[lang]}>{fr ? "Découvrir le programme" : "Discover the program"} <span aria-hidden="true">→</span></Link>
-            <p className="account-status">{!rewards ? (fr ? "Créez un compte ou obtenez une carte invité pour suivre vos points." : "Create an account or get a guest card to follow your points.") : rewards.accrualOperational ? (fr ? "Programme actif : cumulez des points à chaque achat admissible." : "Program active: earn points on every eligible purchase.") : (fr ? "Aperçu : le programme n’est pas encore actif, aucun point n’est cumulé." : "Preview: the program is not active yet, no points are being earned.")}</p>
+            <p className="account-status">{!rewards ? (fr ? "Créez un compte ou obtenez une carte invité pour suivre vos tampons." : "Create an account or get a guest card to follow your stamps.") : rewards.accrualOperational ? (fr ? "Programme actif : chaque boisson admissible vous donne un tampon." : "Program active: every eligible drink earns a stamp.") : (fr ? "Aperçu : le programme n’est pas encore actif, aucun tampon n’est cumulé." : "Preview: the program is not active yet, no stamps are being earned.")}</p>
           </div>
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/rewards.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="rewards-art"><StorefrontIcon name="gift"/><span>★ ★ ★</span></span></StorefrontArt></div>
         </section>}

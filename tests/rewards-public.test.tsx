@@ -20,17 +20,21 @@ beforeAll(async () => {
 afterAll(async () => { await (await database() as unknown as { close(): Promise<void> }).close(); });
 
 describe("public Salut Rewards page (no login, FR/EN)", () => {
-  it("renders the French page with the 5 % terms, steps, calculator, reward states, FAQ and CTAs", async () => {
+  it("renders the French page with the 9 + 1 terms, steps, stamp card, reward states, FAQ and CTAs", async () => {
     const page = await html("fr");
     expect(page).toContain("Chaque gorgée");
-    expect(page).toContain("5 %");
-    expect(page).toContain("10 points par 1 $");
-    for (const word of ["Commandez", "Cumulez", "Profitez"]) expect(page).toContain(word);
-    expect(page).toContain('data-testid="calculator"');
-    expect(page).toContain("5 $ de rabais");
+    expect(page).toContain("9 boissons");
+    expect(page).toContain("la <strong>10e</strong> est gratuite");
+    for (const word of ["Commandez", "Cumulez", "Savourez"]) expect(page).toContain(word);
+    expect(page).toContain('data-testid="stamp-progress"');
+    expect(page).toContain('role="progressbar"');
+    expect(page).toContain('aria-valuenow="6"');
+    expect(page).toContain('aria-valuemax="9"');
+    expect(page).toContain("Boisson gratuite — 9 tampons");
+    expect(page).not.toMatch(/5 \$ de rabais|10 points par/);
     expect(page).toContain("Bientôt disponible");
     expect(page).toContain("Aperçu : pas encore actif");
-    for (const q of ["Est-ce gratuit", "Ai-je besoin d’un compte", "Les points expirent-ils", "remboursement"]) expect(page).toContain(q);
+    for (const q of ["Est-ce gratuit", "Ai-je besoin d’un compte", "Les tampons expirent-ils", "remboursement"]) expect(page).toContain(q);
     expect(page).toContain("Aucune politique d’expiration");
     expect(page).toContain('href="/fr/menu"'); // outside official-catalog mode the CTA points to the demo menu
     expect(page).toContain(cardPath.fr);
@@ -38,11 +42,13 @@ describe("public Salut Rewards page (no login, FR/EN)", () => {
   it("renders the English page with natural, consistent copy", async () => {
     const page = await html("en");
     expect(page).toContain("Every sip");
-    expect(page).toContain("5%");
-    for (const word of ["Order", "Earn", "Enjoy"]) expect(page).toContain(word);
-    expect(page).toContain("$5 off");
+    expect(page).toContain("the <strong>10th</strong> is free");
+    for (const word of ["Order", "Collect", "Enjoy"]) expect(page).toContain(word);
+    expect(page).toContain('data-testid="stamp-progress"');
+    expect(page).toContain("Free drink — 9 stamps");
     expect(page).toContain("Coming soon");
-    expect(page).toContain("Do points expire?");
+    expect(page).toContain("Do stamps expire?");
+    expect(page).not.toMatch(/\$5 off|points per/);
     expect(page).toContain(cardPath.en);
   });
   it("never presents an unavailable reward as redeemable and labels the preview", async () => {
@@ -69,9 +75,9 @@ describe("public Salut Rewards page (no login, FR/EN)", () => {
     delete process.env.SITE_URL;
     expect(fr.alternates).toEqual({ canonical: rewardsPath.fr, languages: { "fr-CA": "/fr/recompenses", "en-CA": "/en/rewards", "x-default": "/fr/recompenses" } });
     expect(en.alternates?.canonical).toBe("/en/rewards");
-    expect(String(fr.description).replace(/\s/g, " ")).toContain("1 000 points = 5 $");
+    expect(String(fr.description)).toContain("9 boissons admissibles achetées, la 10e est gratuite");
     expect(String(fr.description)).toContain("aperçu");
-    expect(String(en.description)).toContain("1,000 points = $5 off");
+    expect(String(en.description)).toContain("9 eligible drinks purchased, the 10th is free");
   });
   it("states only what is implemented: counter redemption, no automatic online discount", async () => {
     const page = await html("en");
