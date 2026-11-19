@@ -90,6 +90,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
     if (!selected || !ready || cart.length >= 20) return;
     const form = new FormData(event.currentTarget);
     const optionIds = official ? form.getAll("option").map(String) : undefined;
+    if (official && selected.groups?.some(group => group.id === "tapioca") && !optionIds?.includes("tapioca-tapioca")) optionIds?.push("tapioca-tapioca");
     try {
       selectionCost(selected.groups ?? [], optionIds ?? []);
     } catch {
@@ -166,8 +167,8 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
           <label>{fr ? "Quantité" : "Quantity"}<input name="quantity" type="number" min={1} max={10} defaultValue={1} required/></label>
         </div>
         {selected.groups?.filter(group => group.options.length > 0).map(group => <fieldset key={group.id}>
-          <legend>{({ tapioca: "Tapioca", "brown-sugar": fr ? "Boba à la cassonade" : "Brown Sugar Boba", popping: fr ? "Perles éclatantes" : "Popping pearls", jelly: fr ? "Gelées" : "Jellies" } as Record<string, string>)[group.id]} · {group.min}–{group.max}</legend>
-          {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} defaultChecked={option.default}/> {option[lang]}{option.cents > 0 ? ` +${money(option.cents, lang)}` : ""}</label>)}
+          <legend>{({ tapioca: fr ? "Tapioca · 1 portion incluse" : "Tapioca · 1 serving included", "brown-sugar": fr ? "Boba à la cassonade" : "Brown Sugar Boba", popping: fr ? "Perles éclatantes" : "Popping pearls", jelly: fr ? "Gelées" : "Jellies" } as Record<string, string>)[group.id]} · {group.min}–{group.max}</legend>
+          {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} defaultChecked={option.default} disabled={group.id === "tapioca" && option.default}/> {option[lang]}{option.cents > 0 ? ` +${money(option.cents, lang)}` : ""}</label>)}
         </fieldset>)}
         {selectionError && <p role="alert">{selectionError}</p>}
         <button className="button" disabled={!ready || cart.length >= 20}>{fr ? "Ajouter au panier" : "Add to cart"}</button>{" "}
