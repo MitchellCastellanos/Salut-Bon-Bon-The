@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { database } from "../../../../src/db";
 import { language, money, pickupDate } from "../../../../src/domain";
 import { staffRole } from "../../../../src/staff";
-import { AdminNav } from "../nav";
 
 export const metadata = { robots: { index: false, follow: false } };
 const pageSize = 25;
@@ -29,7 +28,6 @@ export default async function AdminCustomers({ params, searchParams }: PageProps
   const pages = Math.max(1, Math.ceil(count.n / pageSize));
   const link = (p: number) => `/${lang}/admin/customers?${new URLSearchParams({ ...(q ? { q } : {}), page: String(p) })}`;
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="customers"/>
     <h1>{fr ? "Clients" : "Customers"}</h1>
     <p>{fr ? `${count.n} compte(s) client. Données de contact visibles par l’administration seulement.` : `${count.n} customer account(s). Contact data is visible to administrators only.`}</p>
     <form className="catalog-filters" role="search"><label>{fr ? "Nom ou courriel" : "Name or email"}<input name="q" maxLength={100} defaultValue={q}/></label><button className="outline">{fr ? "Chercher" : "Search"}</button></form>

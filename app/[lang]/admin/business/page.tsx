@@ -1,4 +1,3 @@
-import { AdminNav } from "../nav";
 import { notFound } from "next/navigation";
 import { language } from "../../../../src/domain";
 import { staffRole } from "../../../../src/staff";
@@ -26,7 +25,6 @@ export default async function AdminBusiness({ params, searchParams }: PageProps<
   const { profile, fiscal, blockers } = await pickupConfiguration();
   const pct = (rate: number) => String(rate / 1000);
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="business"/>
     <h1>{fr ? "Commerce et fiscalité" : "Business and tax"}</h1>
     {blockers.length > 0 && <BlockerList lang={lang} blockers={blockers}/>}
     {q.saved && <p role="status" className="panel">{fr ? "Enregistré." : "Saved."}</p>}

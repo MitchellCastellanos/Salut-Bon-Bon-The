@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { AdminNav } from "../nav";
 import { notFound } from "next/navigation";
 import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
@@ -43,7 +42,6 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
   const err = errs[str("error")];
   const fmt = (d: Date | string) => new Intl.DateTimeFormat(fr ? "fr-CA" : "en-CA", { timeZone: "America/Toronto", dateStyle: "medium", timeStyle: "short" }).format(new Date(d));
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="rewards"/>
     <h1>{fr ? "Récompenses Salut" : "Salut Rewards"}</h1>
     {err && <p role="alert" className="panel">{err[fr ? 0 : 1]}</p>}
     {str("saved") && <p role="status" className="panel">{fr ? "Enregistré." : "Saved."}</p>}

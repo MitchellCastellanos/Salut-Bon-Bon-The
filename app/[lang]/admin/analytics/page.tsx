@@ -1,4 +1,3 @@
-import { AdminNav } from "../nav";
 import { notFound } from "next/navigation";
 import { analyticsEnabled } from "../../../../src/analytics";
 import { database } from "../../../../src/db";
@@ -34,7 +33,6 @@ export default async function AnalyticsPage({ params, searchParams }: PageProps<
     completed_order: ["Commandes passées", "Orders placed"],
   };
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="analytics"/>
     <h1>{fr ? "Mesure d’audience" : "Audience analytics"}</h1>
     {!enabled && <p role="status" className="panel">{fr ? "La mesure d’audience est désactivée (SALUT_ANALYTICS_ENABLED). Quand elle sera activée, seuls les visiteurs qui acceptent le témoin sont mesurés, sans données personnelles." : "Audience measurement is switched off (SALUT_ANALYTICS_ENABLED). Once on, only visitors who accept the cookie are measured, with no personal data."}</p>}
     <form className="catalog-filters">

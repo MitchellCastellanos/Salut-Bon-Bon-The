@@ -3,7 +3,6 @@ import { database } from "../../../../src/db";
 import { language, modifiers } from "../../../../src/domain";
 import { staffRole } from "../../../../src/staff";
 import { pickupConfiguration } from "../../../../src/store-settings";
-import { AdminNav } from "../nav";
 import { BlockerList } from "../blockers";
 import { saveAvailability, saveBulkPricing, saveCampaign, savePricing } from "../actions";
 
@@ -42,7 +41,6 @@ export default async function AdminCampaigns({ params }: PageProps<"/[lang]/admi
   `);
   const iso = (value: Date | string | null) => value ? new Date(value).toISOString() : "";
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="campaigns"/>
     <h1>{fr ? "Campagnes et prix rapides" : "Campaigns and quick pricing"}</h1>
     {blockers.length ? <BlockerList lang={lang} blockers={blockers}/> : <p role="status" className="panel">{fr ? "La commande en ligne pour cueillette est ouverte." : "Online pickup ordering is open."}</p>}
     <p>{fr ? "Saisissez les prix en cents canadiens." : "Enter prices in Canadian cents."}</p>
