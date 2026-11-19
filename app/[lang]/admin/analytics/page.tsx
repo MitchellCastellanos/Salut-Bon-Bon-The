@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AdminNav } from "../nav";
 import { notFound } from "next/navigation";
 import { analyticsEnabled } from "../../../../src/analytics";
 import { database } from "../../../../src/db";
@@ -9,14 +9,15 @@ export const metadata = { robots: { index: false, follow: false } };
 
 export default async function AnalyticsPage({ params, searchParams }: PageProps<"/[lang]/admin/analytics">) {
   const { lang } = await params;
-  if (!language(lang) || !analyticsEnabled() || await staffRole() !== "ADMIN") notFound();
+  if (!language(lang) || !process.env.DATABASE_URL || await staffRole() !== "ADMIN") notFound();
+  const enabled = analyticsEnabled();
   const { period } = await searchParams;
   const days = period === "7" ? 7 : period === "90" ? 90 : 30;
-  const { rows } = await (await database()).query<{ event: string; campaign_id: string | null; total: number }>(`
+  const { rows } = enabled ? await (await database()).query<{ event: string; campaign_id: string | null; total: number }>(`
     SELECT event, campaign_id, count(*)::int AS total
     FROM marketing_events WHERE occurred_at >= now() - ($1::int * interval '1 day')
     GROUP BY event, campaign_id ORDER BY total DESC, event, campaign_id
-  `, [days]);
+  `, [days]) : { rows: [] };
   const fr = lang === "fr";
   const maximum = Math.max(1, ...rows.map(row => row.total));
   const number = new Intl.NumberFormat(fr ? "fr-CA" : "en-CA");
@@ -33,8 +34,9 @@ export default async function AnalyticsPage({ params, searchParams }: PageProps<
     completed_order: ["Commandes passées", "Orders placed"],
   };
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Admin"}</Link>
+    <AdminNav lang={lang} current="analytics"/>
     <h1>{fr ? "Mesure d’audience" : "Audience analytics"}</h1>
+    {!enabled && <p role="status" className="panel">{fr ? "La mesure d’audience est désactivée (SALUT_ANALYTICS_ENABLED). Quand elle sera activée, seuls les visiteurs qui acceptent le témoin sont mesurés, sans données personnelles." : "Audience measurement is switched off (SALUT_ANALYTICS_ENABLED). Once on, only visitors who accept the cookie are measured, with no personal data."}</p>}
     <form className="catalog-filters">
       <label>{fr ? "Période" : "Period"} <select name="period" defaultValue={days}>
         {[7, 30, 90].map(value => <option key={value} value={value}>{value} {fr ? "jours" : "days"}</option>)}
