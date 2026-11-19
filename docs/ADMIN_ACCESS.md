@@ -17,9 +17,9 @@ From then on, ADMIN manages everyone else in **Admin → Team and access** (`/fr
 
 The Admin home shows whether pickup ordering is open and, when it is closed, exactly what is missing (switch, schedule, lead time, capacity, fiscal status, profile, priced products) with a link to fix each item. Products also need **Offered** ticked in the price sheet before they can be ordered.
 
-## Customer accounts without email (rehearsal only)
+## Customer accounts without email
 
-Customer registration normally needs email verification (Resend). To walk the whole customer journey before a mail provider exists, set `SALUT_INSTANT_ACCOUNTS=1`: new customers are created already verified and can sign in right away. This is **ignored when `VERCEL_ENV=production`** so a real customer can never register an address they do not own; use it locally and on previews. Remove it once Resend is configured.
+Customer registration normally needs email verification (Resend). With `SALUT_INSTANT_ACCOUNTS=1` new customers are created already verified and can sign in right away. It is honoured in every environment, **including production**, because the owner chose to show the customer journey before a mail provider exists. Trade-off: while it is on, anyone can register an address they do not own, and password-reset mail cannot be relied on. Remove the variable (and redeploy) as soon as Resend is configured. It was set in Vercel Production on 2026-11-19.
 
 ## Full rehearsal walkthrough
 

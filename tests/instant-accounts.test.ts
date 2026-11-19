@@ -8,17 +8,12 @@ describe("instant (no-email) customer accounts", () => {
     vi.stubEnv("SALUT_INSTANT_ACCOUNTS", "");
     expect(instantAccounts()).toBe(false);
   });
-  it("work locally and in previews when enabled, and make registration available without a mail provider", () => {
+  it("work in every environment when explicitly enabled, and make registration available without a mail provider", () => {
     vi.stubEnv("SALUT_INSTANT_ACCOUNTS", "1");
-    for (const env of ["", "preview"]) {
+    for (const env of ["", "preview", "production"]) {
       vi.stubEnv("VERCEL_ENV", env);
       expect(instantAccounts()).toBe(true);
       expect(accountEmailAvailable()).toBe(true);
     }
-  });
-  it("are always ignored in production", () => {
-    vi.stubEnv("SALUT_INSTANT_ACCOUNTS", "1");
-    vi.stubEnv("VERCEL_ENV", "production");
-    expect(instantAccounts()).toBe(false);
   });
 });

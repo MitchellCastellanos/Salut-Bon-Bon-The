@@ -54,12 +54,12 @@ export async function sendAccountEmail(kind: AccountEmailKind, to: string, name:
 }
 
 /**
- * Rehearsal switch: with SALUT_INSTANT_ACCOUNTS=1 a new customer is marked verified at sign-up, with no email. It exists so the
- * whole customer journey can be walked through before a mail provider is configured. It is ignored in production, where an
- * unverified address could be used to impersonate someone, so real customers always go through email verification.
+ * With SALUT_INSTANT_ACCOUNTS=1 a new customer is marked verified at sign-up, with no email, so the customer journey can be shown
+ * before a mail provider is configured. It is honoured in every environment, including production, because setting the variable is
+ * the explicit decision: while it is on, anyone can register an address they do not own. Remove it once Resend is configured.
  */
 export function instantAccounts() {
-  return process.env.SALUT_INSTANT_ACCOUNTS === "1" && process.env.VERCEL_ENV !== "production";
+  return process.env.SALUT_INSTANT_ACCOUNTS === "1";
 }
 
 /** Registration is only offered when verification email can actually be delivered (or captured in non-deployed testing). */

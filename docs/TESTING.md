@@ -62,5 +62,5 @@ The rewards suite was also run with the app connected as the least-privilege `sa
 
 ## Admin team and instant-account journey (2026-11-19)
 
-- `npm test` adds `tests/team.test.ts` (team management and ADMIN-only gates against in-memory PostgreSQL) and `tests/instant-accounts.test.ts` (the rehearsal switch is off by default and ignored in production).
+- `npm test` adds `tests/team.test.ts` (team management and ADMIN-only gates against in-memory PostgreSQL) and `tests/instant-accounts.test.ts` (the no-email switch is off unless `SALUT_INSTANT_ACCOUNTS=1`).
 - `node tests/instant-journey-smoke.mjs` (browser): customer registers with `SALUT_INSTANT_ACCOUNTS=1` and signs in, is denied `/staff` and `/admin`, ADMIN creates a STAFF account (duplicate refused), STAFF signs in and is denied `/admin/team`, the customer orders and sees the order under *My orders*, STAFF sees it, ADMIN removes the access and the STAFF session ends. Needs a disposable migrated database with ADMIN `admin@example.invalid` / `AdminPassw0rd!x`, an open checkout and `SALUT_INSTANT_ACCOUNTS=1` on the app. See [Admin access](ADMIN_ACCESS.md).
