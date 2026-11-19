@@ -17,6 +17,32 @@ From then on, ADMIN manages everyone else in **Admin → Team and access** (`/fr
 
 The Admin home shows whether pickup ordering is open and, when it is closed, exactly what is missing (switch, schedule, lead time, capacity, fiscal status, profile, priced products) with a link to fix each item. Products also need **Offered** ticked in the price sheet before they can be ordered.
 
+## Where everything is (ADMIN)
+
+`/fr/admin` is the dashboard: ordering status (with what is missing), sales for today and the last 7 days (online vs counter), and a card for each area. Every admin screen shares one navigation bar.
+
+| To do this | Go to |
+| --- | --- |
+| Follow and advance orders, record payment at pickup | `/staff` (Orders) |
+| Record an in-person sale (paid and completed, linked to a Rewards customer by code or email) | `/staff/counter` |
+| Edit the menu: products, categories, toppings, images, collections | `/admin/catalog` |
+| Set prices and what is offered | `/admin/prices` |
+| Opening hours, closures, lead time, capacity | `/admin/hours` |
+| Address, phone, GST/QST numbers, tax status | `/admin/business` |
+| See customers, their points and orders | `/admin/customers` |
+| Rewards rules, adjustments, refunds | `/admin/rewards` |
+| Site activity | `/admin/analytics` |
+| Homepage campaigns and quick pricing | `/admin/campaigns` |
+| People with access | `/admin/team` |
+
+STAFF can use `/staff`, `/staff/counter` and `/staff/rewards`; everything under `/admin` is ADMIN only.
+
+### Counter sales
+Prices, options and tax are computed on the server exactly like an online order; the sale is stored as `COUNTER`, already paid (cash, terminal or other) and completed, with the staff member recorded. It does not use pickup capacity or require the online-ordering switch, but it does need a chosen tax status. Naming a Rewards customer (member code or email) links the sale and earns points by the usual rule. Needs migration 010.
+
+### Analytics
+Set `SALUT_ANALYTICS_ENABLED=1` to collect first-party events. Only visitors who accept the analytics preference are measured and no personal data is stored. With it off, the page explains so instead of disappearing.
+
 ## Customer accounts without email
 
 Customer registration normally needs email verification (Resend). With `SALUT_INSTANT_ACCOUNTS=1` new customers are created already verified and can sign in right away. It is honoured in every environment, **including production**, because the owner chose to show the customer journey before a mail provider exists. Trade-off: while it is on, anyone can register an address they do not own, and password-reset mail cannot be relied on. Remove the variable (and redeploy) as soon as Resend is configured. It was set in Vercel Production on 2026-11-19.

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AdminNav } from "../nav";
 import { notFound } from "next/navigation";
 import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
@@ -25,7 +25,7 @@ export default async function AdminPrices({ params, searchParams }: PageProps<"/
   const priced = rows.filter(row => row.regularApproved || row.largeApproved).length;
   const demoCount = rows.filter(row => (row.regular !== null && !row.regularApproved) || (row.large !== null && !row.largeApproved)).length;
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Administration"}</Link>
+    <AdminNav lang={lang} current="prices"/>
     <h1>{fr ? "Feuille de prix" : "Price sheet"}</h1>
     <p>{fr ? `Saisissez les prix approuvés en dollars (ex. 6.75). Laissez vide un format non vendu. ${priced} des ${rows.length} produits ont un prix.` : `Enter the approved prices in dollars (e.g. 6.75). Leave a size blank if it is not sold. ${priced} of ${rows.length} products have a price.`}</p>
     <p className="catalog-notice">{fr ? `${demoCount} produits ont des prix de démonstration non approuvés. Corrigez les montants et confirmez-les avant toute vente.` : `${demoCount} products have unapproved sample prices. Review and confirm amounts before selling.`}</p>

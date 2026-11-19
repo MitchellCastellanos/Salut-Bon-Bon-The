@@ -29,3 +29,7 @@ Branch `claude/salut-rewards-implementation-xy2gra` (from `main` at c5f249d; no 
 ## Update 2026-11-19 (admin access, team management, rehearsal accounts)
 
 Branch `claude/sharp-volta-qnyknv`. Added `/admin/team` (ADMIN creates, promotes, demotes, resets and removes STAFF/ADMIN accounts with last-admin protection and audit), an ordering-readiness summary on the Admin home, and `SALUT_INSTANT_ACCOUNTS=1` (customer sign-up without email; the owner enabled it in Production on 2026-11-19 — remove it once Resend is configured). Guide: [Admin access](ADMIN_ACCESS.md). Production now has `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `SITE_URL` and `SALUT_INSTANT_ACCOUNTS=1`, and one ADMIN user created directly in the production Neon database (its initial password was shared in chat: change it).
+
+## Update 2026-11-19 (complete admin)
+
+Admin dashboard at `/admin` with shared navigation (the former `/admin` content moved to `/admin/campaigns`), `/admin/customers` list and detail, analytics page visible even when measurement is off, counter sales at `/staff/counter` (migration 010: `orders.channel`, `counter_tender`, `created_by`). See [Admin access](ADMIN_ACCESS.md).

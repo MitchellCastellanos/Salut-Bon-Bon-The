@@ -64,3 +64,8 @@ The rewards suite was also run with the app connected as the least-privilege `sa
 
 - `npm test` adds `tests/team.test.ts` (team management and ADMIN-only gates against in-memory PostgreSQL) and `tests/instant-accounts.test.ts` (the no-email switch is off unless `SALUT_INSTANT_ACCOUNTS=1`).
 - `node tests/instant-journey-smoke.mjs` (browser): customer registers with `SALUT_INSTANT_ACCOUNTS=1` and signs in, is denied `/staff` and `/admin`, ADMIN creates a STAFF account (duplicate refused), STAFF signs in and is denied `/admin/team`, the customer orders and sees the order under *My orders*, STAFF sees it, ADMIN removes the access and the STAFF session ends. Needs a disposable migrated database with ADMIN `admin@example.invalid` / `AdminPassw0rd!x`, an open checkout and `SALUT_INSTANT_ACCOUNTS=1` on the app. See [Admin access](ADMIN_ACCESS.md).
+
+## Admin completeness (2026-11-19)
+
+- `tests/counter.test.ts` (needs `TEST_DATABASE_URL`): counter orders are refused without a tax status, are priced and taxed on the server, stored paid and completed, idempotent per request, kept out of pickup capacity, and reject unknown members and unoffered drinks.
+- `node tests/admin-complete-smoke.mjs` (browser, same fixture as the instant-journey smoke): dashboard, every navigation link, analytics notice, counter sale linked to a customer, refusal of an unknown member, counter badge in `/staff`, customer list and detail, customer denied.
