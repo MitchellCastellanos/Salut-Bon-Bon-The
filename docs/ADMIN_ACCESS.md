@@ -19,6 +19,8 @@ The Admin home shows whether pickup ordering is open and, when it is closed, exa
 
 ## Where everything is (ADMIN)
 
+The administration and staff area (`/admin/*`, `/staff/*`) has its own frame: no public header or footer, a grouped sidebar that is always visible (drawer on phones), a **Back to the website** button, the signed-in name and role, language switch and sign-out. STAFF see only Sales and the card scanner. The frame is `app/[lang]/console-shell.tsx`; the layout switches to it from the `x-salut-path` header set in `proxy.ts`.
+
 `/fr/admin` is the dashboard: ordering status (with what is missing), sales for today and the last 7 days (online vs counter), and a card for each area. Every admin screen shares one navigation bar.
 
 | To do this | Go to |

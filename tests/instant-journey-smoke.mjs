@@ -45,7 +45,7 @@ try {
   const admin = await (await browser.newContext()).newPage();
   await staffLogin(admin, "admin@example.invalid", "AdminPassw0rd!x");
   await admin.goto(`${BASE}/fr/admin`);
-  await admin.getByRole("navigation", { name: "Administration" }).getByRole("link", { name: "Équipe", exact: true }).click();
+  await admin.getByRole("navigation", { name: "Navigation de l’administration" }).getByRole("link", { name: "Équipe et accès", exact: true }).click();
   await admin.getByRole("heading", { name: "Équipe et accès" }).waitFor();
   const add = admin.locator('form[aria-labelledby="add-title"]');
   await add.getByLabel("Nom").fill(staff.name);

@@ -4,7 +4,6 @@ import { database } from "../../../../../src/db";
 import { language, money, pickupDate, stateLabels, type State } from "../../../../../src/domain";
 import { accountHistory } from "../../../../../src/loyalty";
 import { staffRole } from "../../../../../src/staff";
-import { AdminNav } from "../../nav";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -24,7 +23,6 @@ export default async function AdminCustomer({ params }: PageProps<"/[lang]/admin
     account ? accountHistory(account.id, 20, db) : Promise.resolve([]),
   ]);
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="customers"/>
     <p><Link href={`/${lang}/admin/customers`}>← {fr ? "Tous les clients" : "All customers"}</Link></p>
     <h1>{user.name}</h1>
     <p>{user.email}{!user.verified && ` (${fr ? "non confirmé" : "unconfirmed"})`} · {fr ? "inscrit le" : "joined"} {pickupDate(new Date(user.created_at).toISOString(), lang)}</p>

@@ -6,7 +6,7 @@ import { language, money } from "../../../src/domain";
 import { staffRole } from "../../../src/staff";
 import { pickupConfiguration } from "../../../src/store-settings";
 import { BlockerList } from "./blockers";
-import { AdminNav, adminItems } from "./nav";
+import { adminItems } from "./nav";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -39,12 +39,11 @@ export default async function AdminHome({ params }: PageProps<"/[lang]/admin">) 
     { label: fr ? "7 jours · comptoir" : "7 days · counter", ...sum(row => row.channel === "COUNTER") },
   ];
   return <section className="wrap catalog-page">
-    <AdminNav lang={lang} current="home"/>
     <h1>{fr ? "Administration" : "Administration"}</h1>
     {blockers.length ? <BlockerList lang={lang} blockers={blockers}/> : <p role="status" className="panel">{fr ? "La commande en ligne pour cueillette est ouverte." : "Online pickup ordering is open."}</p>}
-    <ul className="catalog-grid" aria-label={fr ? "Ventes" : "Sales"}>
-      {cards.map(card => <li key={card.label}><strong>{card.label}</strong><span>{money(card.total, lang)}</span><small>{card.n} {fr ? "commandes (annulées exclues)" : "orders (cancelled excluded)"}</small></li>)}
-    </ul>
+    <div className="console-stats" aria-label={fr ? "Ventes" : "Sales"}>
+      {cards.map(card => <div className="panel" key={card.label}><small>{card.label}</small><strong>{money(card.total, lang)}</strong><span>{card.n} {fr ? "commandes (annulées exclues)" : "orders (cancelled excluded)"}</span></div>)}
+    </div>
     <h2>{fr ? "Tout gérer d’ici" : "Manage everything from here"}</h2>
     <ul className="catalog-grid">
       {adminItems.filter(item => item.id !== "home" && item.id !== "counter").map(item => <li key={item.id}>

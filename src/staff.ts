@@ -63,3 +63,10 @@ export async function staffActor(): Promise<string> {
   const session = await staffAuth()?.api.getSession({ headers: await headers() });
   return session?.user.id ?? "unknown";
 }
+
+/** Display identity of the signed-in staff member, shown in the console sidebar. */
+export async function staffProfile(): Promise<{ name: string; email?: string } | undefined> {
+  if (demoStaff()) return await staffRole() ? { name: "Demo" } : undefined;
+  const session = await staffAuth()?.api.getSession({ headers: await headers() });
+  return session && canManageOrders(session.user.role) ? { name: session.user.name, email: session.user.email } : undefined;
+}

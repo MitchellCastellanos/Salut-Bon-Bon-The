@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export type AdminSection = "home" | "orders" | "counter" | "catalog" | "prices" | "hours" | "business" | "customers" | "rewards" | "analytics" | "campaigns" | "team";
 
 const items: { id: AdminSection; path: string; label: [string, string] }[] = [
@@ -17,12 +15,3 @@ const items: { id: AdminSection; path: string; label: [string, string] }[] = [
   { id: "team", path: "/admin/team", label: ["Équipe", "Team"] },
 ];
 export const adminItems = items;
-
-/** One navigation bar shared by every administration screen. */
-export function AdminNav({ lang, current }: { lang: "fr" | "en"; current: AdminSection }) {
-  const fr = lang === "fr";
-  return <nav className="panel admin-nav" aria-label={fr ? "Administration" : "Administration"}>
-    {items.map((item, index) => <span key={item.id}>{index > 0 && " · "}
-      <Link href={`/${lang}${item.path}`} aria-current={item.id === current ? "page" : undefined}>{item.id === current ? <strong>{item.label[fr ? 0 : 1]}</strong> : item.label[fr ? 0 : 1]}</Link></span>)}
-  </nav>;
-}

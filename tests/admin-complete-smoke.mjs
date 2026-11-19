@@ -32,17 +32,22 @@ try {
   await admin.getByRole("button", { name: "Connexion" }).click();
   // The administrator lands on the dashboard, with the shared navigation visible.
   await admin.getByRole("heading", { name: "Administration" }).waitFor();
-  await admin.getByRole("navigation", { name: "Administration" }).getByRole("link", { name: "Vente au comptoir" }).waitFor();
+  const side = admin.getByRole("navigation", { name: "Navigation de l’administration" });
+  await side.getByRole("link", { name: "Vente au comptoir" }).waitFor();
+  // The console has its own frame: no public header or footer, and a way back to the site.
+  assert.equal(await admin.locator("header.top").count(), 0);
+  assert.equal(await admin.locator("footer.bottom").count(), 0);
+  await admin.getByRole("link", { name: /Retour au site/ }).first().waitFor();
   await admin.goto(`${BASE}/fr/staff`);
-  await admin.getByRole("navigation", { name: "Administration" }).waitFor();
+  await side.getByRole("link", { name: "Commandes" }).waitFor();
 
   // Dashboard and navigation: every section opens and shows the shared bar.
   await admin.goto(`${BASE}/fr/admin`);
   await admin.getByRole("heading", { name: "Administration" }).waitFor();
   await admin.getByText("Aujourd’hui").waitFor();
-  for (const [label, heading] of [["Menu", /Modifier le catalogue/], ["Prix", /Feuille de prix/], ["Heures", /Heures d’ouverture/], ["Commerce et taxes", /Commerce et fiscalité/],
-    ["Clients", /^Clients$/], ["Audience", /Mesure d’audience/], ["Campagnes", /Campagnes/], ["Équipe", /Équipe et accès/]]) {
-    await admin.getByRole("navigation", { name: "Administration" }).getByRole("link", { name: label, exact: true }).click();
+  for (const [label, heading] of [["Produits et catalogue", /Modifier le catalogue/], ["Prix", /Feuille de prix/], ["Heures et cueillette", /Heures d’ouverture/], ["Profil et taxes", /Commerce et fiscalité/],
+    ["Clients", /^Clients$/], ["Audience", /Mesure d’audience/], ["Campagnes", /Campagnes/], ["Équipe et accès", /Équipe et accès/]]) {
+    await side.getByRole("link", { name: label, exact: true }).click();
     await admin.getByRole("heading", { level: 1, name: heading }).waitFor();
   }
   await admin.goto(`${BASE}/fr/admin/analytics`);

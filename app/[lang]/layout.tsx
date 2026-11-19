@@ -4,6 +4,8 @@ import { usesOfficialCatalog } from "../../src/catalog-mode";
 import { Brand } from "../../src/brand";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { ConsoleShell } from "./console-shell";
 import { CartCount } from "../../src/cart-count";
 import { LanguageLink } from "../../src/language-link";
 import { language } from "../../src/domain";
@@ -18,6 +20,8 @@ import { StoreNavigation } from "../../src/store-navigation";
 export default async function LanguageLayout({ children, params }: LayoutProps<"/[lang]">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
+  // Administration and staff screens use their own frame, with none of the public header, footer or storefront queries.
+  if (/^\/(?:fr|en)\/(?:admin|staff)(?:\/|$)/.test((await headers()).get("x-salut-path") ?? "")) return <ConsoleShell lang={lang}>{children}</ConsoleShell>;
   const fr = lang === "fr";
   const home = `/${lang}`;
   const official = usesOfficialCatalog();
