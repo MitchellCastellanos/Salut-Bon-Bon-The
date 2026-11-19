@@ -17,9 +17,18 @@ From then on, ADMIN manages everyone else in **Admin → Team and access** (`/fr
 
 The Admin home shows whether pickup ordering is open and, when it is closed, exactly what is missing (switch, schedule, lead time, capacity, fiscal status, profile, priced products) with a link to fix each item. Products also need **Offered** ticked in the price sheet before they can be ordered.
 
+## Language policy: the admin is English only
+
+**Owner decision (2026-11-19): the administration and staff console is in English.** The public website stays bilingual (French and English parity). Concretely:
+
+- Everything under `/admin/*` and `/staff/*` renders in English. `proxy.ts` redirects `/fr/admin...` and `/fr/staff...` to `/en/...`, so old links, the footer "Staff area" link and rewards QR links keep working.
+- New admin or staff screens must be written in English only: no `fr ? ... : ...` copy, no French strings. (The existing screens still contain the dormant French variants; they are never shown and can be removed gradually.)
+- Customer-facing output generated from the console stays bilingual: customer emails, receipts, tracking pages, and the public pages the console edits.
+- Tests drive the console through `/en/...` with English labels.
+
 ## Where everything is (ADMIN)
 
-The administration and staff area (`/admin/*`, `/staff/*`) has its own frame: no public header or footer, a grouped sidebar that is always visible (drawer on phones), a **Back to the website** button, the signed-in name and role, language switch and sign-out. STAFF see only Sales and the card scanner. The frame is `app/[lang]/console-shell.tsx`; the layout switches to it from the `x-salut-path` header set in `proxy.ts`.
+The administration and staff area (`/admin/*`, `/staff/*`) has its own frame: no public header or footer, a grouped sidebar that is always visible (drawer on phones), a **Back to the website** button, the signed-in name and role, and sign-out. STAFF see only Sales and the card scanner. The frame is `app/[lang]/console-shell.tsx`; the layout switches to it from the `x-salut-path` header set in `proxy.ts`.
 
 `/fr/admin` is the dashboard: ordering status (with what is missing), sales for today and the last 7 days (online vs counter), and a card for each area. Every admin screen shares one navigation bar.
 
