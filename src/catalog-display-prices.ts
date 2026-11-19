@@ -4,8 +4,8 @@ import source from "../catalog/official.json";
 
 type Price = { id: string; size: "regular" | "large"; cents: number };
 const base: Record<string, number> = {
-  "milk-tea": 595, "fruit-tea": 575, smoothies: 650, lemonade: 550,
-  matcha: 675, "fresh-mango-series": 725, "creme-brulee": 750,
+  "milk-tea": 599, "fruit-tea": 599, smoothies: 799, lemonade: 599,
+  matcha: 675, "fresh-mango-series": 799, "creme-brulee": 899,
 };
 
 /** Customer-facing price display; distinct from authorized real checkout pricing. */
