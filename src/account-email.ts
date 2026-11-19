@@ -53,8 +53,17 @@ export async function sendAccountEmail(kind: AccountEmailKind, to: string, name:
   if (!response.ok) throw new Error(`Resend returned HTTP ${response.status}`);
 }
 
+/**
+ * Rehearsal switch: with SALUT_INSTANT_ACCOUNTS=1 a new customer is marked verified at sign-up, with no email. It exists so the
+ * whole customer journey can be walked through before a mail provider is configured. It is ignored in production, where an
+ * unverified address could be used to impersonate someone, so real customers always go through email verification.
+ */
+export function instantAccounts() {
+  return process.env.SALUT_INSTANT_ACCOUNTS === "1" && process.env.VERCEL_ENV !== "production";
+}
+
 /** Registration is only offered when verification email can actually be delivered (or captured in non-deployed testing). */
 export function accountEmailAvailable() {
   const deployed = process.env.VERCEL_ENV === "production" || process.env.VERCEL_ENV === "preview";
-  return Boolean((process.env.SALUT_EMAIL_CAPTURE_DIR && !deployed) || emailMode() !== "disabled");
+  return instantAccounts() || Boolean((process.env.SALUT_EMAIL_CAPTURE_DIR && !deployed) || emailMode() !== "disabled");
 }

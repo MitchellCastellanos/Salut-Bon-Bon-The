@@ -25,3 +25,7 @@ Branch `feat/business-profile-fiscal`. Added the persisted business profile (`bu
 ## Update 2026-11-18 (Salut Rewards 5 % and public page)
 
 Branch `claude/salut-rewards-implementation-xy2gra` (from `main` at c5f249d; no open PRs or unmerged work existed). Added migration 009, public `/fr/recompenses` + `/en/rewards`, guest card (`/fr/recompenses/carte`, `/en/rewards/card`), refund reversal, five program states in ADMIN, cart/product points hints, header/footer/home integration, localized SEO, the French commercial proposal, and tests. Preserved: the ledger, QR engine, staff/admin flows, checkout, tax and payment code. Start with [Rewards](REWARDS.md) and [Launch readiness](LAUNCH_READINESS.md). Before any activation: rehearse migration 009 on a Neon test branch, owner decisions in the proposal, then the ADMIN authorization. Do not enable rewards in production without it.
+
+## Update 2026-11-19 (admin access, team management, rehearsal accounts)
+
+Branch `claude/sharp-volta-qnyknv`. Added `/admin/team` (ADMIN creates, promotes, demotes, resets and removes STAFF/ADMIN accounts with last-admin protection and audit), an ordering-readiness summary on the Admin home, and `SALUT_INSTANT_ACCOUNTS=1` (customer sign-up without email, never honoured in production). Guide: [Admin access](ADMIN_ACCESS.md). Production still lacks `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET` and `SITE_URL` in Vercel and has no ADMIN user; neither was touched.

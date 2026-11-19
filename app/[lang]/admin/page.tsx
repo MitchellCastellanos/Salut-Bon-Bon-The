@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { database } from "../../../src/db";
 import { language, modifiers } from "../../../src/domain";
 import { staffRole } from "../../../src/staff";
+import { pickupConfiguration } from "../../../src/store-settings";
+import { BlockerList } from "./blockers";
 import { saveAvailability, saveBulkPricing, saveCampaign, savePricing } from "./actions";
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -13,6 +15,7 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
   if (!language(lang) || !process.env.DATABASE_URL || await staffRole() !== "ADMIN") notFound();
   const fr = lang === "fr";
   const db = await database();
+  const { blockers } = await pickupConfiguration();
   const { rows } = await db.query<{
     id: string; name: string; available: boolean; size: "regular" | "large";
     price_cents: number | null; promotional_cents: number | null;
@@ -44,12 +47,14 @@ export default async function AdminPage({ params }: PageProps<"/[lang]/admin">) 
     <p><Link href={`/${lang}/admin/catalog`}>{fr ? "Modifier le catalogue" : "Edit the catalog"}</Link></p>
     {analyticsEnabled() && <p><Link href={`/${lang}/admin/analytics`}>{fr ? "Mesure d’audience" : "Audience analytics"}</Link></p>}
     <h1>{fr ? "Prix et disponibilité" : "Pricing and availability"}</h1>
+    {blockers.length ? <BlockerList lang={lang} blockers={blockers}/> : <p role="status" className="panel">{fr ? "La commande en ligne pour cueillette est ouverte." : "Online pickup ordering is open."}</p>}
     <p>{fr ? "Saisissez les prix en cents canadiens." : "Enter prices in Canadian cents."}</p>
     <nav className="panel" aria-label={fr ? "Outils d’administration" : "Admin tools"}>
       <Link href={`/${lang}/admin/prices`}>{fr ? "Feuille de prix (tous les produits)" : "Price sheet (all products)"}</Link>{" · "}
       <Link href={`/${lang}/admin/business`}>{fr ? "Commerce et fiscalité" : "Business and tax"}</Link>{" · "}
       <Link href={`/${lang}/admin/hours`}>{fr ? "Heures, cueillette et fermetures" : "Hours, pickup and closures"}</Link>{" · "}
       <Link href={`/${lang}/admin/rewards`}>{fr ? "Récompenses Salut" : "Salut Rewards"}</Link>{" · "}
+      <Link href={`/${lang}/admin/team`}>{fr ? "Équipe et accès" : "Team and access"}</Link>{" · "}
       <Link href={`/${lang}/staff/rewards`}>{fr ? "Scanner une carte" : "Scan a card"}</Link>
     </nav>
     <details className="panel">
