@@ -20,6 +20,8 @@ export function selectionCost(groups: CatalogOptionGroup[], ids: string[]) {
   for (const group of groups) {
     const matching = group.options.filter(option => choices.delete(option.id));
     if (matching.length < group.min || matching.length > group.max) throw new Error("MENU");
+    // Every drink includes its first tapioca serving; a second is a paid extra.
+    if (group.id === "tapioca" && !matching.some(option => option.id === "tapioca-tapioca")) throw new Error("MENU");
     selected.push(...matching);
   }
   if (choices.size) throw new Error("MENU");
