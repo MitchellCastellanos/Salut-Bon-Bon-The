@@ -30,7 +30,11 @@ try {
   await admin.getByLabel("Courriel").fill("admin@example.invalid");
   await admin.getByLabel("Mot de passe").fill("AdminPassw0rd!x");
   await admin.getByRole("button", { name: "Connexion" }).click();
-  await admin.getByRole("heading", { name: /Commandes/ }).waitFor();
+  // The administrator lands on the dashboard, with the shared navigation visible.
+  await admin.getByRole("heading", { name: "Administration" }).waitFor();
+  await admin.getByRole("navigation", { name: "Administration" }).getByRole("link", { name: "Vente au comptoir" }).waitFor();
+  await admin.goto(`${BASE}/fr/staff`);
+  await admin.getByRole("navigation", { name: "Administration" }).waitFor();
 
   // Dashboard and navigation: every section opens and shows the shared bar.
   await admin.goto(`${BASE}/fr/admin`);
