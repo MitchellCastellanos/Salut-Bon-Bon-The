@@ -8,6 +8,7 @@ import { demoStaff, signInStaff, signOutStaff, staffRole } from "../../../src/st
 import { recordPayment, updateOrder } from "../../../src/orders";
 import { notifyOrder } from "../../../src/notifications";
 import { earnForOrder } from "../../../src/loyalty";
+import { database } from "../../../src/db";
 
 export async function login(lang: string, form: FormData) {
   if (!language(lang)) return;
@@ -22,7 +23,13 @@ export async function login(lang: string, form: FormData) {
     }
   }
   if (!signedIn) redirect(`/${lang}/staff?login=failed`);
-  redirect(`/${lang}/staff`);
+  // Administrators land on the dashboard; the session cookie is not readable yet in this request, so the role comes from the database.
+  let landing = "staff";
+  if (!demoStaff() && email.success) {
+    const { rows: [user] } = await (await database()).query<{ role: string }>(`SELECT "role" FROM "user" WHERE "email" = $1`, [email.data]);
+    if (user?.role === "ADMIN") landing = "admin";
+  }
+  redirect(`/${lang}/${landing}`);
 }
 export async function logout(lang: string) {
   if (!language(lang)) return;

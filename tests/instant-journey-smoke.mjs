@@ -15,7 +15,8 @@ async function staffLogin(page, email, password) {
   await page.getByLabel("Courriel").fill(email);
   await page.getByLabel("Mot de passe").fill(password);
   await page.getByRole("button", { name: "Connexion" }).click();
-  await page.getByRole("heading", { name: /Commandes/ }).waitFor();
+  // Administrators land on the dashboard, STAFF on the orders list.
+  await page.getByRole("heading", { name: email.startsWith("admin@") ? "Administration" : /Commandes/ }).waitFor();
 }
 
 try {

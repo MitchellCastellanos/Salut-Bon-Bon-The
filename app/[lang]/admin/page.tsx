@@ -47,7 +47,7 @@ export default async function AdminHome({ params }: PageProps<"/[lang]/admin">) 
     </ul>
     <h2>{fr ? "Tout gérer d’ici" : "Manage everything from here"}</h2>
     <ul className="catalog-grid">
-      {adminItems.filter(item => item.id !== "home").map(item => <li key={item.id}>
+      {adminItems.filter(item => item.id !== "home" && item.id !== "counter").map(item => <li key={item.id}>
         <Link href={`/${lang}${item.path}`}><strong>{item.label[fr ? 0 : 1]}</strong></Link>
         <small>{blurbs[item.id][fr ? 0 : 1]}</small>
         {item.id === "analytics" && !analyticsEnabled() && <small>{fr ? "Mesure désactivée pour le moment." : "Measurement is currently off."}</small>}
