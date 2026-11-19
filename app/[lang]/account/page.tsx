@@ -15,6 +15,7 @@ export const metadata = { robots: { index: false, follow: false } };
 
 const notices: Record<string, [string, string]> = {
   registered: ["Si l’adresse est valide, un courriel de confirmation vient d’être envoyé. Confirmez-le avant de vous connecter.", "If the address is valid, a confirmation email was just sent. Confirm it before signing in."],
+  created: ["Compte créé. Vous pouvez maintenant vous connecter.", "Account created. You can now sign in."],
   verified: ["Courriel confirmé. Vous pouvez maintenant vous connecter.", "Email confirmed. You can now sign in."],
   forgot: ["Si un compte existe pour cette adresse, un courriel de réinitialisation a été envoyé.", "If an account exists for this address, a reset email was sent."],
   reset: ["Mot de passe mis à jour. Connectez-vous avec le nouveau mot de passe.", "Password updated. Sign in with your new password."],

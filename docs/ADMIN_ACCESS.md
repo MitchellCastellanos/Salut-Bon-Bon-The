@@ -1,0 +1,31 @@
+# Admin access and customer accounts (rehearsal guide)
+
+## Getting into the Admin
+
+Sign-in is at `/fr/staff` (or `/en/staff`). ADMIN users then reach `/fr/admin`. Three things must exist in the environment:
+
+1. `DATABASE_URL` pointing at a migrated database (migrations 001–009).
+2. `BETTER_AUTH_URL` (the exact browser origin, `https://…`, no trailing path), `BETTER_AUTH_SECRET` (random, 32+ characters) and `SITE_URL`. Without them the staff page says sign-in is unavailable.
+3. A first ADMIN identity. Create it once from a trusted machine (the password is read from stdin and never stored in shell history):
+
+```bash
+read -rs ADMIN_PW   # type the password, 12+ characters
+DATABASE_URL=<owner or app connection string> printf '%s' "$ADMIN_PW" | npm run staff:create -- ADMIN you@example.com "Your name"
+```
+
+From then on, ADMIN manages everyone else in **Admin → Team and access** (`/fr/admin/team`): create STAFF or ADMIN accounts, promote or demote, replace a password, or remove access. Rules enforced on the server: ADMIN only; the last remaining ADMIN can never be demoted or removed; you cannot change your own access; role changes, password replacement and removal end that person's sessions immediately; every change is written to the audit history.
+
+The Admin home shows whether pickup ordering is open and, when it is closed, exactly what is missing (switch, schedule, lead time, capacity, fiscal status, profile, priced products) with a link to fix each item. Products also need **Offered** ticked in the price sheet before they can be ordered.
+
+## Customer accounts without email
+
+Customer registration normally needs email verification (Resend). With `SALUT_INSTANT_ACCOUNTS=1` new customers are created already verified and can sign in right away. It is honoured in every environment, **including production**, because the owner chose to show the customer journey before a mail provider exists. Trade-off: while it is on, anyone can register an address they do not own, and password-reset mail cannot be relied on. Remove the variable (and redeploy) as soon as Resend is configured. It was set in Vercel Production on 2026-11-19.
+
+## Full rehearsal walkthrough
+
+1. Admin: set the weekly hours, lead time and capacity (`/admin/hours`), the tax status (`/admin/business`), tick **Offered** and confirm prices (`/admin/prices`), then switch pickup ordering on.
+2. Customer: `/fr/account` → create an account → sign in → order from the menu (the **Available for pickup** section appears once checkout is open) → the order shows under *My orders* and in the private tracking page.
+3. Staff: sign in at `/fr/staff`, advance the order, record payment at pickup.
+4. Admin: add a STAFF member in Team and access and confirm that person can use `/staff` but gets a 404 on `/admin`.
+
+`node tests/instant-journey-smoke.mjs` automates steps 2–4 (see [Testing](TESTING.md)). Note that the public header's **Order** button points at the isolated order demonstration (`/fr/demo-commande`, see [Order and rewards demo](ORDER_REWARDS_DEMO.md)); real orders linked to accounts use the menu's pickup section.

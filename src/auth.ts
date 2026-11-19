@@ -1,7 +1,7 @@
 import { APIError, betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { postgresPool } from "./db";
-import { sendAccountEmail } from "./account-email";
+import { instantAccounts, sendAccountEmail } from "./account-email";
 
 export function staffAuthConfigured() {
   const { DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL } = process.env;
@@ -68,7 +68,7 @@ function createCustomerAuth() {
       sendResetPassword: async ({ user, token }) => { await sendAccountEmail("reset", user.email, user.name, token); },
     },
     emailVerification: {
-      sendOnSignUp: true, autoSignInAfterVerification: false, expiresIn: 60 * 60,
+      sendOnSignUp: !instantAccounts(), autoSignInAfterVerification: false, expiresIn: 60 * 60,
       sendVerificationEmail: async ({ user, token }) => { await sendAccountEmail("verify", user.email, user.name, token); },
     },
     session: { expiresIn: 14 * 24 * 60 * 60, updateAge: 24 * 60 * 60, cookieCache: { enabled: false } },
@@ -78,6 +78,11 @@ function createCustomerAuth() {
       },
     },
     databaseHooks: {
+      user: {
+        create: {
+          before: async user => instantAccounts() ? { data: { ...user, emailVerified: true } } : { data: user },
+        },
+      },
       session: {
         create: {
           before: async session => {

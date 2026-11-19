@@ -39,7 +39,7 @@ export default async function Staff({ params, searchParams }: PageProps<"/[lang]
   return <div className="wrap section">
     <Refresh/>
     <div className="section-head"><div><p className="eyebrow">{role === "ADMIN" ? "ADMINISTRATION" : fr ? "ESPACE ÉQUIPE" : "STAFF AREA"}</p><h1>{fr ? "Commandes" : "Orders"}<span>.</span></h1></div><form action={logout.bind(null, lang)}><button className="outline">{fr ? "Déconnexion" : "Sign out"}</button></form></div>
-    {role === "ADMIN" && <Link href={`/${lang}/admin`}>{fr ? "Prix et disponibilité" : "Pricing and availability"}</Link>}
+    {role === "ADMIN" && <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Administration"}</Link>}
     <form method="get" className="filters" role="search" aria-label={fr ? "Filtrer les commandes" : "Filter orders"}>
       <label>{fr ? "Numéro ou nom" : "Number or name"}<input name="q" maxLength={80} defaultValue={q}/></label>
       <label>{fr ? "Statut" : "Status"}<select name="status" defaultValue={status}><option value="">{fr ? "Tous" : "All"}</option>{states.map(state => <option key={state} value={state}>{stateLabels[state][lang]}</option>)}</select></label>

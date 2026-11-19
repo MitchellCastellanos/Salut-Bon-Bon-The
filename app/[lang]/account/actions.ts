@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { customerAuth } from "../../../src/auth";
-import { accountEmailAvailable } from "../../../src/account-email";
+import { accountEmailAvailable, instantAccounts } from "../../../src/account-email";
 import { customerSession } from "../../../src/customer";
 import { database } from "../../../src/db";
 import { language } from "../../../src/domain";
@@ -30,7 +30,7 @@ export async function register(lang: string, form: FormData) {
   try {
     await auth!.api.signUpEmail({ body: { name, email: address, password: secret }, headers: await headers() });
   } catch { /* Identical outcome whether or not the address exists, so registration cannot be used to probe accounts. */ }
-  back(lang, "registered=1");
+  back(lang, instantAccounts() ? "created=1" : "registered=1");
 }
 
 export async function login(lang: string, form: FormData) {
