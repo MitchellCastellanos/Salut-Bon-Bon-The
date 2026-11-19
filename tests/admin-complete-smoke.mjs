@@ -26,64 +26,64 @@ try {
   await shopper.getByRole("button", { name: /Adhérer à Récompenses Salut/ }).click();
 
   const admin = await (await browser.newContext()).newPage();
-  await admin.goto(`${BASE}/fr/staff`);
-  await admin.getByLabel("Courriel").fill("admin@example.invalid");
-  await admin.getByLabel("Mot de passe").fill("AdminPassw0rd!x");
-  await admin.getByRole("button", { name: "Connexion" }).click();
+  await admin.goto(`${BASE}/en/staff`);
+  await admin.getByLabel("Email").fill("admin@example.invalid");
+  await admin.getByLabel("Password").fill("AdminPassw0rd!x");
+  await admin.getByRole("button", { name: "Sign in" }).click();
   // The administrator lands on the dashboard, with the shared navigation visible.
   await admin.getByRole("heading", { name: "Administration" }).waitFor();
-  const side = admin.getByRole("navigation", { name: "Navigation de l’administration" });
-  await side.getByRole("link", { name: "Vente au comptoir" }).waitFor();
+  const side = admin.getByRole("navigation", { name: "Administration navigation" });
+  await side.getByRole("link", { name: "Counter sale" }).waitFor();
   // The console has its own frame: no public header or footer, and a way back to the site.
   assert.equal(await admin.locator("header.top").count(), 0);
   assert.equal(await admin.locator("footer.bottom").count(), 0);
-  await admin.getByRole("link", { name: /Retour au site/ }).first().waitFor();
-  await admin.goto(`${BASE}/fr/staff`);
-  await side.getByRole("link", { name: "Commandes" }).waitFor();
+  await admin.getByRole("link", { name: /Back to the website/ }).first().waitFor();
+  await admin.goto(`${BASE}/en/staff`);
+  await side.getByRole("link", { name: "Orders" }).waitFor();
 
-  // Dashboard and navigation: every section opens and shows the shared bar.
-  await admin.goto(`${BASE}/fr/admin`);
+  // Dashboard and navigation (the console is English only): every section opens and shows the shared bar.
+  await admin.goto(`${BASE}/en/admin`);
   await admin.getByRole("heading", { name: "Administration" }).waitFor();
-  await admin.getByText("Aujourd’hui").waitFor();
-  for (const [label, heading] of [["Produits et catalogue", /Modifier le catalogue/], ["Prix", /Feuille de prix/], ["Heures et cueillette", /Heures d’ouverture/], ["Profil et taxes", /Commerce et fiscalité/],
-    ["Clients", /^Clients$/], ["Audience", /Mesure d’audience/], ["Campagnes", /Campagnes/], ["Équipe et accès", /Équipe et accès/]]) {
+  await admin.getByText("Today").waitFor();
+  for (const [label, heading] of [["Products and catalog", /Edit the catalog/], ["Prices", /Price sheet/], ["Hours and pickup", /Business hours and pickup/], ["Profile and tax", /Business and tax/],
+    ["Customers", /^Customers$/], ["Analytics", /Audience analytics/], ["Campaigns", /Campaigns/], ["Team and access", /Team and access/]]) {
     await side.getByRole("link", { name: label, exact: true }).click();
     await admin.getByRole("heading", { level: 1, name: heading }).waitFor();
   }
-  await admin.goto(`${BASE}/fr/admin/analytics`);
-  await admin.getByText(/La mesure d’audience est désactivée|Aucune activité/).first().waitFor();
+  await admin.goto(`${BASE}/en/admin/analytics`);
+  await admin.getByText(/Audience measurement is switched off|No activity/).first().waitFor();
 
   // Counter sale linked to the customer, recorded as paid and completed.
-  await admin.goto(`${BASE}/fr/staff/counter`);
-  await admin.getByLabel("Rechercher").fill("matcha au lait");
-  await admin.getByRole("button", { name: "Matcha au lait" }).click();
-  await admin.getByRole("button", { name: "Ajouter à la commande" }).click();
-  await admin.getByText(/1 × Matcha au lait/).waitFor();
-  await admin.getByLabel(/Client Récompenses/).fill(customer.email);
-  await admin.getByLabel("Mode de paiement").selectOption("cash");
-  await admin.getByRole("button", { name: /Enregistrer la vente/ }).click();
-  await admin.getByText(/Vente #\d+ enregistrée/).waitFor();
+  await admin.goto(`${BASE}/en/staff/counter`);
+  await admin.getByLabel("Search").fill("matcha milk");
+  await admin.getByRole("button", { name: "Matcha Milk Tea" }).click();
+  await admin.getByRole("button", { name: "Add to the order" }).click();
+  await admin.getByText(/1 × Matcha Milk Tea/).waitFor();
+  await admin.getByLabel(/Rewards customer/).fill(customer.email);
+  await admin.getByLabel("Payment method").selectOption("cash");
+  await admin.getByRole("button", { name: /Record the sale/ }).click();
+  await admin.getByText(/Sale #\d+ recorded/).waitFor();
 
   // A second sale to an unknown member is refused without creating an order.
-  await admin.getByLabel("Rechercher").fill("matcha au lait");
-  await admin.getByRole("button", { name: "Matcha au lait" }).click();
-  await admin.getByRole("button", { name: "Ajouter à la commande" }).click();
-  await admin.getByLabel(/Client Récompenses/).fill("inconnu@example.invalid");
-  await admin.getByRole("button", { name: /Enregistrer la vente/ }).click();
-  await admin.getByText("Aucun client Récompenses ne correspond").waitFor();
+  await admin.getByLabel("Search").fill("matcha milk");
+  await admin.getByRole("button", { name: "Matcha Milk Tea" }).click();
+  await admin.getByRole("button", { name: "Add to the order" }).click();
+  await admin.getByLabel(/Rewards customer/).fill("inconnu@example.invalid");
+  await admin.getByRole("button", { name: /Record the sale/ }).click();
+  await admin.getByText("No Rewards customer matches").waitFor();
 
   // The order is listed as a counter order, and appears on the customer's detail page.
-  await admin.goto(`${BASE}/fr/staff`);
-  await admin.getByText(/Comptoir · Terminée/).first().waitFor();
-  await admin.goto(`${BASE}/fr/admin/customers?q=${stamp}`);
+  await admin.goto(`${BASE}/en/staff`);
+  await admin.getByText(/Counter · Completed/).first().waitFor();
+  await admin.goto(`${BASE}/en/admin/customers?q=${stamp}`);
   await admin.getByRole("link", { name: customer.name }).click();
   await admin.getByRole("heading", { name: customer.name }).waitFor();
-  await admin.getByText(/Terminée.*comptoir/).waitFor();
-  await admin.goto(`${BASE}/fr/admin`);
-  await admin.getByText("7 jours · comptoir").waitFor();
+  await admin.getByText(/Completed.*counter/).waitFor();
+  await admin.goto(`${BASE}/en/admin`);
+  await admin.getByText("7 days · counter").waitFor();
 
   // Customers cannot reach any of it.
-  for (const path of ["/fr/admin/customers", "/fr/staff/counter"]) assert.equal((await shopper.goto(`${BASE}${path}`))?.status(), 404);
+  for (const path of ["/en/admin/customers", "/en/staff/counter"]) assert.equal((await shopper.goto(`${BASE}${path}`))?.status(), 404);
   console.log("admin complete smoke: ok");
 } finally {
   await browser.close();

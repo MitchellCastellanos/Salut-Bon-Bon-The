@@ -8,7 +8,7 @@ import { ConsoleSidebar, type ConsoleSection } from "./console-sidebar";
 export async function ConsoleShell({ lang, children }: { lang: Lang; children: React.ReactNode }) {
   const fr = lang === "fr";
   const [role, profile] = await Promise.all([staffRole(), staffProfile()]);
-  const siteHref = `/${lang}`;
+  const siteHref = "/fr";
   if (!role) return <main id="main" className="console-login">
     <Link className="console-back" href={siteHref}>← {fr ? "Retour au site" : "Back to the website"}</Link>
     {children}

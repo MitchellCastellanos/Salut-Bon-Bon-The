@@ -56,13 +56,15 @@ try {
 
   const admin = await (await browser.newContext()).newPage();
   await signIn(admin, "ADMIN");
-  await admin.getByText("ADMINISTRATION", { exact: true }).waitFor();
+  // Administrators land on the dashboard; the order list is one click away.
+  await admin.getByRole("heading", { name: "Administration" }).waitFor();
+  await admin.goto(new URL("/en/staff", STAFF_SMOKE_BASE_URL).href);
   let catalogEditor;
   if (process.env.STAFF_SMOKE_CATALOG === "1") {
     const page = await admin.context().newPage();
     await page.goto(new URL("/en/admin", STAFF_SMOKE_BASE_URL).href);
-    await page.getByRole("heading", { name: "Pricing and availability" }).waitFor();
-    await page.getByRole("link", { name: "Edit the catalog" }).click();
+    await page.getByRole("heading", { name: "Administration" }).waitFor();
+    await page.getByRole("link", { name: "Products and catalog" }).click();
     await page.getByRole("heading", { name: "Edit the catalog" }).waitFor();
     await page.locator("summary").getByText("Categories", { exact: true }).click();
     const form = page.locator("form").filter({ hasText: "milk-tea" }).first();

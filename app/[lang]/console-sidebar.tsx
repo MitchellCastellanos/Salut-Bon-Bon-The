@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { LanguageLink } from "../../src/language-link";
 import type { Lang } from "../../src/domain";
 
 export type ConsoleLink = { href: string; label: string };
@@ -35,7 +34,7 @@ export function ConsoleSidebar({ lang, sections, name, role, siteHref, logout }:
   const footer = <div className="console-foot">
     <Link className="console-back" href={siteHref}>← {fr ? "Retour au site" : "Back to the website"}</Link>
     <p className="console-who"><strong>{name}</strong><span>{role}</span></p>
-    <div className="console-foot-row"><LanguageLink lang={lang}/>
+    <div className="console-foot-row">
       <form action={logout}><button type="submit" className="console-logout">{fr ? "Déconnexion" : "Sign out"}</button></form></div>
   </div>;
   return <>

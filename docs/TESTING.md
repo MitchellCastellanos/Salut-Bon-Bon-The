@@ -69,3 +69,5 @@ The rewards suite was also run with the app connected as the least-privilege `sa
 
 - `tests/counter.test.ts` (needs `TEST_DATABASE_URL`): counter orders are refused without a tax status, are priced and taxed on the server, stored paid and completed, idempotent per request, kept out of pickup capacity, and reject unknown members and unoffered drinks.
 - `node tests/admin-complete-smoke.mjs` (browser, same fixture as the instant-journey smoke): dashboard, every navigation link, analytics notice, counter sale linked to a customer, refusal of an unknown member, counter badge in `/staff`, customer list and detail, customer denied.
+
+Note (2026-11-19): the admin and staff console is English only, so every browser suite that signs in as STAFF/ADMIN uses `/en/...` URLs and English labels. When a suite resets and restarts its server, stop the old `next-server` process first, or the new one cannot bind the port and a stale build answers (symptom: "Invalid Server Actions request"). `rewards-public-smoke` needs a build made with `SITE_URL` set to the test origin.

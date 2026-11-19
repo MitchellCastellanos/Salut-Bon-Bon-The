@@ -33,3 +33,7 @@ Branch `claude/sharp-volta-qnyknv`. Added `/admin/team` (ADMIN creates, promotes
 ## Update 2026-11-19 (complete admin)
 
 Admin dashboard at `/admin` with shared navigation (the former `/admin` content moved to `/admin/campaigns`), `/admin/customers` list and detail, analytics page visible even when measurement is off, counter sales at `/staff/counter` (migration 010: `orders.channel`, `counter_tender`, `created_by`). See [Admin access](ADMIN_ACCESS.md).
+
+## Update 2026-11-19 (admin is English only)
+
+Owner decision: the administration and staff console is English only; the public site keeps French/English parity. `/fr/admin*` and `/fr/staff*` redirect to `/en/...` in `proxy.ts`. Rule recorded in `AGENTS.md` and [Admin access](ADMIN_ACCESS.md). Browser suites now use `/en/...` and English labels (rewards, rewards-public, staff, instant-journey, admin-complete). Two stale assertions were fixed along the way (closed-checkout catalog notice, mobile header link visibility).

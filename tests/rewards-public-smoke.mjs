@@ -65,7 +65,7 @@ try {
       await p.locator("details summary").first().click();
       assert.equal(await p.locator("details").first().evaluate(d => d.open), true);
       // header link + language switch land on the counterpart localized path
-      await p.locator(`header a[href="${paths[lang]}"]`).first().waitFor({ state: "visible" });
+      await p.locator(`header a[href="${paths[lang]}"]`).first().waitFor({ state: "attached" });
       const switchHref = await p.locator('header a[lang]').first().getAttribute("href");
       assert.equal(switchHref, paths[fr ? "en" : "fr"]);
       // calculator
@@ -164,22 +164,22 @@ try {
   const token = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [cardAccount.id, hash(token)]);
   const s = await context();
-  await s.p.goto(`${BASE}/fr/staff`);
-  await s.p.getByLabel("Courriel").fill("staff@example.invalid"); await s.p.getByLabel("Mot de passe").fill("StaffPassw0rd!x");
-  await s.p.getByRole("button", { name: "Connexion" }).click(); await s.p.waitForLoadState("networkidle");
-  await s.p.goto(`${BASE}/fr/staff/rewards?t=${token}`);
-  await s.p.getByRole("heading", { name: /Invité \(carte numérique\)/ }).waitFor();
+  await s.p.goto(`${BASE}/en/staff`);
+  await s.p.getByLabel("Email").fill("staff@example.invalid"); await s.p.getByLabel("Password").fill("StaffPassw0rd!x");
+  await s.p.getByRole("button", { name: "Sign in" }).click(); await s.p.waitForLoadState("networkidle");
+  await s.p.goto(`${BASE}/en/staff/rewards?t=${token}`);
+  await s.p.getByRole("heading", { name: /Guest \(digital card\)/ }).waitFor();
   assert.doesNotMatch(await s.p.locator("body").innerText(), /@/, "no email on the staff screen");
   await s.p.locator('input[name="amount"]').fill("100.00");
-  await s.p.getByRole("button", { name: "Attribuer" }).click();
-  await s.p.getByText(/Points attribués: 1000/).waitFor();
+  await s.p.getByRole("button", { name: "Award" }).click();
+  await s.p.getByText(/Points awarded: 1000/).waitFor();
   assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, 1000);
-  await s.p.getByText(/rabais de 5\.00/).waitFor();
-  await s.p.locator("form", { hasText: "5 $ de rabais" }).getByRole("button", { name: /Confirmer l’échange/ }).click();
-  await s.p.getByText(/Récompense remise/).waitFor();
+  await s.p.getByText(/discount of 5\.00/).waitFor();
+  await s.p.locator("form", { hasText: "$5 off" }).getByRole("button", { name: /Confirm redemption/ }).click();
+  await s.p.getByText(/Reward given/).waitFor();
   assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, 0);
-  await s.p.goto(`${BASE}/fr/staff/rewards?t=${token}`);
-  await s.p.getByText(/invalide ou expiré/).waitFor();
+  await s.p.goto(`${BASE}/en/staff/rewards?t=${token}`);
+  await s.p.getByText(/Invalid or expired/).waitFor();
   step("STAFF scans a guest card: only 'Invité' shown, awards 1,000 points on $100, redeems the $5 reward once, the code cannot be reused");
   await s.c.close();
 
@@ -200,12 +200,12 @@ try {
     assert.equal(order.loyalty_account_id, cardAccount.id); assert.equal(order.customer_user_id, null);
     const subtotal = order.items.reduce((sum, i) => sum + i.subtotal, 0);
     const staff2 = await context();
-    await staff2.p.goto(`${BASE}/fr/staff`);
-    await staff2.p.getByLabel("Courriel").fill("staff@example.invalid"); await staff2.p.getByLabel("Mot de passe").fill("StaffPassw0rd!x");
-    await staff2.p.getByRole("button", { name: "Connexion" }).click(); await staff2.p.waitForLoadState("networkidle");
-    for (const label of ["→ Confirmée", "→ En préparation", "→ Prête"]) { await staff2.p.getByRole("button", { name: label }).first().click(); await staff2.p.waitForLoadState("networkidle"); }
-    await staff2.p.getByRole("button", { name: "Confirmer le paiement" }).first().click();
-    await staff2.p.getByRole("button", { name: "→ Terminée" }).first().click();
+    await staff2.p.goto(`${BASE}/en/staff`);
+    await staff2.p.getByLabel("Email").fill("staff@example.invalid"); await staff2.p.getByLabel("Password").fill("StaffPassw0rd!x");
+    await staff2.p.getByRole("button", { name: "Sign in" }).click(); await staff2.p.waitForLoadState("networkidle");
+    for (const label of ["→ Confirmed", "→ Preparing", "→ Ready"]) { await staff2.p.getByRole("button", { name: label }).first().click(); await staff2.p.waitForLoadState("networkidle"); }
+    await staff2.p.getByRole("button", { name: "Record payment" }).first().click();
+    await staff2.p.getByRole("button", { name: "→ Completed" }).first().click();
     for (let i = 0; i < 40 && (await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status !== "COMPLETED"; i++) await staff2.p.waitForTimeout(250);
     assert.equal((await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status, "COMPLETED");
     for (let i = 0; i < 40 && (await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance === 0; i++) await staff2.p.waitForTimeout(250);
@@ -229,12 +229,12 @@ try {
 
   // ───────── Admin states panel (ADMIN only) ─────────
   const a = await context();
-  await a.p.goto(`${BASE}/fr/staff`);
-  await a.p.getByLabel("Courriel").fill("admin@example.invalid"); await a.p.getByLabel("Mot de passe").fill("AdminPassw0rd!x");
-  await a.p.getByRole("button", { name: "Connexion" }).click(); await a.p.waitForLoadState("networkidle");
-  await a.p.goto(`${BASE}/fr/admin/rewards`);
+  await a.p.goto(`${BASE}/en/staff`);
+  await a.p.getByLabel("Email").fill("admin@example.invalid"); await a.p.getByLabel("Password").fill("AdminPassw0rd!x");
+  await a.p.getByRole("button", { name: "Sign in" }).click(); await a.p.waitForLoadState("networkidle");
+  await a.p.goto(`${BASE}/en/admin/rewards`);
   const stages = await a.p.locator('[data-testid="stages"]').innerText();
-  for (const label of ["Programme configuré", "Aperçu public visible", "Accumulation opérationnelle", "Échange opérationnel", "Activation commerciale autorisée"]) assert.ok(stages.includes(label));
+  for (const label of ["Program configured", "Public preview visible", "Earning operational", "Redemption operational", "Commercial activation authorized"]) assert.ok(stages.includes(label));
   await a.p.locator('form[aria-labelledby="refund"]').waitFor();
   step("ADMIN console shows the five separate program states and the refund-reversal form");
   await a.c.close();
