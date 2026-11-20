@@ -31,7 +31,7 @@ export async function submitOrder(payload: unknown, campaign?: unknown) {
     const order = await placeOrder({ ...parsed.data, email: parsed.data.email ?? customer?.email },
       allowed ? { campaign: attribution.success ? attribution.data : null } : undefined, customer?.id);
     const number = order.number.toString();
-    // A guest card held by this browser collects points for the order (never for another person's card or a signed-in member's order).
+    // A guest card held by this browser collects stamps for the order (never for another person's card or a signed-in member's order).
     if (process.env.DATABASE_URL && !customer) {
       const card = await currentGuestCard().catch(() => undefined);
       if (card) await linkOrderToCard(number, card.account.id).catch(() => undefined);

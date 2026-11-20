@@ -1,59 +1,17 @@
 /**
- * Pure Salut Rewards arithmetic. No I/O, so server pages, the public calculator and the tests share one definition.
- * All amounts are integer cents; points are integers.
- *
- * Rounding rule: points are computed once per order on the whole eligible pre-tax subtotal and ROUNDED DOWN
- * (floor), never per line and never up. With 10 points per $1 that is floor(cents / 10).
+ * Pure Salut Rewards arithmetic. The program is a stamp card: every eligible drink earns one stamp and the 10th drink is
+ * free. A stamp is stored as one unit of the ledger balance, and the free drink is a reward that costs `stampsForReward`
+ * stamps (9 purchased, the 10th is the reward). No I/O, so server pages and the tests share one definition.
  */
-export const maxHypotheticalCents = 500_000;
-
-/** Points earned on `eligibleCents` (pre-tax, after discounts, excluding tips and redeemed rewards). */
-export function pointsFor(eligibleCents: number, perDollar: number) {
-  if (!Number.isSafeInteger(eligibleCents) || eligibleCents <= 0 || !Number.isSafeInteger(perDollar) || perDollar <= 0) return 0;
-  return Math.floor(eligibleCents * perDollar / 100);
-}
-
-/** Cash value (cents) of `points` at the configured reward ratio, rounded down. */
-export function valueCents(points: number, reward: { pointsCost: number; discountCents: number }) {
-  if (points <= 0 || reward.pointsCost <= 0) return 0;
-  return Math.floor(points * reward.discountCents / reward.pointsCost);
-}
-
-/** Effective return as a percentage of eligible spend, derived from the real rate and reward (not hard-coded). */
-export function returnPercent(perDollar: number | null, reward: { pointsCost: number; discountCents: number } | null) {
-  if (!perDollar || !reward || reward.pointsCost <= 0) return null;
-  const percent = perDollar * reward.discountCents / reward.pointsCost;
-  return Math.round(percent * 100) / 100;
-}
-
-/** Progress toward a reward: share (0–1) and points still missing. */
-export function progress(points: number, cost: number) {
-  if (cost <= 0) return { share: 0, missing: 0 };
-  return { share: Math.min(1, Math.max(0, points / cost)), missing: Math.max(0, cost - points) };
-}
-
-/** Eligible spend (cents) still needed to cover `missing` points. */
-export function spendToEarn(missingPoints: number, perDollar: number) {
-  if (missingPoints <= 0 || perDollar <= 0) return 0;
-  return Math.ceil(missingPoints * 100 / perDollar);
-}
 
 /**
- * Points that remain valid after refunding `refundedCents` of an order whose eligible base was `eligibleCents` and
- * which earned `earned` points: floor(earned x remaining / eligible). A full refund keeps 0.
+ * Stamps that remain valid after refunding `refundedCents` of an order whose eligible base was `eligibleCents` and which
+ * earned `earned` stamps: floor(earned x remaining / eligible). A full refund keeps 0. Mirrors `loyalty_reverse_refund` in SQL.
  */
-export function pointsKeptAfterRefund(earned: number, eligibleCents: number, refundedCents: number) {
+export function stampsKeptAfterRefund(earned: number, eligibleCents: number, refundedCents: number) {
   if (eligibleCents <= 0) return 0;
   const remaining = Math.max(0, eligibleCents - refundedCents);
   return Math.floor(earned * remaining / eligibleCents);
-}
-
-/** Parses a user-typed dollar amount ("12.50", "12,5") into cents, or undefined when it is not a valid amount. */
-export function parseDollars(text: string) {
-  const match = text.trim().replace(",", ".").match(/^(\d{1,4})(?:\.(\d{1,2}))?$/);
-  if (!match) return undefined;
-  const cents = Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0") || 0);
-  return cents > 0 && cents <= maxHypotheticalCents ? cents : undefined;
 }
 
 export type RewardState = "available" | "coming_soon" | "unavailable";
@@ -66,4 +24,34 @@ export function rewardState(reward: { available: boolean }, ops: { redemptionOpe
   if (reward.available && ops.redemptionOperational) return "available";
   if (!ops.active || !ops.redemptionOperational) return "coming_soon";
   return "unavailable";
+}
+
+/** Stamps needed for the free drink: 9 drinks purchased, the 10th is free. */
+export const stampsForReward = 9;
+/** Largest number of stamps a single order or counter visit can earn (to be confirmed by the owner). */
+export const maxStampsPerOrder = 10;
+
+/** Stamps for the order lines that count: one per drink, quantities summed, capped per order. Invalid quantities count as 0. */
+export function stampsForItems(items: { quantity?: unknown }[]) {
+  const drinks = items.reduce((sum, item) => sum + (Number.isSafeInteger(item.quantity) && (item.quantity as number) > 0 ? item.quantity as number : 0), 0);
+  return Math.min(drinks, maxStampsPerOrder);
+}
+
+export type StampCard = {
+  /** Stamps shown on the card (never more than `required`). */
+  filled: number; required: number; toGo: number; share: number;
+  /** True once a free drink can be redeemed. */
+  ready: boolean;
+  /** Free drinks already earned and not yet redeemed. */
+  freeDrinks: number;
+  /** Stamps beyond the first free drink, carried over to the next card. */
+  carried: number;
+};
+/** Derives everything the progress bar shows from the ledger balance. */
+export function stampCard(balance: number, required = stampsForReward): StampCard {
+  const safe = Number.isSafeInteger(balance) && balance > 0 ? balance : 0;
+  const need = Number.isSafeInteger(required) && required > 0 ? required : stampsForReward;
+  const freeDrinks = Math.floor(safe / need);
+  const filled = Math.min(safe, need);
+  return { filled, required: need, toGo: Math.max(0, need - safe), share: filled / need, ready: freeDrinks > 0, freeDrinks, carried: freeDrinks > 0 ? safe - need : 0 };
 }

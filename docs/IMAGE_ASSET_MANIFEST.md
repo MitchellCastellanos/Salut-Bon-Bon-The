@@ -99,3 +99,7 @@ Where each campaign shows its imagery with the official catalog: the homepage he
 Existing coverage reviewed and kept: mango, crème brûlée and lemonade campaigns (BATCH-01, 04, 05) and the generic rewards tile `public/promotions/rewards.webp` (BATCH-02, a rewards card with a gift motif, not a gift-card product).
 
 **Logo policy.** Product photography stays logo-free. The official logo is always a separate HTML/CSS layer (`src/brand.tsx`, `src/brand-server.ts`): header, footer, account pages, rewards and QR card, checkout surfaces and transactional emails. Until the owner supplies `public/brand/logo.svg` the site shows the typographic wordmark; emails need a PNG export at `public/brand/logo-email.png` (email clients reject SVG); `public/brand/logo.svg` also becomes the favicon and the social preview automatically. Never embed a logo inside AI-generated photography.
+
+### Stamp card imagery (BATCH-07, optional)
+
+`public/rewards/stamp-filled.webp`, `stamp-empty.webp`, `stamp-free.webp` (1:1, 512 × 512, transparent) are used by the stamp progress bar when present; otherwise built-in icons are shown. `free-drink-celebration.webp` (4:3) is optional and not wired yet. Prompts: `docs/image-prompts/BATCH-07.md`.

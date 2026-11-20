@@ -6,6 +6,7 @@ import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
 import { awardInStore, LoyaltyError, lookupQr, redeemReward } from "../../../../src/loyalty";
 import { allow } from "../../../../src/rate-limit";
+import { maxStampsPerOrder } from "../../../../src/rewards-math";
 import { staffActor, staffRole } from "../../../../src/staff";
 
 const token = z.string().regex(/^[0-9a-f]{64}$/);
@@ -35,14 +36,14 @@ export async function redeem(lang: string, form: FormData) {
 
 export async function award(lang: string, form: FormData) {
   if (!language(lang) || !process.env.DATABASE_URL || !await staffRole()) return;
-  const parsed = z.object({ token, key, amount: z.string().regex(/^\d{1,4}(\.\d{1,2})?$/) }).safeParse({ token: form.get("token"), key: form.get("key"), amount: form.get("amount") });
+  const parsed = z.object({ token, key, drinks: z.string().regex(/^\d{1,2}$/).transform(Number).refine(v => v >= 1 && v <= maxStampsPerOrder) }).safeParse({ token: form.get("token"), key: form.get("key"), drinks: form.get("drinks") });
   if (!parsed.success) redirect(`/${lang}/staff/rewards?error=AMOUNT&t=${String(form.get("token") ?? "").slice(0, 64)}`);
   const actor = await staffActor();
   if (!await allow("award-staff", actor, 60, 60)) redirect(`/${lang}/staff/rewards?error=RATE`);
   const found = await lookupQr(parsed.data!.token, await database());
   if (!found) redirect(`/${lang}/staff/rewards?error=QR_INVALID`);
   try {
-    const result = await awardInStore({ accountId: found!.accountId, cents: Math.round(Number(parsed.data!.amount) * 100), key: parsed.data!.key, actor });
+    const result = await awardInStore({ accountId: found!.accountId, drinks: parsed.data!.drinks, key: parsed.data!.key, actor });
     redirect(`/${lang}/staff/rewards?t=${parsed.data!.token}&awarded=${result.awarded}${result.balance === undefined ? "" : `&balance=${result.balance}`}`);
   } catch (error) {
     if (error instanceof LoyaltyError) redirect(`/${lang}/staff/rewards?t=${parsed.data!.token}&error=${error.code}`);

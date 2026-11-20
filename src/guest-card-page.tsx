@@ -8,6 +8,7 @@ import { accountHistory, loyaltyProgram } from "./loyalty";
 import { rewardsPath } from "./rewards-paths";
 import { forgetGuestCard, getGuestCard, restoreGuestCard } from "../app/[lang]/guest-card-actions";
 import { rewardsName } from "./storefront-content";
+import { ledgerLabel, StampProgress } from "./stamp-progress";
 
 export const cardMetadata = (lang: Lang): Metadata => ({
   title: lang === "fr" ? "Ma carte invité" : "My guest card", robots: { index: false, follow: false }, referrer: "no-referrer",
@@ -25,20 +26,20 @@ export async function GuestCardPage({ lang, error, notice }: { lang: Lang; error
   const err = error && error in errors ? errors[error as keyof typeof errors][fr ? 0 : 1] : undefined;
   const program = await loyaltyProgram().catch(() => undefined);
   const history = card ? await accountHistory(card.account.id, 15) : [];
-  const kind = (k: string) => k === "earn" ? (fr ? "Points gagnés" : "Points earned") : k === "redeem" ? (fr ? "Récompense échangée" : "Reward redeemed") : k === "reverse" ? (fr ? "Points repris (remboursement)" : "Points reversed (refund)") : (fr ? "Ajustement" : "Adjustment");
+  const kind = (k: string) => ledgerLabel(k, lang);
   return <section className="wrap section rw-card-page">
     <p className="eyebrow">{rewardsName[lang]}</p><h1>{fr ? "Ma carte invité" : "My guest card"}<span>.</span></h1>
     {err && <p role="alert" className="panel">{err}</p>}
     {notice && <p role="status" className="panel">{fr ? "Fait." : "Done."}</p>}
-    {program && !program.active && <p role="status" className="panel">{fr ? "Aperçu : le programme n’est pas encore actif, aucun point n’est cumulé." : "Preview: the program is not active yet, no points are being earned."}</p>}
+    {program && !program.active && <p role="status" className="panel">{fr ? "Aperçu : le programme n’est pas encore actif, aucun tampon n’est cumulé." : "Preview: the program is not active yet, no stamps are being earned."}</p>}
     {!card ? <>
-      <p>{fr ? "Obtenez une carte numérique gratuite, sans compte ni mot de passe. Elle est liée à cet appareil; un code de secours vous permet de la retrouver ailleurs, et vous pourrez la lier à un compte plus tard sans perdre vos points." : "Get a free digital card with no account or password. It is tied to this device; a backup code lets you restore it elsewhere, and you can link it to an account later without losing points."}</p>
+      <p>{fr ? "Obtenez une carte numérique gratuite, sans compte ni mot de passe. Elle est liée à cet appareil; un code de secours vous permet de la retrouver ailleurs, et vous pourrez la lier à un compte plus tard sans perdre vos tampons." : "Get a free digital card with no account or password. It is tied to this device; a backup code lets you restore it elsewhere, and you can link it to an account later without losing points."}</p>
       <form action={getGuestCard.bind(null, lang)}><button className="button">{fr ? "Obtenir ma carte" : "Get my card"}</button></form>
       <h2>{fr ? "J’ai déjà une carte" : "I already have a card"}</h2>
       <form action={restoreGuestCard.bind(null, lang)} className="panel checkout"><label>{fr ? "Code de secours" : "Backup code"}<input name="code" required autoComplete="off" spellCheck={false} maxLength={80}/></label>
         <button className="outline">{fr ? "Restaurer ma carte" : "Restore my card"}</button></form>
     </> : <>
-      <p className="total">{fr ? "Solde" : "Balance"} <strong>{card.account.balance} {fr ? "points" : "points"}</strong></p>
+      <StampProgress balance={card.account.balance} lang={lang}/>
       <QrCard lang={lang} memberCode={card.account.member_code} logo={officialLogo()}/>
       <details className="panel"><summary>{fr ? "Code de secours (à garder privé)" : "Backup code (keep it private)"}</summary>
         <p>{fr ? "Ce code donne accès à votre carte. Conservez-le dans un endroit sûr; ne le partagez avec personne." : "This code gives access to your card. Store it somewhere safe and share it with no one."}</p>

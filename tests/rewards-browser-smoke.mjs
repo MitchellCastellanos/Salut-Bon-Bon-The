@@ -186,25 +186,19 @@ try {
 
   await admin.goto(`${BASE}/en/admin/rewards`);
   const program = admin.locator('form[aria-labelledby="program"]');
-  assert.equal(await program.locator('input[name="rate"]').inputValue(), "10", "the preview ships with 10 points per $1");
-  await program.locator('input[name="rate"]').fill("");
-  await program.locator('input[name="active"]').check();
-  await program.getByRole("button", { name: "Save program" }).click();
-  await admin.getByText("Set an earning rate").waitFor();
-  step("program cannot be activated without an earning rate");
+  assert.equal(await program.locator('input[name="rate"]').count(), 0, "the stamp card has no earning rate");
   await admin.locator('form[aria-labelledby="program"] input[name="active"]').check();
-  await admin.locator('form[aria-labelledby="program"] input[name="rate"]').fill("2");
   await admin.locator('form[aria-labelledby="program"]').getByRole("button", { name: "Save program" }).click();
   await admin.waitForURL(/saved=program/);
   const reward = admin.locator("form", { hasText: "New reward" });
   await reward.locator('input[name="id"]').fill("free-drink");
   await reward.locator('input[name="nameFr"]').fill("Boisson gratuite");
   await reward.locator('input[name="nameEn"]').fill("Free drink");
-  await reward.locator('input[name="cost"]').fill("10");
+  await reward.locator('input[name="cost"]').fill("9");
   await reward.locator('input[name="available"]').check();
   await reward.getByRole("button", { name: "Create" }).click();
   await admin.waitForURL(/saved=reward/);
-  assert.deepEqual((await q("SELECT active, points_per_dollar FROM loyalty_program"))[0], { active: true, points_per_dollar: 2 });
+  assert.deepEqual((await q("SELECT active FROM loyalty_program"))[0], { active: true });
   assert.equal((await q("SELECT count(*)::int AS n FROM catalog_audit_history WHERE action LIKE 'loyalty.%'"))[0].n >= 2, true);
   step("rewards program activated by ADMIN, reward created, changes audited");
 
@@ -319,49 +313,51 @@ try {
   for (let i = 0; i < 40 && (await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status !== "COMPLETED"; i++) await staff.waitForTimeout(250);
   assert.equal((await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status, "COMPLETED");
   const acct = (await q(`SELECT a.id, a.balance FROM loyalty_accounts a JOIN "user" u ON u.id = a.user_id WHERE u.email = 'ana@example.invalid'`))[0];
-  assert.equal(acct.balance, 27, "floor(1350 cents × 2 points per dollar / 100)");
+  const stamps = Math.min(10, (await q("SELECT items FROM orders WHERE number = $1", [order.n]))[0].items.reduce((sum, i) => sum + i.quantity, 0));
+  assert.equal(acct.balance, stamps, "one stamp per drink, capped per order");
   await ana.goto(`${BASE}/fr/account/rewards`);
-  await ana.getByText("27 points").first().waitFor();
-  await ana.getByText("Points gagnés").waitFor();
+  assert.equal(await ana.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), String(Math.min(stamps, 9)));
+  await ana.getByText("Tampons gagnés").waitFor();
   await ana.locator(".qr svg").waitFor();            // her page requests a fresh QR after load, which supersedes older tokens
   await ana.waitForLoadState("networkidle");
-  step("completed order earned 27 points; shown in the customer's history");
+  step("completed order earned one stamp per drink; shown in the customer's history");
 
   // ───────── QR identification and redemption at the counter ─────────
+  await q("SELECT loyalty_post($1, 'adjust', 9, 'smoke-seed-nine', NULL, NULL, NULL, 'smoke seed', 'test')", [acct.id]);   // a full card (9 stamps) on top of the order
   const token = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [acct.id, hash(token)]);
   await staff.goto(`${BASE}/en/staff/rewards?t=${token}`);
   await staff.getByRole("heading", { name: /Ana · / }).waitFor().catch(async error => { throw new Error(`${error.message}\nPAGE: ${(await staff.locator("main").innerText()).slice(0, 200)}\nTOKENS: ${JSON.stringify(await q("SELECT left(token_hash,8) h, expires_at, now() AS now, redeemed_at FROM loyalty_qr_tokens ORDER BY id"))}\nWANT: ${hash(token).slice(0, 8)}`); });
   assert.equal(await staff.getByText("Tremblay").count(), 0, "staff see the first name only");
-  await staff.getByText("27 points").first().waitFor();
-  await staff.getByRole("button", { name: "Confirm redemption" }).click();
+  assert.equal(await staff.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), "9");
+  await staff.getByRole("button", { name: /Confirm redemption/ }).click();
   await staff.getByText("Reward given").waitFor();
-  await staff.getByText("new balance 17").waitFor();
+  await staff.getByText(`stamps left ${stamps}`).waitFor();
   await staff.goto(`${BASE}/en/staff/rewards?t=${token}`);
   assert.equal(await staff.getByRole("heading", { name: /Ana · / }).count(), 0, "a redeemed QR no longer identifies");
-  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, 17);
+  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, stamps);
   const token2 = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [acct.id, hash(token2)]);
   await staff.goto(`${BASE}/en/staff/rewards?t=${token2}`);
-  await staff.getByLabel(/Amount before tax/).fill("5.00");
-  await staff.getByRole("button", { name: "Award" }).click();
-  await staff.getByText("Points awarded: 10").waitFor();
-  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, 27);
+  await staff.getByLabel(/Eligible drinks bought/).fill("2");
+  await staff.getByRole("button", { name: "Add stamps" }).click();
+  await staff.getByText("Stamps added: 2").waitFor();
+  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, stamps + 2);
   const expiredToken = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() - interval '1 minute')", [acct.id, hash(expiredToken)]);
   await staff.goto(`${BASE}/en/staff/rewards?t=${expiredToken}`);
   assert.equal(await staff.getByRole("heading", { name: /Ana · / }).count(), 0, "expired QR is rejected");
-  step("staff QR flow: identify (first name only), redeem once, replay rejected, in-store award, expiry");
+  step("staff QR flow: identify (first name only), redeem once, replay rejected, in-store stamps, expiry");
 
   // ───────── Admin sees history; customer adjustments need a reason ─────────
   await admin.goto(`${BASE}/en/admin/rewards?q=${encodeURIComponent("ana@example.invalid")}`);
   await admin.getByText(/Ana Tremblay/).first().waitFor();
   const adj = admin.locator("form", { hasText: "Adjust" }).first();
-  await adj.getByLabel(/Points/).fill("-5");
+  await adj.getByLabel(/Stamps/).fill("-1");
   await adj.getByLabel(/Reason/).fill("Correction de test");
   await adj.getByRole("button", { name: "Adjust" }).click();
   await admin.waitForURL(/saved=adjust/);
-  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, 22);
+  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, stamps + 1);
   assert.equal((await q("SELECT count(*)::int AS n FROM loyalty_transactions WHERE kind = 'adjust' AND reason = 'Correction de test'"))[0].n, 1);
   step("ADMIN customer lookup, history and audited adjustment with reason");
 
@@ -372,7 +368,7 @@ try {
   assert.equal(await ben.getByText(/#\d+/).count(), 0, "Ben sees none of Ana's orders");
   await ben.getByRole("button", { name: "Adhérer à Récompenses Salut" }).click();
   await ben.locator(".member-code").waitFor();
-  await ben.getByText("0 points").first().waitFor();
+  assert.equal(await ben.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), "0");
   assert.notEqual((await ben.locator(".member-code").textContent()).trim(), code);
   for (const path of ["/en/admin", "/en/admin/rewards", "/en/admin/hours", "/en/admin/prices"]) {
     assert.equal((await ben.request.get(BASE + path)).status(), 404, `customer must not reach ${path}`);

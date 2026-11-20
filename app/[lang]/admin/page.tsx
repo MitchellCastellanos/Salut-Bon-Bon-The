@@ -16,7 +16,7 @@ const blurbs: Record<string, [string, string]> = {
   prices: ["Prix des 62 produits et ce qui est offert.", "Prices for the 62 products and what is offered."],
   hours: ["Heures d’ouverture, fermetures, délai de préparation, capacité.", "Opening hours, closures, lead time, capacity."],
   business: ["Adresse, téléphone, numéros de TPS/TVQ et statut fiscal.", "Address, phone, GST/QST numbers and tax status."],
-  customers: ["Liste des clients, points et commandes.", "Customer list, points and orders."],
+  customers: ["Liste des clients, tampons et commandes.", "Customer list, stamps and orders."],
   rewards: ["Règles du programme, récompenses, ajustements, remboursements.", "Program rules, rewards, adjustments, refunds."],
   analytics: ["Activité du site : fiches vues, paniers, commandes.", "Site activity: product views, carts, orders."],
   campaigns: ["Campagnes de la page d’accueil et prix rapides.", "Homepage campaigns and quick pricing."],
@@ -52,7 +52,7 @@ export default async function AdminHome({ params }: PageProps<"/[lang]/admin">) 
         {item.id === "analytics" && !analyticsEnabled() && <small>{fr ? "Mesure désactivée pour le moment." : "Measurement is currently off."}</small>}
       </li>)}
       <li><Link href={`/${lang}/staff/counter`}><strong>{fr ? "Vente au comptoir" : "Counter sale"}</strong></Link><small>{fr ? "Enregistrer une vente en personne." : "Record an in-person sale."}</small></li>
-      <li><Link href={`/${lang}/staff/rewards`}><strong>{fr ? "Scanner une carte" : "Scan a card"}</strong></Link><small>{fr ? "Identifier un client et échanger des points." : "Identify a customer and redeem points."}</small></li>
+      <li><Link href={`/${lang}/staff/rewards`}><strong>{fr ? "Scanner une carte" : "Scan a card"}</strong></Link><small>{fr ? "Identifier un client et échanger une boisson gratuite." : "Identify a customer and redeem a free drink."}</small></li>
     </ul>
   </section>;
 }

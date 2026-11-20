@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import catalog from "../catalog/official.json";
-import { pointsFor } from "./rewards-math";
+import { stampsForItems } from "./rewards-math";
 
 type Lang = "fr" | "en";
 type Item = { product: string; size: "regular" | "large"; topping: "none" | "pearls" | "popping"; quantity: number };
@@ -33,7 +33,7 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
   const [message, setMessage] = useState("");
   const subtotal = useMemo(() => cart.reduce((sum, line) => sum + price(line), 0), [cart]);
   const gst = Math.round(subtotal * 0.05), qst = Math.round(subtotal * 0.09975);
-  const points = pointsFor(subtotal, 10);
+  const points = stampsForItems(cart); // stamps: one per drink
   const refresh = useCallback(async (id: string, token: string) => {
     try {
       const response = await fetch(api + "?id=" + encodeURIComponent(id) + "&token=" + encodeURIComponent(token), { cache: "no-store" });
@@ -134,7 +134,7 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
         </div>; })}
         <p>{fr ? "Sous-total" : "Subtotal"}: {money(subtotal, lang)} · TPS/GST: {money(gst, lang)} · TVQ/QST: {money(qst, lang)}</p>
         <h2>{fr ? "Total estimé" : "Estimated total"}: {money(subtotal + gst + qst, lang)}</h2>
-        <p>🎁 <strong>{points} {fr ? "points Rewards" : "Rewards points"}</strong> · {fr ? "Valeur estimée" : "Estimated value"} {money(Math.floor(points * 0.5), lang)} · {fr ? "Activation à venir" : "Pending activation"}</p>
+        <p>🎁 <strong>{points} {fr ? "tampons Rewards" : "Rewards stamps"}</strong> · {fr ? "9 tampons = la 10e boisson gratuite" : "9 stamps = the 10th drink free"} · {fr ? "Activation à venir" : "Pending activation"}</p>
       </section>
       <section style={{ ...card, display: "grid", gap: 12 }}>
         <h2>{fr ? "3. Cueillette" : "3. Pickup"}</h2>
@@ -157,7 +157,7 @@ export function OrderRewardsDemo({ lang }: { lang: Lang }) {
       <p>{order.name} · {order.pickup} · <strong>{money(order.total, lang)}</strong></p>
       <ul>{order.lines.map((line, i) => <li key={i}>{line.quantity} × {line[lang]} · {line.size} · {money(line.subtotal, lang)}</li>)}</ul>
       <ol>{statuses[lang].map((status, i) => <li key={status} style={{ opacity: i <= order.status ? 1 : 0.4, padding: 4 }}>{i <= order.status ? "✓ " : "○ "}{status}</li>)}</ol>
-      <p>🎁 {order.points} {fr ? "points Rewards prévus (non crédités)" : "estimated Rewards points (not credited)"}</p>
+      <p>🎁 {order.points} {fr ? "tampons Rewards prévus (non crédités)" : "estimated Rewards stamps (not credited)"}</p>
       {view === "staff" && <button className="button" type="button" disabled={busy || order.status >= 4} onClick={advance}>{fr ? "Étape suivante" : "Next status"}</button>}
       <button className="outline" type="button" onClick={share}>{fr ? "Copier le lien privé pour un autre appareil" : "Copy private link for another device"}</button>
       <button className="outline" type="button" onClick={reset}>{fr ? "Nouvelle commande" : "New order"}</button>

@@ -455,5 +455,57 @@
   "integration": "unused: same photograph as public/promotions/creme-brulee.webp at lower resolution",
   "actualSize": "1200x450",
   "bytes": 31828
+ },
+ {
+  "batch": "BATCH-07",
+  "aspectRatio": "1:1",
+  "size": "512x512",
+  "generation": "pending",
+  "id": "stamp-filled",
+  "file": "public/rewards/stamp-filled.webp",
+  "association": "Filled stamp slot of the loyalty stamp card",
+  "placement": "Stamp card progress bar (/account/rewards, guest card, staff counter)",
+  "altFr": "",
+  "altEn": "A loyalty stamp with a bubble tea cup.",
+  "integration": "wired-with-fallback (built-in SVG icons shown until supplied; decorative, empty alt)"
+ },
+ {
+  "batch": "BATCH-07",
+  "aspectRatio": "1:1",
+  "size": "512x512",
+  "generation": "pending",
+  "id": "stamp-empty",
+  "file": "public/rewards/stamp-empty.webp",
+  "association": "Empty stamp slot of the loyalty stamp card",
+  "placement": "Stamp card progress bar",
+  "altFr": "",
+  "altEn": "An empty stamp slot on the loyalty card.",
+  "integration": "wired-with-fallback (built-in SVG icons shown until supplied; decorative, empty alt)"
+ },
+ {
+  "batch": "BATCH-07",
+  "aspectRatio": "1:1",
+  "size": "512x512",
+  "generation": "pending",
+  "id": "stamp-free",
+  "file": "public/rewards/stamp-free.webp",
+  "association": "Free-drink slot (10th) of the loyalty stamp card",
+  "placement": "Stamp card progress bar, last slot",
+  "altFr": "",
+  "altEn": "A bubble tea cup with a gift bow.",
+  "integration": "wired-with-fallback (built-in SVG icons shown until supplied; decorative, empty alt)"
+ },
+ {
+  "batch": "BATCH-07",
+  "aspectRatio": "4:3",
+  "size": "1200x900",
+  "generation": "pending",
+  "id": "free-drink-celebration",
+  "file": "public/rewards/free-drink-celebration.webp",
+  "association": "Celebration when the stamp card is full",
+  "placement": "Not wired yet (optional future use on the full-card state)",
+  "altFr": "Un verre de thé à la mangue entouré de confettis.",
+  "altEn": "A mango tea cup surrounded by confetti.",
+  "integration": "not wired: optional"
  }
 ]

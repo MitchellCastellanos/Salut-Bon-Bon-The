@@ -18,7 +18,7 @@ const step = name => console.log(`  ✓ ${name}`);
 const hash = t => createHash("sha256").update(t).digest("hex");
 const sizes = [["mobile-390", { width: 390, height: 844 }, true], ["desktop-1280", { width: 1280, height: 900 }, false]];
 const paths = { fr: "/fr/recompenses", en: "/en/rewards" };
-const operate = on => q("UPDATE loyalty_program SET active=$1, accrual_enabled=true, redemption_enabled=true, points_per_dollar=10, earn_categories=NULL, min_order_cents=0, preview_visible=true WHERE id=1", [on]);
+const operate = on => q("UPDATE loyalty_program SET active=$1, accrual_enabled=true, redemption_enabled=true, earn_categories=NULL, min_order_cents=0, preview_visible=true WHERE id=1", [on]);
 
 async function context(viewport = { width: 1100, height: 900 }, mobile = false) {
   const c = await browser.newContext({ viewport, isMobile: mobile, hasTouch: mobile });
@@ -31,7 +31,7 @@ async function settle(page) {
 }
 
 try {
-  await q("UPDATE loyalty_rewards SET available = false WHERE id = 'rabais-5'");
+  await q("UPDATE loyalty_rewards SET available = false WHERE id = 'free-drink'");
   await operate(false);
 
   // ───────── Public page: no login, both languages, both widths ─────────
@@ -53,10 +53,10 @@ try {
       assert.ok(layout.overflow <= 0, `${name} ${lang}: horizontal overflow ${layout.overflow}px`);
       assert.deepEqual(layout.broken, [], `${name} ${lang}: broken images`);
       assert.equal(layout.unnamed, 0, "every link and button has a name"); assert.equal(layout.unlabeled, 0, "every input has a label");
-      for (const id of ["how", "calculator", "rewards", "participate", "faq"]) assert.equal(await p.locator(`#${id}`).count(), 1, `section #${id}`);
+      for (const id of ["how", "card", "rewards", "participate", "faq"]) assert.equal(await p.locator(`#${id}`).count(), 1, `section #${id}`);
       assert.equal(await p.locator(".rw-steps li").count(), 3);
       const text = await p.locator('[data-testid="rewards-page"]').innerText();
-      assert.match(text, fr ? /5\s?%/ : /5%/); assert.match(text, fr ? /10 points par 1\s?\$/ : /10 points per \$1/);
+      assert.match(text, fr ? /9 boissons/ : /9 drinks/); assert.match(text, fr ? /10e/ : /10th/);
       assert.match(text, fr ? /Aperçu : pas encore actif/ : /Preview: not active yet/);
       assert.equal(await p.locator('[data-testid="status-pill"]').count(), 1);
       assert.equal(await p.locator('.rw-card[data-state="available"]').count(), 0, "no reward is redeemable while the program is a preview");
@@ -68,24 +68,16 @@ try {
       await p.locator(`header a[href="${paths[lang]}"]`).first().waitFor({ state: "attached" });
       const switchHref = await p.locator('header a[lang]').first().getAttribute("href");
       assert.equal(switchHref, paths[fr ? "en" : "fr"]);
-      // calculator
-      const calc = p.locator('[data-testid="calculator"]');
-      await calc.locator("input").fill("20");
-      await calc.getByText(/200/).first().waitFor();
-      const calcText = await calc.innerText();
-      assert.match(calcText, fr ? /1,00\s?\$/ : /\$1\.00/);
-      assert.match(calcText, fr ? /Il manquerait 800 points/ : /800 points short/);
-      assert.equal(await calc.locator('[role="progressbar"]').getAttribute("aria-valuenow"), "200");
-      assert.match(calcText, fr ? /Aperçu : le programme n’est pas encore actif/ : /Preview: the program is not active yet/);
-      await calc.locator("input").fill("abc");
-      await calc.getByRole("alert").waitFor();
-      await calc.locator("input").fill("100");
-      await calc.getByText(fr ? /suffirait pour une récompense de 5,00\s?\$/ : /enough for a \$5\.00 reward/).waitFor();
+      // stamp card: accessible progress bar with the illustrative 6 of 9
+      const card = p.locator('[data-testid="stamp-progress"]');
+      assert.equal(await card.locator('[role="progressbar"]').getAttribute("aria-valuenow"), "6");
+      assert.equal(await card.locator('[role="progressbar"]').getAttribute("aria-valuemax"), "9");
+      assert.match(await card.innerText(), fr ? /Encore 3 boissons et la prochaine est gratuite/ : /3 more drinks and your next one is free/);
       if (SHOTS) await p.screenshot({ path: `${SHOTS}/rewards-${lang}-${name}.png`, fullPage: true });
     }
     await c.close();
   }
-  step("FR/EN public pages at 390 px and 1280 px: no login, no overflow, images load, 3 steps, calculator, preview state, FAQ, header link, language switch");
+  step("FR/EN public pages at 390 px and 1280 px: no login, no overflow, images load, 3 steps, stamp card, preview state, FAQ, header link, language switch");
 
   const anon = await context();
   assert.equal((await anon.p.goto(`${BASE}/fr/rewards`)).status(), 404);
@@ -108,7 +100,7 @@ try {
   assert.equal((await anon.p.goto(BASE + paths.fr)).status(), 404);
   assert.equal(await (async () => { await anon.p.goto(`${BASE}/fr`); return anon.p.locator('header nav a[href="/fr/recompenses"]').count(); })(), 0, "hidden preview removes the header link");
   await q("UPDATE loyalty_program SET preview_visible=true WHERE id=1");
-  await q("UPDATE loyalty_rewards SET available = true WHERE id = 'rabais-5'"); await operate(true);
+  await q("UPDATE loyalty_rewards SET available = true WHERE id = 'free-drink'"); await operate(true);
   await anon.p.goto(BASE + paths.fr); await settle(anon.p);
   assert.ok(await anon.p.locator('.rw-card[data-state="available"]').count() >= 1, "offered reward on an active program is available");
   assert.equal(await anon.p.locator('[data-testid="preview-note"]').count(), 0);
@@ -121,11 +113,11 @@ try {
   await anon.p.goto(`${BASE}/fr`);
   const banner = anon.p.locator("#rewards");
   assert.equal(await banner.getByRole("link", { name: /Découvrir le programme/ }).getAttribute("href"), "/fr/recompenses");
-  assert.match(await banner.innerText(), /5\s?%/);
+  assert.match(await banner.innerText(), /9 boissons/);
   await anon.p.goto(`${BASE}/en`);
   assert.equal(await anon.p.locator("#rewards").getByRole("link", { name: /Discover the program/ }).getAttribute("href"), "/en/rewards");
   assert.equal(await anon.p.locator("footer a", { hasText: "Salut Rewards" }).getAttribute("href"), "/en/rewards");
-  step("homepage banner and footer link to the dedicated page with the derived 5 %");
+  step("homepage banner and footer link to the dedicated page with the 9 + 1 terms");
   await anon.c.close();
 
   // ───────── Guest card (no account) ─────────
@@ -160,7 +152,7 @@ try {
   await other.c.close();
 
   // ───────── Counter: staff scans the guest card, awards, redeems ─────────
-  await operate(true); await q("UPDATE loyalty_rewards SET available = true WHERE id = 'rabais-5'");
+  await operate(true); await q("UPDATE loyalty_rewards SET available = true WHERE id = 'free-drink'");
   const token = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [cardAccount.id, hash(token)]);
   const s = await context();
@@ -170,17 +162,17 @@ try {
   await s.p.goto(`${BASE}/en/staff/rewards?t=${token}`);
   await s.p.getByRole("heading", { name: /Guest \(digital card\)/ }).waitFor();
   assert.doesNotMatch(await s.p.locator("body").innerText(), /@/, "no email on the staff screen");
-  await s.p.locator('input[name="amount"]').fill("100.00");
-  await s.p.getByRole("button", { name: "Award" }).click();
-  await s.p.getByText(/Points awarded: 1000/).waitFor();
-  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, 1000);
-  await s.p.getByText(/discount of 5\.00/).waitFor();
-  await s.p.locator("form", { hasText: "$5 off" }).getByRole("button", { name: /Confirm redemption/ }).click();
+  await s.p.locator('input[name="drinks"]').fill("9");
+  await s.p.getByRole("button", { name: "Add stamps" }).click();
+  await s.p.getByText(/Stamps added: 9/).waitFor();
+  assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, 9);
+  assert.equal(await s.p.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), "9");
+  await s.p.locator("form", { hasText: "Free drink" }).getByRole("button", { name: /Confirm redemption/ }).click();
   await s.p.getByText(/Reward given/).waitFor();
   assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, 0);
   await s.p.goto(`${BASE}/en/staff/rewards?t=${token}`);
   await s.p.getByText(/Invalid or expired/).waitFor();
-  step("STAFF scans a guest card: only 'Invité' shown, awards 1,000 points on $100, redeems the $5 reward once, the code cannot be reused");
+  step("STAFF scans a guest card: only 'Guest' shown, adds 9 stamps, redeems the free drink once, the code cannot be reused");
   await s.c.close();
 
   // ───────── Guest card online order, cart estimate, confirmed points ─────────
@@ -190,7 +182,7 @@ try {
     await g.p.getByRole("button", { name: "Ajouter au panier" }).click();
     await g.p.locator(".cart-lines li").first().waitFor();
     const hint = await g.p.locator('[data-testid="points-estimate"]').innerText();
-    assert.match(hint, /Estimation : environ \d+ points/); assert.match(hint, /confirmés une fois la commande terminée/);
+    assert.match(hint, /Cette commande rapportera \d+ tampons?/); assert.match(hint, /confirmés une fois la commande terminée/);
     await g.p.getByLabel("Nom pour la cueillette").fill("Invité");
     const options = await g.p.locator('select[name="pickup"] option:not([disabled])').evaluateAll(os => os.map(o => o.value));
     await g.p.locator('select[name="pickup"]').selectOption(options[3]);
@@ -209,21 +201,21 @@ try {
     for (let i = 0; i < 40 && (await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status !== "COMPLETED"; i++) await staff2.p.waitForTimeout(250);
     assert.equal((await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status, "COMPLETED");
     for (let i = 0; i < 40 && (await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance === 0; i++) await staff2.p.waitForTimeout(250);
-    assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, Math.floor(subtotal * 10 / 100), "5 % of the pre-tax subtotal, rounded down");
+    assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id=$1", [cardAccount.id]))[0].balance, Math.min(10, order.items.reduce((sum, i) => sum + i.quantity, 0)), "one stamp per drink, capped per order");
     await staff2.c.close();
     await g.p.goto(`${BASE}/fr/recompenses/carte`);
-    await g.p.getByText(/Points gagnés · \+\d+ · #/).waitFor();
+    await g.p.getByText(/Tampons gagnés · \+\d+ · #/).waitFor();
     const trackText = await (await g.c.request.get(`${BASE}/fr/track/${(await q("SELECT tracking_token FROM orders WHERE number=$1", [order.n]))[0].tracking_token}`)).text();
-    assert.doesNotMatch(trackText, /Points gagnés|solde/i, "the private tracking link never shows loyalty balances");
-    step(`guest card collects the online order (#${order.n}, subtotal ${subtotal} cents) and the cart shows an estimate, not confirmed points`);
+    assert.doesNotMatch(trackText, /Tampons gagnés|solde/i, "the private tracking link never shows loyalty balances");
+    step(`guest card collects the online order (#${order.n}, subtotal ${subtotal} cents) and the cart shows an estimate, not confirmed stamps`);
     // anonymous cart: no promise of points
     const noCard = await context(); await noCard.p.goto(`${BASE}/fr/catalog`); await settle(noCard.p);
     await noCard.p.locator("#order-201").getByRole("button", { name: /Personnaliser/ }).click();
     await noCard.p.getByRole("button", { name: "Ajouter au panier" }).click();
     await noCard.p.locator(".cart-lines li").first().waitFor();
-    assert.match(await noCard.p.locator('[data-testid="points-estimate"]').innerText(), /ne cumulera pas de points sans compte ni carte/);
+    assert.match(await noCard.p.locator('[data-testid="points-estimate"]').innerText(), /ne cumulera pas de tampons sans compte ni carte/);
     await noCard.c.close();
-    step("a cart with neither account nor card promises no points and offers sign-in or a guest card");
+    step("a cart with neither account nor card promises no stamps and offers sign-in or a guest card");
   } else step("checkout is closed on this fixture: guest-order and cart-estimate steps skipped");
   await g.c.close();
 

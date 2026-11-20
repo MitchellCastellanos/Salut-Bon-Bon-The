@@ -8,12 +8,12 @@ import { adjust, recordRefund, saveProgram, saveReward, setAccountStatus } from 
 
 export const metadata = { robots: { index: false, follow: false } };
 const errs: Record<string, [string, string]> = {
-  program: ["Paramètres invalides.", "Invalid settings."], rate: ["Définissez un taux (points par dollar) avant d’activer le programme.", "Set an earning rate (points per dollar) before activating the program."],
+  program: ["Paramètres invalides.", "Invalid settings."], rate: ["Erreur de configuration du programme.", "Program configuration error."],
   reward: ["Récompense invalide (identifiant, coûts et éligibilité).", "Invalid reward (identifier, cost and eligibility)."], adjust: ["Ajustement invalide : un motif est obligatoire.", "Invalid adjustment: a reason is required."],
   INSUFFICIENT_POINTS: ["Le solde ne peut pas devenir négatif.", "The balance cannot go negative."], IDEMPOTENCY_CONFLICT: ["Opération déjà traitée.", "Already processed."],
   NOT_AUTHORIZED: ["En production, l’activation exige l’autorisation commerciale du propriétaire (case à cocher).", "In production, activation requires the owner’s commercial authorization (checkbox)."],
   refund: ["Remboursement invalide : commande, montant avant taxes et motif sont obligatoires.", "Invalid refund: order, pre-tax amount and reason are required."],
-  NO_EARN_FOR_ORDER: ["Aucun point n’a été gagné pour cette commande en ligne.", "No points were earned for this online order."],
+  NO_EARN_FOR_ORDER: ["Aucun tampon n’a été gagné pour cette commande en ligne.", "No stamps were earned for this online order."],
   REFUND_EXCEEDS_PURCHASE: ["Le total remboursé dépasserait le montant admissible de la commande.", "Total refunds would exceed the order’s eligible amount."],
 };
 
@@ -58,15 +58,14 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
     </section>
     <form className="panel checkout" action={saveProgram.bind(null, lang)} aria-labelledby="program">
       <h2 id="program">{fr ? "Règles du programme" : "Program rules"}</h2>
-      <p>{fr ? "Aperçu initial : 10 points par 1 $ (soit 5 % avec la récompense de 5 $ pour 1 000 points). Le programme reste inactif tant qu’il n’est pas activé ici." : "Initial preview: 10 points per $1 (5 % with the $5 for 1,000 points reward). The program stays inactive until it is activated here."}</p>
+      <p>{fr ? "Carte de tampons : un tampon par boisson admissible, 9 tampons = la 10e boisson gratuite (récompense « free-drink »). Le programme reste inactif tant qu’il n’est pas activé ici." : "Stamp card: one stamp per eligible drink, 9 stamps = the 10th drink free (the free-drink reward). The program stays inactive until it is activated here."}</p>
       <label><input type="checkbox" name="previewVisible" defaultChecked={program.previewVisible}/> {fr ? "Aperçu public visible (page, menu, accueil)" : "Public preview visible (page, menu, home)"}</label>
       <label><input type="checkbox" name="active" defaultChecked={program.active}/> {fr ? "Programme actif (interrupteur général des opérations)" : "Program active (master operations switch)"}</label>
       <label><input type="checkbox" name="accrualEnabled" defaultChecked={program.accrualEnabled}/> {fr ? "Accumulation permise lorsque actif" : "Earning allowed when active"}</label>
       <label><input type="checkbox" name="redemptionEnabled" defaultChecked={program.redemptionEnabled}/> {fr ? "Échanges permis lorsque actif" : "Redemption allowed when active"}</label>
       <label><input type="checkbox" name="commercialAuthorized" defaultChecked={program.commercialAuthorized}/> {fr ? "Activation commerciale autorisée par le propriétaire (obligatoire pour activer en production)" : "Commercial activation authorized by the owner (required to activate in production)"}</label>
-      <label>{fr ? "Points par dollar dépensé (avant taxes)" : "Points per dollar spent (before tax)"}<input name="rate" inputMode="numeric" pattern="\d{1,3}" defaultValue={program.pointsPerDollar ?? ""}/></label>
-      <label>{fr ? "Achat minimal pour gagner des points ($)" : "Minimum purchase to earn points ($)"}<input name="min" inputMode="decimal" pattern="\d{1,4}(\.\d{1,2})?" defaultValue={program.minOrderCents ? (program.minOrderCents / 100).toFixed(2) : ""}/></label>
-      <fieldset><legend>{fr ? "Catégories admissibles au gain (aucune cochée = toutes)" : "Categories that earn points (none checked = all)"}</legend>
+      <label>{fr ? "Achat minimal pour gagner des tampons ($)" : "Minimum purchase to earn stamps ($)"}<input name="min" inputMode="decimal" pattern="\d{1,4}(\.\d{1,2})?" defaultValue={program.minOrderCents ? (program.minOrderCents / 100).toFixed(2) : ""}/></label>
+      <fieldset><legend>{fr ? "Catégories de boissons qui rapportent des tampons (aucune cochée = toutes)" : "Drink categories that earn stamps (none checked = all)"}</legend>
         {categories.map(c => <label key={c.id}><input type="checkbox" name="category" value={c.id} defaultChecked={program.earnCategories?.includes(c.id)}/> {fr ? c.fr : c.en}</label>)}</fieldset>
       <button className="button">{fr ? "Enregistrer le programme" : "Save program"}</button>
     </form>
@@ -78,8 +77,8 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
       <label>{fr ? "Nom (EN)" : "Name (EN)"}<input name="nameEn" required maxLength={120} defaultValue={r?.name_en}/></label>
       <label>{fr ? "Description (FR)" : "Description (FR)"}<input name="descFr" maxLength={400} defaultValue={r?.description_fr}/></label>
       <label>{fr ? "Description (EN)" : "Description (EN)"}<input name="descEn" maxLength={400} defaultValue={r?.description_en}/></label>
-      <label>{fr ? "Coût en points" : "Cost in points"}<input name="cost" required inputMode="numeric" pattern="\d{1,6}" defaultValue={r?.points_cost}/></label>
-      <label>{fr ? "Valeur du rabais en $ (facultatif, appliqué en caisse)" : "Discount value in $ (optional, applied at the counter)"}<input name="discount" inputMode="decimal" pattern="\d{1,4}(\.\d{1,2})?" defaultValue={r?.discount_cents ? (r.discount_cents / 100).toFixed(2) : ""}/></label>
+      <label>{fr ? "Coût en tampons" : "Cost in stamps"}<input name="cost" required inputMode="numeric" pattern="\d{1,6}" defaultValue={r?.points_cost}/></label>
+      <label>{fr ? "Valeur du rabais en $ (facultatif; vide pour une boisson gratuite)" : "Discount value in $ (optional; empty for a free drink)"}<input name="discount" inputMode="decimal" pattern="\d{1,4}(\.\d{1,2})?" defaultValue={r?.discount_cents ? (r.discount_cents / 100).toFixed(2) : ""}/></label>
       <label><input type="checkbox" name="previewVisible" defaultChecked={r ? r.preview_visible : true}/> {fr ? "Visible dans l’aperçu public" : "Visible in the public preview"}</label>
       <label>{fr ? "Catégorie admissible (facultatif)" : "Eligible category (optional)"}<select name="category" defaultValue={r?.eligible_category ?? ""}><option value="">—</option>{categories.map(c => <option key={c.id} value={c.id}>{fr ? c.fr : c.en}</option>)}</select></label>
       <label>{fr ? "Produit admissible (code, facultatif)" : "Eligible product (code, optional)"}<input name="product" maxLength={64} defaultValue={r?.eligible_product_id ?? ""}/></label>
@@ -87,9 +86,9 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
       <button className="outline">{r ? (fr ? "Enregistrer" : "Save") : (fr ? "Créer" : "Create")}</button>
     </form>)}
     <form className="panel checkout" action={recordRefund.bind(null, lang)} aria-labelledby="refund">
-      <h2 id="refund">{fr ? "Rembourser une commande en ligne (reprise des points)" : "Refund an online order (reverse points)"}</h2>
-      <p>{fr ? "Saisissez le montant remboursé AVANT TAXES. Les points sont repris proportionnellement (arrondi à l’inférieur sur les points conservés) ; un remboursement complet reprend tous les points. Le solde ne devient jamais négatif : la part déjà dépensée est notée comme écart." : "Enter the refunded amount BEFORE TAX. Points are taken back proportionally (kept points are rounded down); a full refund takes back every point. The balance never goes negative: any part already spent is recorded as a shortfall."}</p>
-      {str("saved") === "refund" && <p role="status">{fr ? `Points repris : ${str("reversed")} · écart non recouvrable : ${str("shortfall")}` : `Points reversed: ${str("reversed")} · unrecoverable shortfall: ${str("shortfall")}`}</p>}
+      <h2 id="refund">{fr ? "Rembourser une commande en ligne (reprise des tampons)" : "Refund an online order (reverse stamps)"}</h2>
+      <p>{fr ? "Saisissez le montant remboursé AVANT TAXES. Les tampons sont repris proportionnellement (arrondi à l’inférieur sur les tampons conservés) ; un remboursement complet reprend tous les tampons. Le solde ne devient jamais négatif : la part déjà dépensée est notée comme écart." : "Enter the refunded amount BEFORE TAX. Stamps are taken back proportionally (kept stamps are rounded down); a full refund takes back every stamp. The balance never goes negative: any part already spent is recorded as a shortfall."}</p>
+      {str("saved") === "refund" && <p role="status">{fr ? `Tampons repris : ${str("reversed")} · écart non recouvrable : ${str("shortfall")}` : `Stamps reversed: ${str("reversed")} · unrecoverable shortfall: ${str("shortfall")}`}</p>}
       <input type="hidden" name="key" value={`refund-${randomUUID()}`}/>
       <label>{fr ? "Numéro de commande" : "Order number"}<input name="order" required inputMode="numeric" pattern="[1-9]\d{0,17}"/></label>
       <label>{fr ? "Montant remboursé avant taxes ($)" : "Refunded amount before tax ($)"}<input name="amount" required inputMode="decimal" pattern="\d{1,4}(\.\d{1,2})?"/></label>
@@ -102,7 +101,7 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
     {found.map((account, i) => <section className="panel" key={account.id}>
       <h3>{account.name} · {account.member_code}</h3><p>{account.email} · {fr ? "solde" : "balance"} <strong>{account.balance}</strong> · {fr ? "cumulé" : "lifetime"} {account.lifetime_earned} · {account.status}</p>
       <form action={adjust.bind(null, lang)} className="filters"><input type="hidden" name="account" value={account.id}/><input type="hidden" name="q" value={q}/><input type="hidden" name="key" value={`adjust-${randomUUID()}`}/>
-        <label>{fr ? "Points (+/−)" : "Points (+/−)"}<input name="points" required pattern="-?\d{1,6}" inputMode="numeric"/></label>
+        <label>{fr ? "Tampons (+/−)" : "Stamps (+/−)"}<input name="points" required pattern="-?\d{1,6}" inputMode="numeric"/></label>
         <label>{fr ? "Motif (obligatoire)" : "Reason (required)"}<input name="reason" required minLength={3} maxLength={300}/></label>
         <button className="outline">{fr ? "Ajuster" : "Adjust"}</button></form>
       <form action={setAccountStatus.bind(null, lang)}><input type="hidden" name="account" value={account.id}/><input type="hidden" name="q" value={q}/>

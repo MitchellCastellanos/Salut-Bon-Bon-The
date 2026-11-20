@@ -21,3 +21,7 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 ## Salut Rewards 5 % (2026-11-18)
 
 - Added migration 009, the public pages `/fr/recompenses` and `/en/rewards` (hero, three steps, calculator driven by the real configuration, reward states, ways to participate, FAQ, final CTA), the guest card (no account), refund reversal, guest-to-account linking, the five program states in ADMIN, cart and product points hints, header/footer/home integration, localized metadata and sitemap, the commercial proposal and the new tests. See [Rewards](REWARDS.md).
+
+## Free-drink stamp card, 9 + 1 (2026-11-19)
+
+- Replaced the points scheme with a stamp card: one stamp per eligible drink, the 10th drink free. Added migration 010 (free-drink reward at 9 stamps, `rabais-5` withdrawn, preview balances cleared through the ledger), stamp earning for completed online orders and in-store visits, the `StampProgress` bar on account, guest card, staff counter and public page, stamp wording across cart, product, home, track and admin screens, image prompts BATCH-07 and new tests. The points calculator and earning-rate field were removed. See [Rewards](REWARDS.md).

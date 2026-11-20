@@ -39,8 +39,8 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
   // Cart rewards hint: only with a configured, publicly visible program. Reading failures simply hide the hint.
   const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
   const linked = program ? Boolean(await customerSession().catch(() => undefined) || await currentGuestCard().catch(() => undefined)) : false;
-  const rewardsInfo = program?.previewVisible && program.pointsPerDollar ? {
-    pointsPerDollar: program.pointsPerDollar, operational: programStages(program).accrualOperational, allEligible: !program.earnCategories?.length,
+  const rewardsInfo = program?.previewVisible ? {
+    operational: programStages(program).accrualOperational, allEligible: !program.earnCategories?.length,
     minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
   return <section className="wrap catalog-page">
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>

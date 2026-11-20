@@ -410,6 +410,20 @@ a.category-tile:hover{box-shadow:inset 0 0 0 2px var(--detail)}
   .storefront-nav .header-actions{gap:0}
 }
 
+/* Stamp card: 9 purchased drinks, the 10th is free */
+.stamp{--mango:#f6b21a;--coral2:#f26a4f;--choc:#4a2c1a;display:grid;gap:12px;background:linear-gradient(135deg,#fff3d6,#fde3e8);border-radius:28px;padding:22px;border:2px solid var(--line)}
+.stamp.ready{border-color:var(--coral2);box-shadow:0 14px 34px -18px #df422f99}
+.stamp-head{margin:0;display:flex;align-items:baseline;gap:8px;color:var(--choc)}.stamp-head strong{white-space:nowrap;font-size:2.6rem;letter-spacing:-.06em;color:var(--coral2);line-height:1}.stamp-head small{font-size:1.2rem;color:var(--choc);letter-spacing:0}.stamp-head span{font-weight:800}
+.stamp-bar{height:18px;border-radius:99px;background:#fffdf9;border:1px solid var(--line);overflow:hidden}
+.stamp-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--mango),var(--coral2));border-radius:99px;transition:width .5s}
+.stamp-slots{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+.stamp-slots li{display:grid;justify-items:center;gap:2px;opacity:.38;transition:opacity .3s,transform .3s}.stamp-slots li.on{opacity:1}
+.stamp-slots li svg,.stamp-slots li img{width:100%;max-width:44px;height:auto;aspect-ratio:1;color:var(--choc)}
+.stamp-slots li.on:not(.free) svg{color:var(--coral2)}.stamp-slots li.free svg{color:var(--mango)}.stamp-slots li.free.on{transform:scale(1.12)}.stamp-slots li.free.on svg{color:var(--coral2)}
+.stamp-slots small{font-size:.68rem;font-weight:800;color:var(--choc)}
+.stamp-msg{margin:0;font-weight:800;color:var(--choc)}
+@media (max-width:520px){.stamp-slots{grid-template-columns:repeat(5,minmax(0,1fr));row-gap:10px}.stamp-head strong{font-size:2.1rem}}
+@media (prefers-reduced-motion:reduce){.stamp-bar i,.stamp-slots li{transition:none}}
 /* Administration console frame */
 .console{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh;background:var(--cream)}
 .console-side{position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:18px;padding:22px 16px;background:#3b2216;color:#fff3e3}

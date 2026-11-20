@@ -32,7 +32,7 @@ export default async function AdminCustomers({ params, searchParams }: PageProps
     <p>{fr ? `${count.n} compte(s) client. Données de contact visibles par l’administration seulement.` : `${count.n} customer account(s). Contact data is visible to administrators only.`}</p>
     <form className="catalog-filters" role="search"><label>{fr ? "Nom ou courriel" : "Name or email"}<input name="q" maxLength={100} defaultValue={q}/></label><button className="outline">{fr ? "Chercher" : "Search"}</button></form>
     {!rows.length ? <p>{fr ? "Aucun client." : "No customers."}</p> : <div className="table-scroll"><table className="price-table">
-      <thead><tr><th>{fr ? "Nom" : "Name"}</th><th>{fr ? "Courriel" : "Email"}</th><th>{fr ? "Inscrit le" : "Joined"}</th><th>{fr ? "Commandes" : "Orders"}</th><th>{fr ? "Dépensé" : "Spent"}</th><th>{fr ? "Points" : "Points"}</th></tr></thead>
+      <thead><tr><th>{fr ? "Nom" : "Name"}</th><th>{fr ? "Courriel" : "Email"}</th><th>{fr ? "Inscrit le" : "Joined"}</th><th>{fr ? "Commandes" : "Orders"}</th><th>{fr ? "Dépensé" : "Spent"}</th><th>{fr ? "Tampons" : "Stamps"}</th></tr></thead>
       <tbody>{rows.map(row => <tr key={row.id}>
         <td><Link href={`/${lang}/admin/customers/${row.id}`}>{row.name}</Link></td>
         <td>{row.email}{!row.verified && <small> ({fr ? "non confirmé" : "unconfirmed"})</small>}</td>

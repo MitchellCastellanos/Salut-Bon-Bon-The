@@ -19,21 +19,20 @@ export async function saveProgram(lang: string, form: FormData) {
   const actor = await admin();
   if (!language(lang)) return;
   const parsed = z.object({
-    rate: z.union([z.literal(""), z.string().regex(/^\d{1,3}$/)]),
     min: z.union([z.literal(""), dollars]),
-  }).safeParse({ rate: form.get("rate") ?? "", min: form.get("min") ?? "" });
+  }).safeParse({ min: form.get("min") ?? "" });
   if (!parsed.success) back(lang, "error=program");
   const flag = (name: string) => form.get(name) === "on";
   const categories = form.getAll("category").map(String).filter(value => /^[a-z0-9-]{1,48}$/.test(value));
   try {
     await saveProgramConfig({
-      active: flag("active"), rate: parsed.data!.rate ? Number(parsed.data!.rate) : null,
+      active: flag("active"),
       minOrderCents: parsed.data!.min ? Math.round(Number(parsed.data!.min) * 100) : 0, categories,
       previewVisible: flag("previewVisible"), accrualEnabled: flag("accrualEnabled"), redemptionEnabled: flag("redemptionEnabled"),
       commercialAuthorized: flag("commercialAuthorized"),
     }, actor, { production: process.env.VERCEL_ENV === "production" });
   } catch (error) {
-    back(lang, `error=${error instanceof LoyaltyError ? (error.code === "PROGRAM_INACTIVE" ? "rate" : error.code) : "program"}`);
+    back(lang, `error=${error instanceof LoyaltyError ? error.code : "program"}`);
   }
   revalidatePath(`/${lang}/admin/rewards`);
   back(lang, "saved=program");

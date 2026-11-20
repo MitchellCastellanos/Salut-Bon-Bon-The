@@ -2,6 +2,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { stampsForItems } from "../../../src/rewards-math";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     const gst = Math.round(subtotal * 0.05);
     const qst = Math.round(subtotal * 0.09975);
     const tax = gst + qst;
-    const points = Math.floor(subtotal * 10 / 100);
+    const points = stampsForItems(lines); // stamps: one per drink (the `points` column keeps its legacy name)
     const id = randomUUID();
     const token = randomBytes(32).toString("hex");
     await pool().query(`INSERT INTO demo_orders (id,access_token_hash,name,lines,subtotal_cents,tax_cents,total_cents,points,pickup,client_hash)

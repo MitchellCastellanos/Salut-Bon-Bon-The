@@ -37,7 +37,7 @@ export default async function CounterPage({ params, searchParams }: PageProps<"/
     <Link href={`/${lang}/staff`}>{fr ? "Commandes" : "Orders"}</Link>
     <h1>{fr ? "Vente au comptoir" : "Counter sale"}<span>.</span></h1>
     <p>{fr ? "Enregistrez une vente faite en personne. Les prix et taxes sont calculés par le serveur ; la vente est enregistrée comme payée et terminée." : "Record a sale made in person. Prices and tax are calculated by the server; the sale is saved as paid and completed."}</p>
-    {flag("done") && <p role="status" className="panel">{fr ? `Vente #${flag("done")} enregistrée : ${money(Number(flag("total")), lang)}.` : `Sale #${flag("done")} recorded: ${money(Number(flag("total")), lang)}.`}{Number(flag("points")) > 0 && (fr ? ` ${flag("points")} points accordés.` : ` ${flag("points")} points awarded.`)}</p>}
+    {flag("done") && <p role="status" className="panel">{fr ? `Vente #${flag("done")} enregistrée : ${money(Number(flag("total")), lang)}.` : `Sale #${flag("done")} recorded: ${money(Number(flag("total")), lang)}.`}{Number(flag("points")) > 0 && (fr ? ` ${flag("points")} tampons accordés.` : ` ${flag("points")} stamps awarded.`)}</p>}
     {error && <p role="alert" className="panel">{error[fr ? 0 : 1]}</p>}
     {fiscal.status === "unconfigured" && <p role="alert" className="panel">{errors.fiscal[fr ? 0 : 1]}</p>}
     {!products.length ? <p role="status">{fr ? "Aucune boisson n’a de prix approuvé et offert. Voir la feuille de prix." : "No drink has an approved, offered price. See the price sheet."}</p> :

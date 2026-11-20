@@ -1,3 +1,4 @@
+import { StampProgress } from "../../../src/stamp-progress";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { accountEmailAvailable } from "../../../src/account-email";
@@ -50,7 +51,7 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
       {hasPublicImage("/rewards/campaign-banner.webp") && <div className="art-banner"><StorefrontArt path="/rewards/campaign-banner.webp" sizes="(max-width: 900px) 100vw, 1100px" priority/></div>}
       <p className="eyebrow">{rewardsName[lang]}</p><h1>{fr ? "Mon compte" : "My account"}<span>.</span></h1>
       {banner}
-      <p>{fr ? "Créez un compte pour suivre vos commandes et cumuler des points avec Récompenses Salut." : "Create an account to follow your orders and earn points with Salut Rewards."}</p>
+      <p>{fr ? "Créez un compte pour suivre vos commandes et cumuler des tampons avec Récompenses Salut." : "Create an account to follow your orders and collect stamps with Salut Rewards."}</p>
       {hasPublicImage("/account/welcome.webp") && <div className="art-banner welcome"><StorefrontArt path="/account/welcome.webp" sizes="(max-width: 900px) 100vw, 480px"/></div>}
       <div className="order-grid">
         <form className="panel checkout" action={login.bind(null, lang)} aria-labelledby="login-title">
@@ -86,10 +87,10 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
     {banner}
     <div className="order-grid">
       <section className="panel" aria-labelledby="rewards-title"><h2 id="rewards-title">{rewardsName[lang]}</h2>
-        {account ? <><p className="total">{fr ? "Solde" : "Balance"} <strong>{account.balance} {fr ? "points" : "points"}</strong></p>
-          <p>{program.active ? (fr ? "Programme actif." : "Program active.") : (fr ? "Le programme n’est pas actif pour le moment : aucun point n’est cumulé." : "The program is not active right now: no points are being earned.")}</p>
+        {account ? <><StampProgress balance={account.balance} lang={lang}/>
+          <p>{program.active ? (fr ? "Programme actif." : "Program active.") : (fr ? "Le programme n’est pas actif pour le moment : aucun tampon n’est cumulé." : "The program is not active right now: no stamps are being earned.")}</p>
           <Link className="button" href={`/${lang}/account/rewards`}>{fr ? "Voir ma carte et mes récompenses" : "View my card and rewards"}</Link></> :
-          <><p>{fr ? "Adhérez gratuitement pour obtenir votre carte et cumuler des points." : "Join for free to get your card and earn points."}</p>
+          <><p>{fr ? "Adhérez gratuitement pour obtenir votre carte de tampons (9 boissons, la 10e est gratuite)." : "Join for free to get your stamp card (9 drinks, the 10th is free)."}</p>
             <form action={joinRewards.bind(null, lang)}><button className="button">{fr ? "Adhérer à Récompenses Salut" : "Join Salut Rewards"}</button></form></>}
       </section>
       <form className="panel checkout" action={updateProfile.bind(null, lang)} aria-labelledby="profile-title">
