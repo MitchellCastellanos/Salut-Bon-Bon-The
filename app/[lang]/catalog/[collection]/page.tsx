@@ -20,7 +20,7 @@ export default async function CollectionPage({ params }: PageProps<"/[lang]/cata
   const banner = item.image;
   const categories = item.id === "explore-menu" ? await catalogCategories() : [];
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/catalog`}>{lang === "fr" ? "Voir le menu" : "Explore the menu"}</Link>
+    <Link className="outline" href={`/${lang}/catalog`}>← {lang === "fr" ? "Retour au catalogue" : "Back to catalog"}</Link>
     <h1>{item.title}</h1>
     <p>{item.headline}</p>
     {banner && hasPublicImage(banner) && <Image className="catalog-banner" src={banner} alt="" width={2400} height={900}/>}
