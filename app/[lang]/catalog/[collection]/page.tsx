@@ -5,6 +5,7 @@ import { catalogCategories, catalogCollection } from "../../../../src/catalog";
 import { language } from "../../../../src/domain";
 import { hasPublicImage } from "../../../../src/storefront-art";
 import { CatalogList } from "../catalog-list";
+import { RestoreCatalogPosition } from "../restore-position";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/catalog/[collection]">) {
   const { lang, collection } = await params;
@@ -20,6 +21,7 @@ export default async function CollectionPage({ params }: PageProps<"/[lang]/cata
   const banner = item.image;
   const categories = item.id === "explore-menu" ? await catalogCategories() : [];
   return <section className="wrap catalog-page">
+    <RestoreCatalogPosition />
     <Link className="outline" href={`/${lang}/catalog`}>← {lang === "fr" ? "Retour au catalogue" : "Back to catalog"}</Link>
     <h1>{item.title}</h1>
     <p>{item.headline}</p>
