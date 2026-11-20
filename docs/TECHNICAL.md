@@ -17,6 +17,10 @@ Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4, Zod, Postgre
 - **Catalog/pricing.** `src/catalog*.ts`, `catalog/official.json`, `src/catalog-display-prices.ts` (display fallback; see PROJECT_STATUS risks).
 - **Interfaces.** Next server actions are internal. External HTTP surface: `POST /api/stripe/webhook`, `GET /api/notifications/run` (cron, `CRON_SECRET`), `/api/demo-orders` (isolated demo, below), `robots.txt`, `sitemap.xml`, Open Graph image.
 
+## Administration architecture
+
+One setting, one place. Menu data (names, photo, category, sizes and prices, sold out/hidden, toppings) is edited only under `/admin/menu`; `src/admin-menu.ts` holds the logic (validation, transactions via `atomic`, audit with the acting account). The single switch for taking online orders is `pickup_checkout_enabled`, changed by `setOrderingEnabled` (`src/admin-reports.ts`) from the dashboard or the hours page; opening hours only decide which pickup times exist. Saving a price is the owner's approval of it; blank means the size is not sold. Reports (`report()` in `src/admin-reports.ts`) count paid orders net of refunds, never simulated payments. Shared UI: `ui.tsx` (header, notices, badges), `submit.tsx` (pending state and confirmation), `guard.ts` (ADMIN checks for pages and actions). Admin pages and actions are ADMIN only, enforced on the server by `tests/admin-permissions.test.ts`. The console is English only; photos come from the WebP files in `/public` (new ones are added through the image workflow, not uploaded in the admin).
+
 ## Routes
 
 | Area | Routes |
@@ -27,7 +31,7 @@ Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4, Zod, Postgre
 | Demo mode | `/{fr,en}/demo`, `/demo/side-by-side`, `/{lang}/pay/[session]` (simulated payment page) |
 | Card and Wallet | `/s/[code]` (QR target, forwards to the staff scanner), `GET /api/wallet/pass`, Apple web service `/api/wallet/v1/…` |
 | STAFF + ADMIN | `/staff` (orders), `/staff/counter`, `/staff/rewards` (scan, award, redeem) |
-| ADMIN only | `/admin` (dashboard), `/admin/orders` (+ `/[number]`), `/admin/notifications`, `/admin/wallet`, `/admin/activity`, `/admin/catalog`, `/admin/prices`, `/admin/hours`, `/admin/business`, `/admin/customers` (+ `/[id]`), `/admin/rewards`, `/admin/analytics`, `/admin/campaigns`, `/admin/team` |
+| ADMIN only | `/admin` (dashboard with the online-ordering switch), `/admin/orders` (+ `/[number]`), `/admin/menu` (+ `/new`, `/[id]`, `/options`), `/admin/customers` (+ `/[id]`), `/admin/rewards`, `/admin/wallet` (digital cards), `/admin/hours`, `/admin/business`, `/admin/team`, `/admin/reports`, `/admin/website`, `/admin/notifications`, `/admin/integrations`, `/admin/activity`. Retired paths `/admin/catalog`, `/admin/prices`, `/admin/analytics`, `/admin/campaigns` redirect to their replacements |
 
 With a database configured, the header **Order** button and product links lead to the real pickup ordering section of `/catalog` (`src/order-links.ts`); without a database they lead to the isolated local demonstration.
 
@@ -49,6 +53,7 @@ PostgreSQL is the only store. SQL lives in `db/NNN-*.sql`, applied in order by `
 | 010 | `orders.channel`, `counter_tender`, `created_by` (counter sales) |
 | 011 | Stamp card: clears preview balances through the ledger (aborts if commercially authorized and balances exist), withdraws `rabais-5`, adds reward `free-drink` costing 9. No schema change; `points_per_dollar` kept but unused |
 | 012 | Salut Plus completion: `payment_attempts.provider` accepts `simulated`; payment state `REFUNDED` and `order_refunds`; `loyalty_program.free_drink_max_cents` (799) and `identifier_redemption`; `loyalty_identifiers` (stable card identification); `wallet_passes` and `wallet_registrations`; `customer_favorites`; function `loyalty_redeem_member` |
+| 013 | `catalog_products.published` (default true). Hidden = not published (draft, off the website); sold out = published but not available (listed as unavailable, cannot be ordered). The storefront lists only published drinks |
 
 Other SQL: `db/import-catalog.sql` (catalog data), `db/seeds/business-initial.json` (profile seed). `db/manual-client-prices-2026-11-18.sql` is **not a migration** (no number, never run by the runner): it updates regular prices and assigns every modifier to every product. Its header says it was applied to Neon production on 2026-11-18, which matches the 124 priced variants found there on 2026-11-20 even though older docs said no prices existed. The `demo_orders` table used by `/api/demo-orders` has no DDL in this repository.
 
@@ -182,6 +187,7 @@ Browser suites need a built app, `CHROMIUM_PATH` and, except the demo suite, a d
 | `node tests/instant-journey-smoke.mjs` | Customer → order → staff → team | `SALUT_INSTANT_ACCOUNTS=1`, open checkout |
 | `node tests/admin-complete-smoke.mjs` | Dashboard, navigation, counter sale, customers | Same fixture |
 | `npm run test:plus-demo` | Whole Plus journey in demo mode: admin demo settings, account, customized order, simulated payment, staff queue, ready, completion, stamps, decoded logo QR, staff scan, in-store stamps, redemption, anonymous denial, admin refund, notification log | App started with `SALUT_DEMO_MODE=1` on a disposable database that has the catalog with prices (`db/manual-client-prices-2026-11-18.sql` after creating variants), the business profile (`npm run business:init`) and ADMIN/STAFF fixtures |
+| `node tests/admin-audit-smoke.mjs` | Administration audit in a real browser: every navigation destination, retired-route redirects, ordering pause/resume reflected on the storefront, sold-out and price changes reflected on product pages, draft vs published drinks, hours save, change history, reports, STAFF/visitor denial (404), phone and tablet overflow | Same fixture as `test:plus-demo` (SALUT_DEMO_MODE=1, ADMIN and STAFF fixtures, priced catalog, business profile) |
 | `npm run qr:calibrate` | Largest logo size that still decodes (jsQR) | – |
 | `npm run assets:check` | Image manifest versus files | – |
 

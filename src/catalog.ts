@@ -4,7 +4,7 @@ import { database } from "./db";
 import type { Lang } from "./domain";
 
 type Named = { id: string; fr: string; en: string };
-type CatalogProduct = Named & { category: string; image: string | null };
+type CatalogProduct = Named & { category: string; image: string | null; available: boolean };
 type Campaign = Named & { headline_fr: string; headline_en: string; image: string | null };
 
 export async function catalogCategories(): Promise<Named[]> {
@@ -23,15 +23,15 @@ export async function catalogCollections(): Promise<Named[]> {
 }
 
 export async function catalogProducts(featured = false): Promise<CatalogProduct[]> {
-  if (!process.env.DATABASE_URL) return source.products.map(product => ({ ...product, image: product.image ?? null }));
+  if (!process.env.DATABASE_URL) return source.products.map(product => ({ ...product, image: product.image ?? null, available: true }));
   const { rows } = await (await database()).query<CatalogProduct>(`
-    SELECT p.id, p.category, fr.name AS fr, en.name AS en, i.path AS image
+    SELECT p.id, p.category, fr.name AS fr, en.name AS en, i.path AS image, p.available
     FROM catalog_products p
     JOIN catalog_product_translations fr ON fr.product_id = p.id AND fr.locale = 'fr'
     JOIN catalog_product_translations en ON en.product_id = p.id AND en.locale = 'en'
     LEFT JOIN LATERAL (SELECT path FROM catalog_product_images WHERE product_id = p.id ORDER BY position, path LIMIT 1) i ON true
     LEFT JOIN catalog_featured_placements f ON f.product_id = p.id AND f.placement = 'homepage'
-    WHERE NOT $1::boolean OR f.position IS NOT NULL
+    WHERE p.published AND (NOT $1::boolean OR f.position IS NOT NULL)
     ORDER BY CASE WHEN $1::boolean THEN f.position END, p.id
   `, [featured]);
   return rows;

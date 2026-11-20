@@ -1,4 +1,5 @@
 "use server";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { language } from "../../../../src/domain";
@@ -15,4 +16,5 @@ export async function cardQrAction(lang: string, form: FormData) {
   if (parsed.data.op === "rotate") await rotateIdentifier(parsed.data.account, actor);
   else await revokeIdentifier(parsed.data.account, actor);
   revalidatePath(`/${lang}/admin/customers`, "layout");
+  if (parsed.data.user) redirect(`/${lang}/admin/customers/${parsed.data.user}?saved=${parsed.data.op}`);
 }

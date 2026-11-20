@@ -44,14 +44,14 @@ try {
   // Dashboard and navigation (the console is English only): every section opens and shows the shared bar.
   await admin.goto(`${BASE}/en/admin`);
   await admin.getByRole("heading", { name: "Administration" }).waitFor();
-  await admin.getByText("Today").waitFor();
-  for (const [label, heading] of [["Products and catalog", /Edit the catalog/], ["Prices", /Price sheet/], ["Hours and pickup", /Business hours and pickup/], ["Profile and tax", /Business and tax/],
-    ["Customers", /^Customers$/], ["Analytics", /Audience analytics/], ["Campaigns", /Campaigns/], ["Team and access", /Team and access/]]) {
+  await admin.getByText("Today", { exact: true }).first().waitFor();
+  for (const [label, heading] of [["Drinks and prices", /Drinks and prices/], ["Hours and online ordering", /Hours and online ordering/], ["Business info and tax", /Business info and tax/],
+    ["Customers", /^Customers$/], ["Sales and activity", /Sales and activity/], ["Website content", /Website content/], ["Staff and access", /Staff and access/]]) {
     await side.getByRole("link", { name: label, exact: true }).click();
     await admin.getByRole("heading", { level: 1, name: heading }).waitFor();
   }
-  await admin.goto(`${BASE}/en/admin/analytics`);
-  await admin.getByText(/Audience measurement is switched off|No activity/).first().waitFor();
+  await admin.goto(`${BASE}/en/admin/reports`);
+  await admin.getByText(/Visit measurement is switched off|No visits/).first().waitFor();
 
   // Counter sale linked to the customer, recorded as paid and completed.
   await admin.goto(`${BASE}/en/staff/counter`);

@@ -43,3 +43,7 @@ With the project lead's authorization: a backup branch and a rehearsal branch we
 ## 2026-11-20 · Topping rule: one included topping, every extra $1.00
 
 Every drink includes one topping chosen from tapioca or the popping pearls; each additional topping, of any kind, costs $1.00 (not $0.75). Implemented in `selectionCost` (`src/catalog-options.ts`): the most expensive selected tapioca/popping option is free, and the base tapioca stored at $0 counts as a standard topping when it is an extra. No catalog migration was needed, so the rule works with the data already in production and with the code deployed before it.
+
+## 2026-11-20 · One authoritative place per admin setting
+
+Prices and availability: only `/admin/menu`. Online ordering on/off: `pickup_checkout_enabled`, surfaced as "Temporarily stop new orders"; opening hours are separate and only define pickup times. Sold out (stays visible, not orderable) and hidden (off the website) are distinct (`catalog_products.published`). Stamp reversal after a refund happens only through the order refund. Photos are chosen from files shipped in `/public`; upload would need new storage and is out of scope. STAFF keep the live queue, counter sale and card scanner; order history stays ADMIN only (owner decision welcome if staff should search past orders).

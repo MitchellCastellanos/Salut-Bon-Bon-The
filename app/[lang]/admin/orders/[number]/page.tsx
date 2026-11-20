@@ -2,20 +2,24 @@ import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "../../../../../src/db";
-import { language, modifiers, money, pickupDate, stateLabels, type State } from "../../../../../src/domain";
-import { staffRole } from "../../../../../src/staff";
+import { modifiers, money, pickupDate, stateLabels, type State } from "../../../../../src/domain";
+import { orderStatusLabel, paymentLabel, paymentLabels } from "../../../../../src/labels";
+import { adminPage } from "../../guard";
+import { Badge, Notice, PageHeader } from "../../ui";
+import { Submit } from "../../submit";
 import { cancelOrder, refund } from "./actions";
 
 export const metadata = { robots: { index: false, follow: false } };
 const errors: Record<string, string> = {
   INVALID: "Check the amount and give a reason of at least 3 characters.", AMOUNT: "The amount is more than what remains refundable.",
   NOT_REFUNDABLE: "This order has no refundable payment.", PROVIDER_UNAVAILABLE: "Stripe is not connected: refund this payment in the Stripe dashboard.",
-  PROVIDER_FAILED: "Stripe refused the refund. Nothing was recorded.", NOT_FOUND: "Order not found.",
+  PROVIDER_FAILED: "Stripe refused the refund. Nothing was recorded.", NOT_FOUND: "Order not found.", STATE: "This order has already changed status (someone else may have updated it). Review it below.",
 };
 
 export default async function AdminOrder({ params, searchParams }: PageProps<"/[lang]/admin/orders/[number]">) {
-  const { lang, number } = await params;
-  if (!language(lang) || !process.env.DATABASE_URL || await staffRole() !== "ADMIN" || !/^[1-9]\d{0,17}$/.test(number)) notFound();
+  const { lang: rawLang, number } = await params;
+  const lang = await adminPage(rawLang);
+  if (!/^[1-9]\d{0,17}$/.test(number)) notFound();
   const query = await searchParams;
   const db = await database();
   const { rows: [order] } = await db.query<{ number: string; customer: string; customer_email: string | null; notes: string | null; status: State; payment: string; payment_method: string; total: number; tax_cents: number;
@@ -33,14 +37,13 @@ export default async function AdminOrder({ params, searchParams }: PageProps<"/[
   const remaining = order.total - refunded;
   const refundable = ["PAID_ONLINE", "REFUND_REQUIRED", "PAID_AT_PICKUP"].includes(order.payment) && remaining > 0;
   const stamp = (k: string) => String(query[k] ?? "");
-  return <section className="wrap catalog-page">
-    <p><Link href={`/${lang}/admin/orders`}>← Orders</Link></p>
-    <h1>Order #{order.number}</h1>
-    {stamp("error") && <p role="alert" className="panel">{errors[stamp("error")] ?? "The operation could not be completed."}</p>}
-    {stamp("done") && <p role="status" className="panel">Saved.</p>}
+  return <section className="wrap">
+    <p><Link href={`/${lang}/admin/orders`}>← Order history</Link></p>
+    <PageHeader title={`Order #${order.number}`} intro={<><Badge tone={order.status === "CANCELLED" ? "bad" : order.status === "COMPLETED" ? "good" : "warn"}>{orderStatusLabel[order.status]}</Badge> <Badge tone={paymentLabels[order.payment]?.tone}>{paymentLabel(order.payment)}</Badge> {paymentLabels[order.payment]?.help}</>}/>
+    <Notice saved={stamp("done")} error={stamp("error")} saves={{ cancel: "Order cancelled. The customer was notified.", refund: "Refund recorded." }} errors={errors}/>
     <div className="order-grid">
       <article className="panel"><h2>Order</h2>
-        <p><strong>{stateLabels[order.status].en}</strong> · {order.payment.replaceAll("_", " ").toLowerCase()} ({order.payment_method})</p>
+        <p><strong>{stateLabels[order.status].en}</strong> · {paymentLabel(order.payment)} ({order.payment_method === "card" ? "card" : "pay at pickup"})</p>
         <p>{order.customer}{order.customer_email && ` · ${order.customer_email}`}{order.customer_user_id && <> · <Link href={`/${lang}/admin/customers/${order.customer_user_id}`}>account</Link></>}</p>
         <p>Pickup {pickupDate(new Date(order.pickup_at).toISOString(), "en")} · placed {pickupDate(new Date(order.created_at).toISOString(), "en")}{order.channel === "COUNTER" && ` · counter sale (${order.counter_tender}) by ${order.created_by}`}</p>
         {order.notes && <p>Note: {order.notes}</p>}
@@ -55,16 +58,16 @@ export default async function AdminOrder({ params, searchParams }: PageProps<"/[
         {mails.rows.length > 0 && <><h3>Emails</h3><ul>{mails.rows.map((m, i) => <li key={i}>{m.kind.replaceAll("_", " ")} · {m.status.toLowerCase()}{m.last_error && ` (${m.last_error})`}</li>)}</ul></>}
       </article>
     </div>
-    {["RECEIVED", "CONFIRMED", "PREPARING", "READY"].includes(order.status) && <form className="panel checkout" action={cancelOrder.bind(null, lang)}>
+    {["RECEIVED", "CONFIRMED", "PREPARING", "READY"].includes(order.status) && <form className="admin-form" action={cancelOrder.bind(null, lang)}>
       <h2>Cancel the order</h2><input type="hidden" name="order" value={order.number}/><input type="hidden" name="from" value={order.status}/>
       <label>Reason (kept in the change history)<input name="reason" required minLength={3} maxLength={280}/></label>
-      <button className="outline">Cancel order</button></form>}
+      <div><Submit className="danger" confirm="Cancel this order? The customer will be notified. A paid online order will then need a refund.">Cancel order</Submit></div></form>}
     {refunds.rows.length > 0 && <div className="panel"><h2>Refunds</h2><ul>{refunds.rows.map((r, i) => <li key={i}>{money(r.amount_cents, "en")} · {r.provider} · {r.reason} · {r.actor} · {pickupDate(new Date(r.created_at).toISOString(), "en")}</li>)}</ul></div>}
-    {refundable && <form className="panel checkout" action={refund.bind(null, lang)}>
+    {refundable && <form className="admin-form" action={refund.bind(null, lang)}>
       <h2>Refund</h2><input type="hidden" name="order" value={order.number}/><input type="hidden" name="key" value={`refund-${randomUUID()}`}/>
       <label>Amount in dollars, tax included (up to {(remaining / 100).toFixed(2)})<input name="amount" inputMode="decimal" pattern="\d{1,5}(\.\d{1,2})?" required defaultValue={(remaining / 100).toFixed(2)}/></label>
       <label>Reason<input name="reason" required minLength={3} maxLength={280}/></label>
       <p className="fine-print">{order.payment_method === "card" ? "Simulated payments are refunded in the simulation; real Stripe payments are refunded through Stripe." : "Pay-at-pickup payments are recorded as a manual refund: hand the money back at the counter."} Stamps earned on this order are taken back in proportion.</p>
-      <button>Refund</button></form>}
+      <div><Submit className="danger" confirm="Record this refund? It cannot be undone and stamps earned on the order are taken back.">Refund</Submit></div></form>}
   </section>;
 }
