@@ -11,11 +11,12 @@ const staff = { name: "Equipo Prueba", email: `equipo-${stamp}@example.invalid`,
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium" });
 
 async function staffLogin(page, email, password) {
-  await page.goto(`${BASE}/fr/staff`);
-  await page.getByLabel("Courriel").fill(email);
-  await page.getByLabel("Mot de passe").fill(password);
-  await page.getByRole("button", { name: "Connexion" }).click();
-  await page.getByRole("heading", { name: /Commandes/ }).waitFor();
+  await page.goto(`${BASE}/fr/staff`); // French URLs redirect to the English console
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  // Administrators land on the dashboard, STAFF on the orders list.
+  await page.getByRole("heading", { name: email.startsWith("admin@") ? "Administration" : /Orders/ }).waitFor();
 }
 
 try {
@@ -37,28 +38,28 @@ try {
 
   // 2. The customer is not a staff member.
   await shopper.goto(`${BASE}/fr/staff`);
-  await shopper.getByRole("button", { name: "Connexion" }).waitFor();
+  await shopper.getByRole("button", { name: "Sign in" }).waitFor();
   assert.equal((await shopper.goto(`${BASE}/fr/admin`))?.status(), 404);
 
   // 3. ADMIN signs in, sees the team page and creates a STAFF account.
   const admin = await (await browser.newContext()).newPage();
   await staffLogin(admin, "admin@example.invalid", "AdminPassw0rd!x");
   await admin.goto(`${BASE}/fr/admin`);
-  await admin.getByRole("link", { name: "Équipe et accès" }).click();
-  await admin.getByRole("heading", { name: "Équipe et accès" }).waitFor();
+  await admin.getByRole("navigation", { name: "Administration navigation" }).getByRole("link", { name: "Team and access", exact: true }).click();
+  await admin.getByRole("heading", { name: "Team and access" }).waitFor();
   const add = admin.locator('form[aria-labelledby="add-title"]');
-  await add.getByLabel("Nom").fill(staff.name);
-  await add.getByLabel("Courriel").fill(staff.email);
-  await add.getByLabel(/Mot de passe/).fill(staff.password);
-  await add.getByRole("button", { name: "Créer le compte" }).click();
-  await admin.getByText("Compte créé.").waitFor();
-  await add.getByLabel("Nom").fill(staff.name);
-  await add.getByLabel("Courriel").fill(staff.email);
-  await add.getByLabel(/Mot de passe/).fill(staff.password);
-  await add.getByRole("button", { name: "Créer le compte" }).click();
-  await admin.getByText("existe déjà").waitFor();
+  await add.getByLabel("Name").fill(staff.name);
+  await add.getByLabel("Email").fill(staff.email);
+  await add.getByLabel(/password/i).fill(staff.password);
+  await add.getByRole("button", { name: "Create account" }).click();
+  await admin.getByText("Account created.").waitFor();
+  await add.getByLabel("Name").fill(staff.name);
+  await add.getByLabel("Email").fill(staff.email);
+  await add.getByLabel(/password/i).fill(staff.password);
+  await add.getByRole("button", { name: "Create account" }).click();
+  await admin.getByText("already exists").waitFor();
   // The only administrator cannot be demoted or removed (own row has no controls).
-  assert.equal(await admin.getByRole("button", { name: "Rendre STAFF" }).count(), 0);
+  assert.equal(await admin.getByRole("button", { name: "Make STAFF" }).count(), 0);
 
   // 4. The new STAFF signs in, reaches orders, and is denied the admin area.
   const crew = await (await browser.newContext()).newPage();
@@ -86,10 +87,10 @@ try {
   await crew.getByText(customer.name).first().waitFor();
   await admin.goto(`${BASE}/fr/admin/team`);
   const row = admin.locator("article").filter({ hasText: staff.email });
-  await row.getByRole("button", { name: "Retirer l’accès" }).click();
-  await admin.getByText("Accès retiré.").waitFor();
+  await row.getByRole("button", { name: "Remove access" }).click();
+  await admin.getByText("Access removed.").waitFor();
   await crew.goto(`${BASE}/fr/staff`);
-  await crew.getByRole("button", { name: "Connexion" }).waitFor();
+  await crew.getByRole("button", { name: "Sign in" }).waitFor();
   console.log("instant journey smoke: ok");
 } finally {
   await browser.close();

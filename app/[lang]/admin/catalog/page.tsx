@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
@@ -52,7 +51,6 @@ export default async function EditCatalogPage({ params }: PageProps<"/[lang]/adm
   const groups = [...new Set(modifiers.rows.map(row => row.group_id))];
   const save = <button className="outline">{fr ? "Enregistrer" : "Save"}</button>;
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/admin`}>{fr ? "Prix et campagnes" : "Pricing and campaigns"}</Link>
     <h1>{fr ? "Modifier le catalogue" : "Edit the catalog"}</h1>
     <details className="panel"><summary>{fr ? "Catégories" : "Categories"}</summary>
       {categories.rows.map(row => <form key={row.id} action={editCatalog} className="catalog-filters">

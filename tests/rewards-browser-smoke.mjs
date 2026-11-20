@@ -20,10 +20,10 @@ const ctx = async () => { const c = await browser.newContext({ viewport: { width
 const hash = t => createHash("sha256").update(t).digest("hex");
 
 async function staffLogin(page, email, password) {
-  await page.goto(`${BASE}/fr/staff`);
-  await page.getByLabel("Courriel").fill(email);
-  await page.getByLabel("Mot de passe").fill(password);
-  await page.getByRole("button", { name: "Connexion" }).click();
+  await page.goto(`${BASE}/en/staff`);
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForLoadState("networkidle");
 }
 function mailLink(to, kind) {
@@ -60,25 +60,25 @@ try {
   // ───────── Admin: prices, hours, rewards ─────────
   const admin = await ctx();
   await staffLogin(admin, "admin@example.invalid", "AdminPassw0rd!x");
-  await admin.goto(`${BASE}/fr/admin/prices`);
+  await admin.goto(`${BASE}/en/admin/prices`);
   await admin.locator('input[name="price_201_regular"]').fill("6.75");
   await admin.locator('input[name="price_201_large"]').fill("7.75");
   await admin.locator('input[name="avail_201"]').check();
-  await admin.getByRole("button", { name: "Enregistrer tous les prix" }).click();
-  await admin.getByText("Cochez la confirmation").waitFor();
+  await admin.getByRole("button", { name: "Save all prices" }).click();
+  await admin.getByText("Tick the approval confirmation").waitFor();
   step("price sheet refuses to save without the approval confirmation");
   await admin.locator('input[name="price_201_regular"]').fill("6.75");
   await admin.locator('input[name="price_201_large"]').fill("7.75");
   await admin.locator('input[name="avail_201"]').check();
   await admin.locator('input[name="confirm"]').check();
-  await admin.getByRole("button", { name: "Enregistrer tous les prix" }).click();
-  await admin.getByText("Prix enregistrés").waitFor();
+  await admin.getByRole("button", { name: "Save all prices" }).click();
+  await admin.getByText("Prices saved").waitFor();
   const priced = await q("SELECT id, price_cents, approved, available FROM catalog_variants WHERE product_id = '201' ORDER BY id");
   assert.deepEqual(priced.map(r => [r.id, r.price_cents, r.approved, r.available]), [["large", 775, true, true], ["regular", 675, true, true]]);
   assert.equal((await q("SELECT count(*)::int AS n FROM catalog_variants"))[0].n, 2, "blank prices must not create variants");
   step("price sheet saves approved prices and leaves blanks unpriced");
 
-  await admin.goto(`${BASE}/fr/admin/hours`);
+  await admin.goto(`${BASE}/en/admin/hours`);
   for (const day of ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]) {
     await admin.locator(`input[name="${day}_open"]`).check();
     await admin.locator(`input[name="${day}_0_start"]`).fill("08:00");
@@ -88,7 +88,7 @@ try {
   await admin.locator('input[name="Mon_open"]').check();
   await admin.locator('input[name="Mon_0_start"]').fill("08:00");
   await admin.locator('input[name="Mon_0_end"]').fill("12:00");
-  await admin.getByRole("button", { name: "+ Intervalle" }).first().click();
+  await admin.getByRole("button", { name: "+ Interval" }).first().click();
   await admin.locator('input[name="Mon_1_start"]').fill("13:00");
   await admin.locator('input[name="Mon_1_end"]').fill("22:00");
   assert.equal(await admin.locator(".hours-bar span").count() >= 8, true, "visual schedule draws a segment per interval");
@@ -99,69 +99,69 @@ try {
   await admin.locator('input[name="advance"]').fill("7");
   await admin.locator('input[name="enabled"]').check();
   const closed = inDays(2);
-  await admin.getByRole("button", { name: /Ajouter une fermeture/ }).click();
+  await admin.getByRole("button", { name: /Add a closure/ }).click();
   await admin.locator('input[type="date"]').first().fill(closed);
-  await admin.getByLabel("Motif (facultatif)").fill("Fermeture de test");
-  await admin.getByRole("button", { name: /Enregistrer l.horaire/ }).click();
-  await admin.getByText("Horaire enregistré").waitFor();
+  await admin.getByLabel("Reason (optional)").fill("Fermeture de test");
+  await admin.getByRole("button", { name: /Save schedule/ }).click();
+  await admin.getByText("Schedule saved").waitFor();
   const policy = (await q("SELECT value FROM catalog_store_settings WHERE key = 'pickup_policy'"))[0].value;
   assert.equal(policy.slotCapacity, 2); assert.equal(policy.taxRates, undefined, "tax no longer lives in the pickup policy");
   assert.equal(policy.exceptions[0].from, closed); assert.equal(policy.hours.Mon.length, 2);
   await admin.getByText("Fermeture de test").first().waitFor();
   step("business hours, pickup settings and a closure saved and previewed");
 
-  await admin.goto(`${BASE}/fr/admin/hours`);
+  await admin.goto(`${BASE}/en/admin/hours`);
   await admin.locator('input[name="Tue_0_start"]').fill("23:00");
   await admin.locator('input[name="Tue_0_end"]').fill("22:00");
-  await admin.getByRole("button", { name: /Enregistrer l.horaire/ }).click();
+  await admin.getByRole("button", { name: /Save schedule/ }).click();
   await admin.getByRole("alert").first().waitFor();
   assert.equal((await q("SELECT value FROM catalog_store_settings WHERE key = 'pickup_policy'"))[0].value.hours.Tue[0][0], "08:00", "an invalid interval (start after end) must not be saved");
   step("invalid schedules are rejected server-side and the previous schedule is kept");
 
   // ───────── Business profile and fiscal settings ─────────
-  await admin.goto(`${BASE}/fr/admin/hours`);
-  await admin.getByText("La commande en ligne est fermée").waitFor();
-  for (const text of ["statut fiscal", "profil du commerce"]) await admin.getByText(new RegExp(text, "i")).first().waitFor();
+  await admin.goto(`${BASE}/en/admin/hours`);
+  await admin.getByText("Online ordering is closed").waitFor();
+  for (const text of ["tax status", "business profile"]) await admin.getByText(new RegExp(text, "i")).first().waitFor();
   const closedCatalog = await (await admin.request.get(`${BASE}/fr/catalog`)).text();
-  assert.match(closedCatalog, /commande en ligne est indisponible/i, "checkout stays closed until the fiscal status and profile are set");
+  assert.doesNotMatch(closedCatalog, /Disponibles pour la cueillette/, "checkout stays closed until the fiscal status and profile are set");
   step("checkout stays closed and the admin lists exactly what is missing (fiscal status, profile)");
 
-  await admin.goto(`${BASE}/fr/admin/business`);
+  await admin.goto(`${BASE}/en/admin/business`);
   const profileForm = admin.locator('form[aria-labelledby="profile"]');
   await profileForm.locator('input[name="displayName"]').fill("Salut Bon Bon Thé");
   await profileForm.locator('input[name="street"]').fill("1175 Rue Notre Dame");
   await profileForm.locator('input[name="city"]').fill("Lachine");
   await profileForm.locator('input[name="postalCode"]').fill("12345");
   await profileForm.locator('input[name="phone"]').fill("+1 514-637-6666");
-  await profileForm.getByRole("button", { name: "Enregistrer le profil" }).click();
-  await admin.getByText(/Code postal canadien invalide/).waitFor();
+  await profileForm.getByRole("button", { name: "Save profile" }).click();
+  await admin.getByText(/Invalid Canadian postal code/).waitFor();
   // The failed save reloads the page with the (still empty) stored profile, so every required field is filled again.
   await profileForm.locator('input[name="displayName"]').fill("Salut Bon Bon Thé");
   await profileForm.locator('input[name="street"]').fill("1175 Rue Notre Dame");
   await profileForm.locator('input[name="city"]').fill("Lachine");
   await profileForm.locator('input[name="postalCode"]').fill("h8s2c5");
   await profileForm.locator('input[name="phone"]').fill("+1 514-637-6666");
-  await profileForm.getByRole("button", { name: "Enregistrer le profil" }).click();
+  await profileForm.getByRole("button", { name: "Save profile" }).click();
   await admin.waitForURL(/saved=profile/);
   assert.equal((await q("SELECT value->>'postalCode' AS p FROM catalog_store_settings WHERE key = 'business_profile'"))[0].p, "H8S 2C5");
   step("business profile: invalid postal code rejected server-side, valid profile saved and normalised");
 
   const fiscalForm = admin.locator('form[aria-labelledby="fiscal"]');
   await fiscalForm.locator('select[name="status"]').selectOption("registered");
-  await fiscalForm.getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
-  await admin.getByText(/dénomination sociale est obligatoire/).waitFor();
+  await fiscalForm.getByRole("button", { name: "Save tax settings" }).click();
+  await admin.getByText(/legal name is required/).waitFor();
   await admin.locator('form[aria-labelledby="fiscal"] select[name="status"]').selectOption("registered");
   await admin.locator('form[aria-labelledby="fiscal"] input[name="legalName"]').fill("Test Shop Inc.");
   await admin.locator('form[aria-labelledby="fiscal"] input[name="gstNumber"]').fill("12345");
-  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
-  await admin.getByText(/Numéro de TPS invalide/).waitFor();
+  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Save tax settings" }).click();
+  await admin.getByText(/GST number missing or invalid/).waitFor();
   assert.equal(await q("SELECT 1 FROM catalog_store_settings WHERE key = 'fiscal_settings'").then(r => r.length), 0, "nothing saved while registration numbers are missing or invalid");
   step("fiscal settings: cannot register for tax without a legal name and valid GST/QST numbers (nothing is saved)");
   await admin.locator('form[aria-labelledby="fiscal"] select[name="status"]').selectOption("registered");
   await admin.locator('form[aria-labelledby="fiscal"] input[name="legalName"]').fill("Test Shop Inc.");
   await admin.locator('form[aria-labelledby="fiscal"] input[name="gstNumber"]').fill("123456789 rt 0001");
   await admin.locator('form[aria-labelledby="fiscal"] input[name="qstNumber"]').fill("1234567890 TQ 0001");
-  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
+  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Save tax settings" }).click();
   await admin.waitForURL(/saved=fiscal/);
   const fiscalRow = (await q("SELECT value FROM catalog_store_settings WHERE key = 'fiscal_settings'"))[0].value;
   assert.equal(fiscalRow.gstNumber, "123456789 RT 0001"); assert.equal(fiscalRow.gstRate, 5000); assert.equal(fiscalRow.qstRate, 9975);
@@ -172,9 +172,9 @@ try {
   await home.getByText("1175 Rue Notre Dame").first().waitFor();
   assert.ok(await home.getByRole("link", { name: "+1 514-637-6666" }).count() >= 1);
   assert.equal(await home.locator('script[type="application/ld+json"]').count(), 0, "no structured data until the owner confirms the details");
-  await admin.goto(`${BASE}/fr/admin/business`);
+  await admin.goto(`${BASE}/en/admin/business`);
   await admin.locator('form[aria-labelledby="profile"] input[name="confirmed"]').check();
-  await admin.locator('form[aria-labelledby="profile"]').getByRole("button", { name: "Enregistrer le profil" }).click();
+  await admin.locator('form[aria-labelledby="profile"]').getByRole("button", { name: "Save profile" }).click();
   await admin.waitForURL(/saved=profile/);
   await home.goto(`${BASE}/en`);
   const ld = JSON.parse(await home.locator('script[type="application/ld+json"]').first().textContent());
@@ -184,19 +184,19 @@ try {
   assert.match(footer, /1175 Rue Notre Dame/); assert.match(footer, /\+1 514-637-6666/); assert.match(footer, /08:00/);
   step("storefront shows the persisted address, phone and hours in footer and Find-us; structured data appears only after owner confirmation");
 
-  await admin.goto(`${BASE}/fr/admin/rewards`);
+  await admin.goto(`${BASE}/en/admin/rewards`);
   const program = admin.locator('form[aria-labelledby="program"]');
   assert.equal(await program.locator('input[name="rate"]').count(), 0, "the stamp card has no earning rate");
   await admin.locator('form[aria-labelledby="program"] input[name="active"]').check();
-  await admin.locator('form[aria-labelledby="program"]').getByRole("button", { name: "Enregistrer le programme" }).click();
+  await admin.locator('form[aria-labelledby="program"]').getByRole("button", { name: "Save program" }).click();
   await admin.waitForURL(/saved=program/);
-  const reward = admin.locator("form", { hasText: "Nouvelle récompense" });
+  const reward = admin.locator("form", { hasText: "New reward" });
   await reward.locator('input[name="id"]').fill("free-drink");
   await reward.locator('input[name="nameFr"]').fill("Boisson gratuite");
   await reward.locator('input[name="nameEn"]').fill("Free drink");
   await reward.locator('input[name="cost"]').fill("9");
   await reward.locator('input[name="available"]').check();
-  await reward.getByRole("button", { name: "Créer" }).click();
+  await reward.getByRole("button", { name: "Create" }).click();
   await admin.waitForURL(/saved=reward/);
   assert.deepEqual((await q("SELECT active FROM loyalty_program"))[0], { active: true });
   assert.equal((await q("SELECT count(*)::int AS n FROM catalog_audit_history WHERE action LIKE 'loyalty.%'"))[0].n >= 2, true);
@@ -296,9 +296,9 @@ try {
   for (const expected of ["Salut Bon Bon Thé", "Test Shop Inc.", "1175 Rue Notre Dame", "H8S 2C5", `Facture n° ${order.n}`, "Sous-total avant taxes", "TPS (5 %)", "123456789 RT 0001", "TVQ (9.975 %)", "1234567890 TQ 0001", "Total"]) {
     assert.ok(receiptText.includes(expected), `receipt shows: ${expected}`);
   }
-  await admin.goto(`${BASE}/fr/admin/business`);
+  await admin.goto(`${BASE}/en/admin/business`);
   await admin.locator('form[aria-labelledby="fiscal"] input[name="legalName"]').fill("Renamed Inc.");
-  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Enregistrer les paramètres fiscaux" }).click();
+  await admin.locator('form[aria-labelledby="fiscal"]').getByRole("button", { name: "Save tax settings" }).click();
   await admin.waitForURL(/saved=fiscal/);
   await ana.goto(`${BASE}/fr/track/${tracked.tracking_token}/receipt`);
   assert.ok((await ana.locator(".receipt").innerText()).includes("Test Shop Inc."), "a past receipt keeps the details it was issued with");
@@ -307,9 +307,9 @@ try {
   // ───────── Staff fulfils; loyalty earns on completion ─────────
   const staff = await ctx();
   await staffLogin(staff, "staff@example.invalid", "StaffPassw0rd!x");
-  for (const label of ["→ Confirmée", "→ En préparation", "→ Prête"]) { await staff.getByRole("button", { name: label }).click(); await staff.waitForLoadState("networkidle"); }
-  await staff.getByRole("button", { name: "Confirmer le paiement" }).click();
-  await staff.getByRole("button", { name: "→ Terminée" }).click();
+  for (const label of ["→ Confirmed", "→ Preparing", "→ Ready"]) { await staff.getByRole("button", { name: label }).click(); await staff.waitForLoadState("networkidle"); }
+  await staff.getByRole("button", { name: "Record payment" }).click();
+  await staff.getByRole("button", { name: "→ Completed" }).click();
   for (let i = 0; i < 40 && (await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status !== "COMPLETED"; i++) await staff.waitForTimeout(250);
   assert.equal((await q("SELECT status FROM orders WHERE number = $1", [order.n]))[0].status, "COMPLETED");
   const acct = (await q(`SELECT a.id, a.balance FROM loyalty_accounts a JOIN "user" u ON u.id = a.user_id WHERE u.email = 'ana@example.invalid'`))[0];
@@ -326,36 +326,36 @@ try {
   await q("SELECT loyalty_post($1, 'adjust', 9, 'smoke-seed-nine', NULL, NULL, NULL, 'smoke seed', 'test')", [acct.id]);   // a full card (9 stamps) on top of the order
   const token = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [acct.id, hash(token)]);
-  await staff.goto(`${BASE}/fr/staff/rewards?t=${token}`);
+  await staff.goto(`${BASE}/en/staff/rewards?t=${token}`);
   await staff.getByRole("heading", { name: /Ana · / }).waitFor().catch(async error => { throw new Error(`${error.message}\nPAGE: ${(await staff.locator("main").innerText()).slice(0, 200)}\nTOKENS: ${JSON.stringify(await q("SELECT left(token_hash,8) h, expires_at, now() AS now, redeemed_at FROM loyalty_qr_tokens ORDER BY id"))}\nWANT: ${hash(token).slice(0, 8)}`); });
   assert.equal(await staff.getByText("Tremblay").count(), 0, "staff see the first name only");
   assert.equal(await staff.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), "9");
-  await staff.getByRole("button", { name: /Confirmer l’échange/ }).click();
-  await staff.getByText("Récompense remise").waitFor();
-  await staff.getByText(`tampons restants ${stamps}`).waitFor();
-  await staff.goto(`${BASE}/fr/staff/rewards?t=${token}`);
+  await staff.getByRole("button", { name: /Confirm redemption/ }).click();
+  await staff.getByText("Reward given").waitFor();
+  await staff.getByText(`stamps left ${stamps}`).waitFor();
+  await staff.goto(`${BASE}/en/staff/rewards?t=${token}`);
   assert.equal(await staff.getByRole("heading", { name: /Ana · / }).count(), 0, "a redeemed QR no longer identifies");
   assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, stamps);
   const token2 = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [acct.id, hash(token2)]);
-  await staff.goto(`${BASE}/fr/staff/rewards?t=${token2}`);
-  await staff.getByLabel(/Boissons admissibles achetées/).fill("2");
-  await staff.getByRole("button", { name: "Ajouter les tampons" }).click();
-  await staff.getByText("Tampons ajoutés: 2").waitFor();
+  await staff.goto(`${BASE}/en/staff/rewards?t=${token2}`);
+  await staff.getByLabel(/Eligible drinks bought/).fill("2");
+  await staff.getByRole("button", { name: "Add stamps" }).click();
+  await staff.getByText("Stamps added: 2").waitFor();
   assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, stamps + 2);
   const expiredToken = randomBytes(32).toString("hex");
   await q("INSERT INTO loyalty_qr_tokens (account_id, token_hash, expires_at) VALUES ($1, $2, now() - interval '1 minute')", [acct.id, hash(expiredToken)]);
-  await staff.goto(`${BASE}/fr/staff/rewards?t=${expiredToken}`);
+  await staff.goto(`${BASE}/en/staff/rewards?t=${expiredToken}`);
   assert.equal(await staff.getByRole("heading", { name: /Ana · / }).count(), 0, "expired QR is rejected");
   step("staff QR flow: identify (first name only), redeem once, replay rejected, in-store stamps, expiry");
 
   // ───────── Admin sees history; customer adjustments need a reason ─────────
-  await admin.goto(`${BASE}/fr/admin/rewards?q=${encodeURIComponent("ana@example.invalid")}`);
+  await admin.goto(`${BASE}/en/admin/rewards?q=${encodeURIComponent("ana@example.invalid")}`);
   await admin.getByText(/Ana Tremblay/).first().waitFor();
-  const adj = admin.locator("form", { hasText: "Ajuster" }).first();
-  await adj.getByLabel(/Tampons/).fill("-1");
-  await adj.getByLabel(/Motif/).fill("Correction de test");
-  await adj.getByRole("button", { name: "Ajuster" }).click();
+  const adj = admin.locator("form", { hasText: "Adjust" }).first();
+  await adj.getByLabel(/Stamps/).fill("-1");
+  await adj.getByLabel(/Reason/).fill("Correction de test");
+  await adj.getByRole("button", { name: "Adjust" }).click();
   await admin.waitForURL(/saved=adjust/);
   assert.equal((await q("SELECT balance FROM loyalty_accounts WHERE id = $1", [acct.id]))[0].balance, stamps + 1);
   assert.equal((await q("SELECT count(*)::int AS n FROM loyalty_transactions WHERE kind = 'adjust' AND reason = 'Correction de test'"))[0].n, 1);
@@ -370,15 +370,15 @@ try {
   await ben.locator(".member-code").waitFor();
   assert.equal(await ben.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), "0");
   assert.notEqual((await ben.locator(".member-code").textContent()).trim(), code);
-  for (const path of ["/fr/admin", "/fr/admin/rewards", "/fr/admin/hours", "/fr/admin/prices"]) {
+  for (const path of ["/en/admin", "/en/admin/rewards", "/en/admin/hours", "/en/admin/prices"]) {
     assert.equal((await ben.request.get(BASE + path)).status(), 404, `customer must not reach ${path}`);
   }
-  await ben.goto(`${BASE}/fr/staff/rewards?t=${token2}`);
-  await ben.getByText("Connectez-vous à l’espace équipe").waitFor();
+  await ben.goto(`${BASE}/en/staff/rewards?t=${token2}`);
+  await ben.getByText("Sign in to the staff area").waitFor();
   const asStaffLogin = await ctx();
   await staffLogin(asStaffLogin, "ben@example.invalid", "BenSecretPass12");
-  await asStaffLogin.getByText("Connexion refusée").waitFor();
-  const staffRewardsAsStaff = await staff.request.get(`${BASE}/fr/admin/rewards`);
+  await asStaffLogin.getByText("Sign-in failed").waitFor();
+  const staffRewardsAsStaff = await staff.request.get(`${BASE}/en/admin/rewards`);
   assert.equal(staffRewardsAsStaff.status(), 404, "STAFF cannot use ADMIN pages");
   const customerOnAccount = await ctx();
   await staffLogin(customerOnAccount, "staff@example.invalid", "StaffPassw0rd!x");

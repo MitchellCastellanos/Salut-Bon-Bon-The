@@ -57,3 +57,7 @@ Production checkout stays disabled until hosted validation and owner sign-off. T
 ## Salut Rewards 5 % verification (2026-11-18)
 
 Verified locally (PostgreSQL 16, disposable databases; Neon untouched): `npm run check` clean; `npm test` 104 passed with `TEST_DATABASE_URL` (94 passed and 10 skipped without it); production build; real-PostgreSQL concurrency including parallel refunds and parallel guest linking; migration 009 on an empty database and with the least-privilege `salut_app` role; browser suites `test:rewards` (existing, adapted to the seeded rate) and `test:rewards-public` (new, 390 px and 1280 px, FR/EN) `test:storefront` (14 pages, desktop and mobile) and the credential-free demo `test:browser`. Not tested: Neon with migration 009, a physical camera scanning the QR, assistive technology and contrast tooling, real payment/email providers, Vercel preview, an upgrade of a production database that already holds loyalty data.
+
+## 2026-11-19: admin completeness
+
+Added: dashboard, customer list/detail, counter sales (migration 010), shared admin navigation. Verified locally on PostgreSQL 16: `npm run check`, `npm test` with `TEST_DATABASE_URL` (114 passed), build, and the instant-journey and admin-complete browser suites. Not tested: counter sales and migration 010 on Neon, a physical card terminal (the tender is only a label), and tax receipts for counter sales (the certified sales recording system question in [Tax](TAX.md) applies to them too).

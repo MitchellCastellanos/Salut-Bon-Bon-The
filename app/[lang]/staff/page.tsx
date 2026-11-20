@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, modifiers, money, pickupDate, stateLabels, states, transitions } from "../../../src/domain";
 import { demoStaff, staffRole } from "../../../src/staff";
 import { staffAuthConfigured } from "../../../src/auth";
 import { listOrders } from "../../../src/orders";
 import { Refresh } from "../../../src/refresh";
-import { change, login, logout } from "./actions";
+import { change, login } from "./actions";
 
 const settledPayments = ["PAID_AT_PICKUP", "PAID_ONLINE", "DEMO_PAID"];
 const paymentLabels: Record<string, Record<"fr" | "en", string>> = {
@@ -38,8 +37,7 @@ export default async function Staff({ params, searchParams }: PageProps<"/[lang]
   const orders = await listOrders({ q, status });
   return <div className="wrap section">
     <Refresh/>
-    <div className="section-head"><div><p className="eyebrow">{role === "ADMIN" ? "ADMINISTRATION" : fr ? "ESPACE ÉQUIPE" : "STAFF AREA"}</p><h1>{fr ? "Commandes" : "Orders"}<span>.</span></h1></div><form action={logout.bind(null, lang)}><button className="outline">{fr ? "Déconnexion" : "Sign out"}</button></form></div>
-    {role === "ADMIN" && <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Administration"}</Link>}
+    <div className="section-head"><div><p className="eyebrow">{role === "ADMIN" ? "ADMINISTRATION" : fr ? "ESPACE ÉQUIPE" : "STAFF AREA"}</p><h1>{fr ? "Commandes" : "Orders"}<span>.</span></h1></div></div>
     <form method="get" className="filters" role="search" aria-label={fr ? "Filtrer les commandes" : "Filter orders"}>
       <label>{fr ? "Numéro ou nom" : "Number or name"}<input name="q" maxLength={80} defaultValue={q}/></label>
       <label>{fr ? "Statut" : "Status"}<select name="status" defaultValue={status}><option value="">{fr ? "Tous" : "All"}</option>{states.map(state => <option key={state} value={state}>{stateLabels[state][lang]}</option>)}</select></label>
@@ -47,7 +45,7 @@ export default async function Staff({ params, searchParams }: PageProps<"/[lang]
     </form>
     {!orders.length && <p>{fr ? "Aucune commande." : "No orders yet."}</p>}
     <div className="order-grid">{orders.map(order => <article className="panel" key={order.number.toString()}>
-      <div className="section-head"><h2>#{order.number.toString()}</h2><strong className="pill">{stateLabels[order.status][lang]}</strong></div>
+      <div className="section-head"><h2>#{order.number.toString()}</h2><strong className="pill">{order.channel === "COUNTER" ? `${fr ? "Comptoir" : "Counter"} · ` : ""}{stateLabels[order.status][lang]}</strong></div>
       <p><strong>{order.customer}</strong> · {pickupDate(new Date(order.pickup_at).toISOString(), lang)}</p>
       <small>{fr ? "Reçue" : "Received"} {pickupDate(new Date(order.created_at).toISOString(), lang)}</small>
       <ul>{order.items.map((item, i) => <li key={i}>{item.quantity} × {item.name[lang]} · {modifiers[item.size][lang]} · {"selectedModifiers" in item ? item.selectedModifiers.map(option => option[lang]).join(", ") || modifiers.none[lang] : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</li>)}</ul>

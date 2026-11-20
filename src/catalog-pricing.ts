@@ -4,7 +4,8 @@ import { database } from "./db";
 
 type PriceRow = { id: string; size: Line["size"]; cents: number; fr: string; en: string };
 
-export async function officialPrices(): Promise<(PriceRow & { groups: CatalogOptionGroup[] })[]> {
+/** `counter` ignores the online-ordering switch: in-person sales do not depend on whether the website accepts orders. */
+export async function officialPrices(counter = false): Promise<(PriceRow & { groups: CatalogOptionGroup[] })[]> {
   const { rows } = await (await database()).query<PriceRow>(`
     SELECT p.id, v.id AS size, coalesce(v.promotional_cents, v.price_cents) AS cents,
            fr.name AS fr, en.name AS en
@@ -14,9 +15,9 @@ export async function officialPrices(): Promise<(PriceRow & { groups: CatalogOpt
     JOIN catalog_product_translations en ON en.product_id = p.id AND en.locale = 'en'
     WHERE p.available AND v.available AND v.approved AND v.price_cents > 0
       AND v.id IN ('regular', 'large')
-      AND EXISTS (SELECT 1 FROM catalog_store_settings WHERE key = 'pickup_checkout_enabled' AND value = 'true'::jsonb)
+      AND ($1::boolean OR EXISTS (SELECT 1 FROM catalog_store_settings WHERE key = 'pickup_checkout_enabled' AND value = 'true'::jsonb))
     ORDER BY p.id, v.id DESC
-  `);
+  `, [counter]);
   if (!rows.length) return [];
   const ids = [...new Set(rows.map(row => row.id))];
   const { rows: assignments } = await (await database()).query<{
@@ -46,8 +47,8 @@ export async function officialPrices(): Promise<(PriceRow & { groups: CatalogOpt
   });
 }
 
-export async function quoteOfficial(lines: Line[]) {
-  const prices = await officialPrices();
+export async function quoteOfficial(lines: Line[], counter = false) {
+  const prices = await officialPrices(counter);
   return lines.map(line => {
     const price = prices.find(row => row.id === line.product && row.size === line.size);
     if (!price || line.topping !== "none") throw new Error("MENU");

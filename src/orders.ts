@@ -84,7 +84,7 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
         return receipt;
       }
       const { rows: [slot] } = await client.query<{ reservations: number }>(
-        "SELECT count(*)::int AS reservations FROM orders WHERE pickup_at = $1 AND status <> 'CANCELLED'", [pickup]
+        "SELECT count(*)::int AS reservations FROM orders WHERE pickup_at = $1 AND status <> 'CANCELLED' AND channel = 'ONLINE'", [pickup]
       );
       if (slot.reservations >= policy.slotCapacity) throw new Error("SLOT");
       const placed = await insert(client);
@@ -111,8 +111,8 @@ export async function trackOrder(token: string) {
   )).rows[0];
 }
 export async function listOrders(filter: { q?: string; status?: string } = {}) {
-  return (await (await database()).query<Order & { tax_cents: number; payment_method: string }>(`
-    SELECT number, customer, notes, pickup_at, created_at, status, payment, total, items, tax_cents, payment_method
+  return (await (await database()).query<Order & { tax_cents: number; payment_method: string; channel: string; counter_tender: string | null }>(`
+    SELECT number, customer, notes, pickup_at, created_at, status, payment, total, items, tax_cents, payment_method, channel, counter_tender
     FROM orders
     WHERE ($2 = '' OR status = $2)
       AND ($1 = '' OR number::text = $1 OR position(lower($1) in lower(customer)) > 0)

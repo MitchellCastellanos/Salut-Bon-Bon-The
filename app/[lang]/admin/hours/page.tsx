@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language } from "../../../../src/domain";
 import { days, scheduleOutlook, type Day } from "../../../../src/pickup-policy";
@@ -21,7 +20,6 @@ export default async function AdminHours({ params, searchParams }: PageProps<"/[
   const exceptions = (policy?.exceptions ?? []).map(e => ({ from: e.from, to: e.to, closed: e.closed, hours: (e.hours ?? []) as [string, string][], reason: e.reason ?? "" }));
   const upcoming = policy ? scheduleOutlook(policy) : [];
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Administration"}</Link>
     <h1>{fr ? "Heures d’ouverture et cueillette" : "Business hours and pickup"}</h1>
     <p>{fr ? "Fuseau horaire : America/Toronto. Aucune heure officielle n’est prédéfinie : tout est fermé jusqu’à l’enregistrement. Les changements s’appliquent immédiatement, sans redéploiement." : "Time zone: America/Toronto. No official hours are predefined: everything is closed until you save. Changes apply immediately, with no redeploy."}</p>
     {blockers.length > 0 && <BlockerList lang={lang} blockers={blockers}/>}

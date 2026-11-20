@@ -68,3 +68,9 @@ The rewards suite was also run with the app connected as the least-privilege `sa
 ## Stamp card tests (2026-11-19)
 
 `tests/rewards-stamps.test.ts` (arithmetic, earning per drink with cap, minimum and categories, in-store validation, guest cards, redemption at 9, refund reversal, admin configuration), `tests/stamp-migration.test.ts` (migration 010 on a database holding old balances, and its refusal under an authorized program), `tests/stamp-progress.test.tsx` (progress bar markup, messages, bounds), `tests/rewards-public.test.tsx` and `tests/loyalty.test.ts` (updated). The browser smoke scripts and the concurrency suite were updated for stamps but need a disposable PostgreSQL to run.
+## Admin completeness (2026-11-19)
+
+- `tests/counter.test.ts` (needs `TEST_DATABASE_URL`): counter orders are refused without a tax status, are priced and taxed on the server, stored paid and completed, idempotent per request, kept out of pickup capacity, and reject unknown members and unoffered drinks.
+- `node tests/admin-complete-smoke.mjs` (browser, same fixture as the instant-journey smoke): dashboard, every navigation link, analytics notice, counter sale linked to a customer, refusal of an unknown member, counter badge in `/staff`, customer list and detail, customer denied.
+
+Note (2026-11-19): the admin and staff console is English only, so every browser suite that signs in as STAFF/ADMIN uses `/en/...` URLs and English labels. When a suite resets and restarts its server, stop the old `next-server` process first, or the new one cannot bind the port and a stale build answers (symptom: "Invalid Server Actions request"). `rewards-public-smoke` needs a build made with `SITE_URL` set to the test origin.

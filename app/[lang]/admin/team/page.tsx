@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { language, pickupDate } from "../../../../src/domain";
 import { staffActor, staffRole } from "../../../../src/staff";
@@ -25,7 +24,6 @@ export default async function AdminTeam({ params, searchParams }: PageProps<"/[l
   const flag = (key: string) => typeof query[key] === "string" ? messages[query[key] as string] : undefined;
   const [team, me] = await Promise.all([listTeam(), staffActor()]);
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Administration"}</Link>
     <h1>{fr ? "Équipe et accès" : "Team and access"}</h1>
     <p>{fr ? "L’équipe (STAFF) gère les commandes et le comptoir de récompenses. L’administration (ADMIN) gère aussi le catalogue, les prix, les heures, la fiscalité et les récompenses." : "Staff (STAFF) handle orders and the rewards counter. Administrators (ADMIN) also manage the catalog, prices, hours, tax and rewards."}</p>
     {flag("saved") && <p role="status" className="panel">{flag("saved")![fr ? 0 : 1]}</p>}

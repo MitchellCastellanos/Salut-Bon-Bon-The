@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
@@ -43,7 +42,6 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
   const err = errs[str("error")];
   const fmt = (d: Date | string) => new Intl.DateTimeFormat(fr ? "fr-CA" : "en-CA", { timeZone: "America/Toronto", dateStyle: "medium", timeStyle: "short" }).format(new Date(d));
   return <section className="wrap catalog-page">
-    <Link href={`/${lang}/admin`}>{fr ? "Administration" : "Administration"}</Link>
     <h1>{fr ? "Récompenses Salut" : "Salut Rewards"}</h1>
     {err && <p role="alert" className="panel">{err[fr ? 0 : 1]}</p>}
     {str("saved") && <p role="status" className="panel">{fr ? "Enregistré." : "Saved."}</p>}
@@ -103,7 +101,7 @@ export default async function AdminRewards({ params, searchParams }: PageProps<"
     {found.map((account, i) => <section className="panel" key={account.id}>
       <h3>{account.name} · {account.member_code}</h3><p>{account.email} · {fr ? "solde" : "balance"} <strong>{account.balance}</strong> · {fr ? "cumulé" : "lifetime"} {account.lifetime_earned} · {account.status}</p>
       <form action={adjust.bind(null, lang)} className="filters"><input type="hidden" name="account" value={account.id}/><input type="hidden" name="q" value={q}/><input type="hidden" name="key" value={`adjust-${randomUUID()}`}/>
-        <label>{fr ? "Tampons (+/−)" : "Tampons (+/−)"}<input name="points" required pattern="-?\d{1,6}" inputMode="numeric"/></label>
+        <label>{fr ? "Tampons (+/−)" : "Stamps (+/−)"}<input name="points" required pattern="-?\d{1,6}" inputMode="numeric"/></label>
         <label>{fr ? "Motif (obligatoire)" : "Reason (required)"}<input name="reason" required minLength={3} maxLength={300}/></label>
         <button className="outline">{fr ? "Ajuster" : "Adjust"}</button></form>
       <form action={setAccountStatus.bind(null, lang)}><input type="hidden" name="account" value={account.id}/><input type="hidden" name="q" value={q}/>
