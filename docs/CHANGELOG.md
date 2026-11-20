@@ -6,6 +6,8 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 ## Unreleased
 
+- Staff card scanner: the in-page camera now works in every browser with camera access. It uses the native `BarcodeDetector` when present and falls back to `jsQR` (now a production dependency), adds a Stop button, releases the camera on exit and explains blocked permission. Real-device verification still pending.
+
 - Added source-ready art direction and ordered image generation requirements for the five wired storefront slots, plus reserved promotion and owner-supplied asset paths.
 - Added individual Better Auth staff accounts, PostgreSQL migration 002, operator provisioning, and server authorization for STAFF and ADMIN order operations.
 
