@@ -15,7 +15,7 @@ Audit of 2026-11-20 (documentation consolidation) and the implementation pass of
 | Browser: `tests/plus-demo-smoke.mjs` (new, whole Plus journey, demo mode) | Passed |
 | Browser: `test:rewards`, `test:rewards-public` (existing, adapted to the new card) | Passed |
 | Not run | Camera scan on a phone, Apple Wallet on a real iPhone, real Stripe and Resend, Vercel preview, storefront/staff/catalog suites, accessibility tooling |
-| Neon `production` (read-only counts, before this pass) | Migrations 001–011, 1 ADMIN, 0 customers, 0 orders, 62 products, 124 priced variants. **Migration 012 is not applied there** |
+| Neon `production`, 2026-11-20 after the release | Migration 012 applied (12 in the ledger, rehearsed first on branch `rehearsal-012`, backup branch `pre-release-20261120`); 62 products offered; Rewards active with the free drink at $7.99; checkout enabled with tax status "not registered"; 0 orders, 1 ADMIN |
 
 ## Summary
 
@@ -23,7 +23,7 @@ Salut Plus is **functionally complete in demo mode** and awaiting the three thin
 
 Stripe and Resend adapters stay connected: with Stripe keys the simulated page is replaced by Stripe Checkout; with Resend credentials emails are sent. Until then payments are simulated and emails are only recorded. Apple Wallet is **built and tested with generated test certificates** (signed ZIP, manifest, update web service, push), but needs the owner's Apple Developer credentials to become available, and has never been installed on a real iPhone.
 
-Production is on the Neon `production` branch through migration 011. To run the demo there: apply migration 012 (needs approval), set `SALUT_DEMO_MODE=1` in Vercel, and press **Apply demo settings** on the admin dashboard. `SALUT_INSTANT_ACCOUNTS` becomes unnecessary (demo mode implies it). The shared ADMIN password from 2026-11-19 must still be changed.
+Production (Neon `production`) is **ready for the demo**: migration 012 is applied, the demo settings and prices were applied directly in the database (audited as `demo.*`), and `SALUT_DEMO_MODE=1` is set for the Vercel Production target. The application code takes effect when this branch is merged to `main` and deployed. Until then the deployed code is the old one running on the new schema (additive, compatible). `SALUT_INSTANT_ACCOUNTS` becomes unnecessary (demo mode implies it). The shared ADMIN password from 2026-11-19 must still be changed.
 
 ## Salut Plus feature matrix
 
@@ -43,7 +43,7 @@ Production is on the Neon `production` branch through migration 011. To run the 
 | 12 | Stable, opaque, revocable identification | **IMPLEMENTED** | `src/identification.ts`, `/s/[code]`, migration 012, rotation/revocation, audit, tests | – |
 | 13 | Apple Wallet pass | **IMPLEMENTED, BLOCKED on Apple credentials** | `src/wallet.ts` (ZIP, SHA-1 manifest, PKCS#7 signature verified with OpenSSL against generated test certificates), `/api/wallet/pass` and the `/v1` update web service, APNs push, `/admin/wallet` | Needs Pass Type ID + WWDR certificates; never installed on a real iPhone; SHA-1 signing mirrors common practice but is unverified against Apple |
 | 14 | Staff scan, award, redeem | **IMPLEMENTED** | `/staff/rewards`: link/ID/camera/scanner input, in-store stamps, redeem with "member present" confirmation, rate limits, ledger actor; denied to anonymous (tested) | Camera scanning needs `BarcodeDetector` (Chrome/Android); iPhone uses the camera app |
-| 15 | Free drink value | **IMPLEMENTED (interpretation to confirm)** | `loyalty_program.free_drink_max_cents` = $7.99 (middle price tier), editable in `/admin/rewards`, shown to staff | See D2 |
+| 15 | Free drink value | **IMPLEMENTED** | `loyalty_program.free_drink_max_cents` = $7.99, editable in `/admin/rewards` and reflected everywhere it matters: public rewards page and FAQ, member card, account rewards list, product pages ("can be your free drink"), staff scanner and the Wallet pass | Interpretation of "middle price" to confirm (D2) |
 | 16 | Refunds | **IMPLEMENTED (simulation); Stripe API untested** | `src/refunds.ts`, `/admin/orders/[number]`, idempotent, audited, stamps reversed | Real Stripe refund never exercised |
 | 17 | Automated notifications | **IMPLEMENTED in log mode; sending BLOCKED on Resend** | Outbox, 4 FR/EN templates, `/admin/notifications` (log and preview) | Real delivery needs credentials; templates are code, not editable in admin |
 | 18 | Basic analytics | **PARTIAL** | Sales cards, order counts, opt-in event analytics | Product and loyalty participation reports |
@@ -91,7 +91,7 @@ Findings only; the full audit is a separate later phase.
 1. **Demo mode must be off for a real launch.** `SALUT_DEMO_MODE=1` enables simulated payments (anyone with the link can "pay"), no-email accounts and auto-enrollment. Turn it off and connect Stripe/Resend before any real customer.
 2. **`SALUT_INSTANT_ACCOUNTS=1` is enabled in production** (2026-11-19); anyone can register an address they do not own. Demo mode supersedes it; remove both for launch.
 3. **An ADMIN password was shared in chat** (2026-11-19). Change it.
-4. **Unconfirmed prices are live data.** Production holds 124 priced variants and `src/catalog-display-prices.ts` invents matcha $6.75 and a +$1.00 large premium. Production **large sizes are cheaper than regular for crème brûlée ($8.50 vs $8.99) and smoothies ($7.50 vs $7.99)**, which is clearly wrong; correct them in `/admin/prices` once the owner confirms.
+4. **Prices are demo values, not owner-confirmed.** On 2026-11-20 production large sizes were set to regular + $1.00 for every product (they were inconsistent: large was cheaper than regular for crème brûlée and smoothies). Regular prices are the owner's (matcha $6.75 is not confirmed). Confirm in `/admin/prices` (D8).
 5. **Topping rule is not what the owner stated.** Tapioca is capped at one selection (a second tapioca cannot be charged as an extra) and every modifier is assigned to every product.
 6. **Free-drink rule interpretation.** "The free drink is the middle price" was implemented as a value ceiling of $7.99 (the middle of $5.99/$7.99/$8.99), editable in the admin. Confirm that it is not "only drinks priced exactly $7.99".
 7. **Wallet is untested on a device.** The pass signature validates with OpenSSL against test certificates only.
@@ -124,7 +124,8 @@ Decided on 2026-11-20 by the project lead: **D1** every drink earns a stamp (no 
 
 | Dependency | Needed for | State |
 | --- | --- | --- |
-| Migration 012 on Neon `production` (and `development`) and `SALUT_DEMO_MODE=1` in Vercel | Showing the demo on the deployed site | Needs approval to apply |
+| Merge of PR #25 to `main` (deploys to production) | Showing the demo on the deployed site | Waiting for the owner of the repository |
+| Migration 012 on Neon `development` | Preview deployments | Not applied (previews would run without demo mode) |
 | Stripe test secret key and webhook secret | Real Stripe Checkout instead of the simulated page | BLOCKED (optional for the demo) |
 | Resend verified sending domain, API key, `STORE_NOTIFICATION_EMAIL`, `CRON_SECRET` | Real email | BLOCKED (optional for the demo) |
 | Apple Developer Program account, Pass Type ID certificate and key, WWDR certificate, team id (`APPLE_*` variables, see TECHNICAL) | "Add to Apple Wallet" | BLOCKED |
@@ -136,7 +137,7 @@ Decided on 2026-11-20 by the project lead: **D1** every drink earns a stamp (no 
 Everything on the original Plus list is built. What remains, in order:
 
 1. **Owner inputs (no code):** change the shared ADMIN password; confirm D2, D8, D9 and D10; supply Apple credentials, Stripe test keys and a Resend domain when available.
-2. **Deploy the demo:** with approval, apply migration 012 to Neon `production` (create a branch first), set `SALUT_DEMO_MODE=1`, redeploy, press **Apply demo settings**, run `npm run test:plus-demo` against the deployment's database fixture or walk through [PRODUCT_SPEC.md](PRODUCT_SPEC.md#demo-script-plus-test-environment).
+2. **Deploy the demo:** merge PR #25 (production deploys from `main`) and walk through [PRODUCT_SPEC.md](PRODUCT_SPEC.md#demo-script-plus-test-environment). Database and environment are already prepared.
 3. **Real-device verification:** scan the card QR with iPhone/Android cameras and a scanner at several sizes and distances (confirm or lower `qrLogoHeightRatio`); when Apple credentials exist, install the pass on an iPhone, scan it, and confirm a stamp update refreshes it.
 4. **Provider switch-on in TEST:** add Stripe test keys (the simulated page is replaced automatically) and run a real test payment and refund; add Resend and confirm sandbox delivery, then turn demo mode and instant accounts off.
 5. **Remaining admin gaps:** product/category creation, template editing and resend, analytics for products and loyalty, content editors.

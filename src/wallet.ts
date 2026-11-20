@@ -6,7 +6,7 @@ import { join } from "node:path";
 import forge from "node-forge";
 import { database } from "./db";
 import { ensureIdentifier, identifierUrl } from "./identification";
-import { stampsForReward } from "./rewards-math";
+import { freeDrinkValueNote, stampsForReward } from "./rewards-math";
 
 type Db = { query<T extends Record<string, unknown>>(sql: string, args?: unknown[]): Promise<{ rows: T[] }> };
 
@@ -78,7 +78,7 @@ function sign(manifest: Buffer, config: Pick<Config, "cert" | "key" | "passphras
   return Buffer.from(forge.asn1.toDer(p7.toAsn1()).getBytes(), "binary");
 }
 
-export type PassInput = { serial: string; balance: number; memberCode: string; barcodeUrl: string; name: string | null; lang: "fr" | "en"; voided?: boolean; updatedAt: Date };
+export type PassInput = { freeDrinkMaxCents?: number | null; serial: string; balance: number; memberCode: string; barcodeUrl: string; name: string | null; lang: "fr" | "en"; voided?: boolean; updatedAt: Date };
 
 export function passJson(input: PassInput, config: Pick<Config, "passTypeId" | "teamId" | "site">) {
   const fr = input.lang === "fr";
@@ -98,6 +98,7 @@ export function passJson(input: PassInput, config: Pick<Config, "passTypeId" | "
       auxiliaryFields: [{ key: "member", label: fr ? "MEMBRE" : "MEMBER", value: input.name?.split(/\s+/)[0] ?? input.memberCode }],
       backFields: [{ key: "terms", label: fr ? "Comment ça marche" : "How it works",
         value: fr ? "9 boissons achetées, la 10e est gratuite. Présentez ce code au comptoir. Ce code ne contient aucun renseignement personnel." : "Buy 9 drinks, the 10th is free. Show this code at the counter. It holds no personal information." },
+        ...(input.freeDrinkMaxCents ? [{ key: "value", label: fr ? "Boisson gratuite" : "Free drink", value: freeDrinkValueNote(input.freeDrinkMaxCents, input.lang) }] : []),
         { key: "code", label: fr ? "Numéro de membre" : "Member number", value: input.memberCode }],
     },
   };
@@ -108,6 +109,10 @@ export function buildPass(input: PassInput, config: Config) {
   for (const name of ["icon.png", "icon@2x.png", "icon@3x.png", "logo.png", "logo@2x.png", "logo@3x.png"]) files.push({ name, data: asset(name) });
   const manifest = Buffer.from(JSON.stringify(Object.fromEntries(files.map(file => [file.name, createHash("sha1").update(file.data).digest("hex")]))));
   return zip([...files, { name: "manifest.json", data: manifest }, { name: "signature", data: sign(manifest, config) }]);
+}
+
+async function freeDrinkCeiling(db: Db) {
+  return (await db.query<{ v: number | null }>("SELECT free_drink_max_cents AS v FROM loyalty_program WHERE id = 1")).rows[0]?.v ?? null;
 }
 
 type Account = { id: string; member_code: string; balance: number; name: string | null };
@@ -124,12 +129,13 @@ export async function issuePass(accountId: string, lang: "fr" | "en", db?: Db) {
   if (!account) throw new Error("ACCOUNT_NOT_FOUND");
   const id = await ensureIdentifier(accountId, connection);
   if (id.revoked) throw new Error("REVOKED");
+  const ceiling = await freeDrinkCeiling(connection);
   const serial = randomBytes(16).toString("hex");
   const { rows: [pass] } = await connection.query<{ serial: string; last_updated_at: Date; voided_at: Date | null }>(`
     INSERT INTO wallet_passes (account_id, serial, auth_token_hash, lang) VALUES ($1, $2, $3, $4)
     ON CONFLICT (account_id) DO UPDATE SET downloads = wallet_passes.downloads + 1, voided_at = NULL, lang = EXCLUDED.lang
     RETURNING serial, last_updated_at, voided_at`, [accountId, serial, createHash("sha256").update(passAuthToken(serial)).digest("hex"), lang]);
-  return buildPass({ serial: pass.serial, balance: account.balance, memberCode: account.member_code, name: account.name, lang,
+  return buildPass({ freeDrinkMaxCents: ceiling, serial: pass.serial, balance: account.balance, memberCode: account.member_code, name: account.name, lang,
     barcodeUrl: identifierUrl(id.value, config.site), updatedAt: new Date(pass.last_updated_at) }, config);
 }
 
@@ -142,7 +148,8 @@ export async function currentPass(serial: string, db?: Db) {
   if (!pass) return undefined;
   const account = await accountRow(pass.account_id, connection);
   const id = await ensureIdentifier(pass.account_id, connection);
-  return { updatedAt: new Date(pass.last_updated_at), data: buildPass({ serial, balance: account.balance, memberCode: account.member_code, name: account.name, lang: pass.lang,
+  const ceiling = await freeDrinkCeiling(connection);
+  return { updatedAt: new Date(pass.last_updated_at), data: buildPass({ freeDrinkMaxCents: ceiling, serial, balance: account.balance, memberCode: account.member_code, name: account.name, lang: pass.lang,
     barcodeUrl: identifierUrl(id.value, config.site), voided: Boolean(pass.voided_at) || id.revoked, updatedAt: new Date(pass.last_updated_at) }, config) };
 }
 

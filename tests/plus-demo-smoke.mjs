@@ -87,6 +87,7 @@ try {
   const { data, info } = await sharp(Buffer.from(qrSvg), { density: 300 }).resize(400, 400).flatten({ background: "#fff" }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const decoded = jsQR(new Uint8ClampedArray(data), info.width, info.height)?.data;
   assert.match(decoded ?? "", /\/s\/[A-Z2-9]{22}$/, "the QR decodes to the short stable identification URL");
+  assert.match(await shopper.getByTestId("free-drink-value").first().innerText(), /\$7\.99/, "the free-drink ceiling set by the ADMIN is shown on the card");
   await shot(shopper, "6-card");
 
   // 5. Staff scan the stable QR (the camera app would open this URL), add in-store stamps, redeem the free drink.

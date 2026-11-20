@@ -62,6 +62,8 @@ export type PublicRewards = {
   previewVisible: boolean; operational: boolean; accrualOperational: boolean; redemptionOperational: boolean;
   /** Stamps for the free drink (9: the 10th drink is free) and the per-order cap. */
   stampsRequired: number; maxStampsPerOrder: number; minOrderCents: number; categoryRestricted: boolean;
+  /** Most the free drink may be worth, in cents (ADMIN setting). */
+  freeDrinkMaxCents: number | null;
   featured: PublicReward | null; rewards: PublicReward[];
 };
 export async function publicRewards(db?: Db): Promise<PublicRewards> {
@@ -76,7 +78,7 @@ export async function publicRewards(db?: Db): Promise<PublicRewards> {
   const featured = rewards.find(r => r.id === "free-drink") ?? null;
   return { previewVisible: program.previewVisible, operational: program.active, accrualOperational: stages.accrualOperational, redemptionOperational: stages.redemptionOperational,
     stampsRequired: featured?.pointsCost ?? stampsForReward, maxStampsPerOrder, minOrderCents: program.minOrderCents,
-    categoryRestricted: Boolean(program.earnCategories?.length), featured, rewards };
+    categoryRestricted: Boolean(program.earnCategories?.length), freeDrinkMaxCents: program.freeDrinkMaxCents, featured, rewards };
 }
 
 /** Rewards a customer could redeem right now. Empty when the program is inactive. */

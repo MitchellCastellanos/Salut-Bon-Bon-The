@@ -35,3 +35,7 @@ Every drink earns a stamp (no category restriction). The free drink is the middl
 The site is a **test store until the client approves**: `SALUT_DEMO_MODE=1` turns on a simulated Stripe-style payment page (only while Stripe is not configured), records emails without sending them, creates accounts without verification and auto-enrolls them in Rewards, and enables the demo guide and the admin **Apply demo settings** action. Stripe, Resend and Apple Wallet adapters stay connected to the interface and take over as soon as credentials exist. Demo mode must be off for a real launch.
 
 Apple Wallet passes are built in-repo (ZIP + SHA-1 manifest + PKCS#7 via `node-forge`) instead of with `passkit-generator`, which depends on a vulnerable `joi`.
+
+## 2026-11-20 · Production prepared for the demo
+
+With the project lead's authorization: a backup branch and a rehearsal branch were made in Neon, migration 012 was rehearsed and then applied to `production`, large sizes were set to regular + $1.00 (the production values were inconsistent), the demo settings were applied (hours Mon–Sat 10:30–20:00, 10 min lead time, 10 orders per slot, tax "not registered", all priced products offered, Rewards active, authorization recorded for "project lead (test site)"), and `SALUT_DEMO_MODE=1` was set for Vercel Production. All of it is test-site configuration and is audited in `catalog_audit_history`; none of it is a client approval.

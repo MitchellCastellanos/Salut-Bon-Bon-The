@@ -28,6 +28,8 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/catalog
   const favorite = customer ? await isFavorite(customer.id, id).catch(() => false) : false;
   // Stamps are a preview until the program is operational.
   const program = variants.length && process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
+  const regularCents = variants.find(row => row.size === "regular")?.cents;
+  const freeEligible = Boolean(program?.previewVisible && program.freeDrinkMaxCents && regularCents !== undefined && regularCents <= program.freeDrinkMaxCents);
   const hint = program?.previewVisible && !program.earnCategories?.length ? { live: programStages(program).accrualOperational, min: program.minOrderCents } : undefined;
   return <section className="wrap catalog-page">
     <Link href={`/${lang}/catalog?category=${product.category}`}>{category?.[lang]}</Link>
@@ -36,6 +38,7 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/catalog
     <div className={"catalog-visual catalog-detail-visual catalog-visual--" + product.category}>{photo && hasPublicImage(photo.path) ? <Image src={photo.path} width={600} height={570} alt={photo.exact ? product[lang] : (fr ? "Photo illustrative" : "Illustrative photo")}/> : <span className="catalog-fallback"><StorefrontIcon name={product.category === "matcha" ? "matcha" : product.category === "smoothies" ? "smoothie" : product.category === "lemonade" ? "lemonade" : product.category === "fruit-tea" ? "fruit" : "milk"}/></span>}</div>
     {variants.length ? <>
       <ul>{variants.map(row => <li key={row.size}>{modifiers[row.size][lang]} · {money(row.cents, lang)}{hint && row.cents >= hint.min && <small data-testid="points-hint"> · {fr ? "1 tampon" : "1 stamp"}</small>}</li>)}</ul>
+      {freeEligible && <p className="fine-print" data-testid="free-drink-eligible">{fr ? "Cette boisson peut être votre boisson gratuite." : "This drink can be your free drink."}</p>}
       {hint && <p className="fine-print">{fr ? "Chaque boisson rapporte un tampon (9 tampons = la 10e boisson gratuite), si la commande est liée à un compte ou à une carte et terminée. " : "Every drink earns one stamp (9 stamps = the 10th drink free), if the order is linked to an account or card and completed. "}<Link href={rewardsPath[lang]}>{fr ? "Récompenses Salut" : "Salut Rewards"}</Link></p>}
       <Link className="button" href={orderHref(lang, id)}>{fr ? "Personnaliser pour la cueillette" : "Customize for pickup"}</Link>
     </> : <Link className="button" href={orderHref(lang, id)}>{fr ? "Ajouter au panier" : "Add to cart"}</Link>}

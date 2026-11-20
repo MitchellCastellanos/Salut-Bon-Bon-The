@@ -21,6 +21,7 @@ import { RefundError, refundOrder } from "../src/refunds";
 import { toggleFavorite, favoriteProducts } from "../src/favorites";
 import { ensureIdentifier, identifierPattern, identifierUrl, lookupIdentifier, revokeIdentifier, rotateIdentifier } from "../src/identification";
 import { brandedQr } from "../src/qr-logo";
+import { freeDrinkValueNote } from "../src/rewards-math";
 import { buildPass, issuePass, passAuthToken, passJson, validAuthToken, walletConfig, zip } from "../src/wallet";
 import { applyDemoSettings } from "../src/demo-setup";
 import { notifyOrder } from "../src/notifications";
@@ -127,6 +128,13 @@ describe("redemption by identified member", () => {
     expect((await loyalty.loyaltyProgram(local.current as never)).freeDrinkMaxCents).toBe(799);
     await loyalty.saveProgramConfig({ active: true, minOrderCents: 0, categories: [], previewVisible: true, accrualEnabled: true, redemptionEnabled: true, commercialAuthorized: true, freeDrinkMaxCents: 899 }, "admin", { production: false }, local.current as never);
     expect((await loyalty.loyaltyProgram(local.current as never)).freeDrinkMaxCents).toBe(899);
+    // The ADMIN value reaches every customer-facing surface: public page data, wording, and the Wallet pass.
+    expect((await loyalty.publicRewards(local.current as never)).freeDrinkMaxCents).toBe(899);
+    expect(freeDrinkValueNote(899, "en")).toContain("$8.99");
+    expect(freeDrinkValueNote(799, "fr")).toMatch(/7,99/);
+    expect(freeDrinkValueNote(null, "en")).toBe("");
+    const pass = passJson({ serial: "a".repeat(32), balance: 1, memberCode: "ABCD2345", barcodeUrl: "https://x/s/Y", name: null, lang: "en", updatedAt: new Date(), freeDrinkMaxCents: 899 }, { passTypeId: "pass.t", teamId: "ABCDE12345", site: "https://x" });
+    expect(JSON.stringify(pass.storeCard.backFields)).toContain("$8.99");
     await expect(loyalty.saveProgramConfig({ active: true, minOrderCents: 0, categories: [], previewVisible: true, accrualEnabled: true, redemptionEnabled: true, commercialAuthorized: true, freeDrinkMaxCents: 5 }, "admin", { production: false }, local.current as never)).rejects.toBeTruthy();
   });
 });

@@ -6,7 +6,7 @@ import { language } from "../../../../src/domain";
 import { accountForUser, accountHistory, availableRewards, loyaltyProgram } from "../../../../src/loyalty";
 import { rewardsName } from "../../../../src/storefront-content";
 import { ledgerLabel, StampProgress } from "../../../../src/stamp-progress";
-import { stampsForReward } from "../../../../src/rewards-math";
+import { freeDrinkValueNote, stampsForReward } from "../../../../src/rewards-math";
 import { StorefrontArt } from "../../../../src/storefront-art";
 import { hasPublicImage } from "../../../../src/storefront-art";
 import { joinRewards } from "../actions";
@@ -61,6 +61,7 @@ export default async function RewardsPage({ params, searchParams }: PageProps<"/
         {!rewards.length ? <p>{program.active ? (fr ? "Aucune récompense n’est offerte pour le moment." : "No rewards are offered right now.") : (fr ? "Les récompenses apparaîtront ici lorsque le programme sera actif." : "Rewards will appear here once the program is active.")}</p> :
           <ul>{rewards.map(r => <li key={r.id}><strong>{fr ? r.name_fr : r.name_en}</strong> · {r.points_cost} {fr ? "tampons" : "stamps"}
             {(fr ? r.description_fr : r.description_en) && <><br/><small>{fr ? r.description_fr : r.description_en}</small></>}
+            {r.id === "free-drink" && program.freeDrinkMaxCents ? <><br/><small data-testid="free-drink-value">{freeDrinkValueNote(program.freeDrinkMaxCents, lang)}</small></> : null}
             <br/><small>{account.balance >= r.points_cost ? (fr ? "Votre boisson gratuite est prête. Présentez votre code au comptoir." : "Your free drink is ready. Show your code at the counter.") : (fr ? `Encore ${r.points_cost - account.balance} tampons.` : `${r.points_cost - account.balance} stamps to go.`)}</small></li>)}</ul>}
       </section>
     </div>

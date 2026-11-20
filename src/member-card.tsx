@@ -3,7 +3,9 @@ import { replaceCardQr } from "../app/[lang]/account/actions";
 import { logoMarkup, officialLogo } from "./brand-server";
 import type { Lang } from "./domain";
 import { ensureIdentifier, identifierUrl } from "./identification";
+import { loyaltyProgram } from "./loyalty";
 import { brandedQr } from "./qr-logo";
+import { freeDrinkValueNote } from "./rewards-math";
 import { siteOrigin } from "./site-origin";
 import { walletConfigured } from "./wallet";
 
@@ -17,6 +19,7 @@ export async function MemberCard({ lang, accountId, memberCode, background }: { 
   const logo = officialLogo();
   const qr = id.revoked ? undefined : brandedQr(identifierUrl(id.value, await siteOrigin()), { logoSvg: logoMarkup(), title: fr ? "Code QR de la carte de fidélité" : "Loyalty card QR code" });
   const wallet = walletConfigured();
+  const program = await loyaltyProgram().catch(() => undefined);
   return <>
     <section className="panel rewards-card" aria-labelledby="card-title" style={background ? { backgroundImage: `linear-gradient(rgba(255,248,239,.85), rgba(255,248,239,.85)), url(${background})`, backgroundSize: "cover" } : undefined}>
       <h2 id="card-title">{fr ? "Ma carte Récompenses Salut" : "My Salut Rewards card"}</h2>
@@ -24,6 +27,7 @@ export async function MemberCard({ lang, accountId, memberCode, background }: { 
         : <p role="alert">{fr ? "Ce code a été désactivé. Remplacez-le pour obtenir un nouveau code." : "This code was disabled. Replace it to get a new one."}</p>}
       <p>{fr ? "Numéro de membre" : "Member number"} <strong className="member-code">{memberCode}</strong></p>
       <p className="fine-print">{fr ? "Présentez ce code au comptoir : le personnel le scanne pour ajouter vos tampons ou vous remettre votre récompense." : "Show this code at the counter: staff scan it to add your stamps or hand over your reward."}</p>
+      {program?.freeDrinkMaxCents ? <p className="fine-print" data-testid="free-drink-value">{freeDrinkValueNote(program.freeDrinkMaxCents, lang)}</p> : null}
       <div className="filters">
         {wallet ? <a className="button" href={`/api/wallet/pass?lang=${lang}`}>{fr ? "Ajouter à Apple Wallet" : "Add to Apple Wallet"}</a>
           : <span className="pill" role="status">{fr ? "Apple Wallet : bientôt (en attente des identifiants Apple)" : "Apple Wallet: coming soon (waiting for Apple credentials)"}</span>}
