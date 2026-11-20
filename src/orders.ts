@@ -8,7 +8,7 @@ import type { z } from "zod";
 import { database, postgresPool } from "./db";
 import { checkoutSchema, quote, transitions, type State } from "./domain";
 
-type Payment = "UNPAID" | "PAID_AT_PICKUP" | "DEMO_PAID" | "PAID_ONLINE" | "PAYMENT_FAILED" | "REFUND_REQUIRED";
+type Payment = "UNPAID" | "PAID_AT_PICKUP" | "DEMO_PAID" | "PAID_ONLINE" | "PAYMENT_FAILED" | "REFUND_REQUIRED" | "REFUNDED";
 type Order = {
   number: string; customer: string; notes: string; pickup_at: Date; created_at: Date; status: State;
   payment: Payment; total: number; items: ReturnType<typeof quote> | Awaited<ReturnType<typeof quoteOfficial>>;
@@ -35,7 +35,8 @@ export async function placeOrder(input: z.infer<typeof checkoutSchema>, analytic
   const policy = config?.enabled ? config.ready : null;
   if (official ? !policy || !eligiblePickup(time, policy) :
       time % 900000 || time < Date.now() + 14 * 60000 || time > Date.now() + 3 * 3600000) throw new Error("SLOT");
-  if (official && method !== "pickup") throw new Error("MENU");
+  // The official catalog takes pay-at-pickup and card payments (the caller has already checked the card provider is available); the demo method is never valid.
+  if (official && method === "demo") throw new Error("MENU");
   if (official) {
     const { rows } = await db.query(`
       INSERT INTO checkout_rate_limit (id, minute, attempts)

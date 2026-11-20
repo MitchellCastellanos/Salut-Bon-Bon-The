@@ -1,26 +1,39 @@
 # Salut Bon Bon Thé
 
-Gaban Solutions is building Salut Plus, a bilingual pickup-ordering platform for a Montréal bubble tea business. The first slice covers a demo menu, guest checkout, private tracking and staff order handling.
+Gaban Solutions is building **Salut Plus**, the recommended package of a bilingual (FR/EN) pickup-ordering and loyalty platform for a Montréal bubble tea shop. Next.js App Router, strict TypeScript, Tailwind CSS, Zod, PostgreSQL (Neon in deployment, PGlite for the local demo), Better Auth, Stripe (test mode) and Resend.
+
+**Status in one line:** Salut Plus is complete in demo mode (`SALUT_DEMO_MODE=1`): ordering, simulated Stripe-style payment, live staff queue, stamps, logo QR card, scanner, refunds and owner admin work end to end; Stripe, Resend and Apple Wallet are wired and switch on when credentials exist. Details: [Project status](docs/PROJECT_STATUS.md). Demo walkthrough: [Product spec](docs/PRODUCT_SPEC.md#demo-script-plus-test-environment).
 
 ## Run locally
 
-Use Node.js 24 and npm. From the repository root:
+Use Node.js 24 and npm.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the French storefront at `/fr`, the English storefront at `/en`, or the staff area at `/en/staff`. In the credential-free local demo the staff password is `salut-demo`. Use synthetic names and notes. Orders persist in the ignored `.salut-data` directory. Keep the shared-password demo private. For database-backed individual staff sign-in, use the [staff setup instructions](docs/ENVIRONMENT_SETUP.md#individual-staff-sign-in).
+Open `/fr` or `/en`. Without `DATABASE_URL` the app runs a private credential-free demo (staff area at `/en/staff`, password `salut-demo`, data in the ignored `.salut-data` folder); use synthetic names only. For database-backed sign-in and the full journey see [Technical reference](docs/TECHNICAL.md#staff-admin-and-team-provisioning).
 
 ```sh
-npm run check
-npm test
+npm run check   # route types, TypeScript, ESLint
+npm test        # unit and integration tests (more with TEST_DATABASE_URL)
 npm run build
 ```
 
-Next.js App Router, strict TypeScript, Tailwind CSS, Zod and PostgreSQL through PGlite or pg. See [status](docs/IMPLEMENTATION_STATUS.md), [handoff](docs/HANDOFF.md), [plan](docs/IMPLEMENTATION_PLAN.md), [setup](docs/ENVIRONMENT_SETUP.md), [architecture](docs/ARCHITECTURE.md), and [demo guide](docs/DEMO_GUIDE.md).
+The administration and staff console (`/admin/*`, `/staff/*`) is English only; the public site is fully bilingual. Never commit credentials, certificates, real customer data or local database files.
 
-## Salut Rewards (Récompenses Salut)
+## Documentation
 
-A public preview of the loyalty program lives at `/fr/recompenses` and `/en/rewards` (no login). Terms loaded by migration 009: 10 points per $1 CAD on the pre-tax eligible subtotal (5 %), 1,000 points = $5 off, redeemed at the counter. The program ships **inactive**: nothing is earned or redeemed until an ADMIN activates it (production also needs the recorded owner authorization). Guest cards work without an account. Details: [Rewards](docs/REWARDS.md); client-facing comparison of both loyalty options (French): [Loyalty commercial proposal](docs/LOYALTY_COMMERCIAL_PROPOSAL.md). Extra checks: `npm run test:rewards` and `npm run test:rewards-public` (see [Testing](docs/TESTING.md)).
+| Document | Contents |
+| --- | --- |
+| [docs/COMMERCIAL.md](docs/COMMERCIAL.md) | Packages, prices, Plus positioning, Premium scope |
+| [docs/PRODUCT_SPEC.md](docs/PRODUCT_SPEC.md) | Requirements, end-to-end acceptance, Rewards 9+1, QR and Wallet design, admin requirements |
+| [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) | What is really built, gaps, owner decisions, roadmap |
+| [docs/TECHNICAL.md](docs/TECHNICAL.md) | Architecture, migrations, configuration, integrations, security, deployment, tests |
+| [docs/TAX.md](docs/TAX.md) | GST/QST rules and Québec billing findings |
+| [docs/DECISIONS.md](docs/DECISIONS.md), [docs/CHANGELOG.md](docs/CHANGELOG.md) | Decision log and change history |
+| [docs/IMAGE_ASSET_MANIFEST.md](docs/IMAGE_ASSET_MANIFEST.md) | Image slots and prompts (`docs/image-prompts/`) |
+| [docs/archive/](docs/archive/) | Superseded material (points-era loyalty) |
+
+Agents: read [AGENTS.md](AGENTS.md) first.

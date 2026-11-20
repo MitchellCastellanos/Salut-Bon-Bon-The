@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { database } from "./db";
+import { notifyPassChange } from "./wallet";
 import { maxStampsPerOrder, rewardState, stampsForItems, stampsForReward, type RewardState } from "./rewards-math";
 
 type Db = { query<T extends Record<string, unknown>>(sql: string, args?: unknown[]): Promise<{ rows: T[] }> };
@@ -24,6 +25,10 @@ const hashToken = (token: string) => createHash("sha256").update(token).digest("
 export type Program = {
   active: boolean; earnCategories: string[] | null; minOrderCents: number;
   previewVisible: boolean; accrualEnabled: boolean; redemptionEnabled: boolean; commercialAuthorized: boolean;
+  /** Most the free drink may be worth, in cents (regular size price). */
+  freeDrinkMaxCents: number | null;
+  /** STAFF may redeem for a member identified by the stable identifier (card QR or Wallet), without the short-lived code. */
+  identifierRedemption: boolean;
 };
 export type Account = { id: string; user_id: string | null; member_code: string; balance: number; lifetime_earned: number; status: "active" | "suspended" | "merged"; enrolled_at: Date | string };
 export type Reward = { id: string; name_fr: string; name_en: string; description_fr: string; description_en: string; points_cost: number; available: boolean; eligible_category: string | null; eligible_product_id: string | null; discount_cents: number | null; preview_visible: boolean };
@@ -41,10 +46,11 @@ export function programStages(program: Program) {
 
 export async function loyaltyProgram(db?: Db): Promise<Program> {
   const { rows: [row] } = await (db ?? await database()).query<{ active: boolean; earn_categories: string[] | null; min_order_cents: number;
-    preview_visible: boolean; accrual_enabled: boolean; redemption_enabled: boolean; commercial_authorized: boolean }>(
-    "SELECT active, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized FROM loyalty_program WHERE id = 1");
+    preview_visible: boolean; accrual_enabled: boolean; redemption_enabled: boolean; commercial_authorized: boolean; free_drink_max_cents: number | null; identifier_redemption: boolean }>(
+    "SELECT active, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized, free_drink_max_cents, identifier_redemption FROM loyalty_program WHERE id = 1");
   return { active: row.active, earnCategories: row.earn_categories, minOrderCents: row.min_order_cents,
-    previewVisible: row.preview_visible, accrualEnabled: row.accrual_enabled, redemptionEnabled: row.redemption_enabled, commercialAuthorized: row.commercial_authorized };
+    previewVisible: row.preview_visible, accrualEnabled: row.accrual_enabled, redemptionEnabled: row.redemption_enabled, commercialAuthorized: row.commercial_authorized,
+    freeDrinkMaxCents: row.free_drink_max_cents, identifierRedemption: row.identifier_redemption };
 }
 
 /**
@@ -56,6 +62,8 @@ export type PublicRewards = {
   previewVisible: boolean; operational: boolean; accrualOperational: boolean; redemptionOperational: boolean;
   /** Stamps for the free drink (9: the 10th drink is free) and the per-order cap. */
   stampsRequired: number; maxStampsPerOrder: number; minOrderCents: number; categoryRestricted: boolean;
+  /** Most the free drink may be worth, in cents (ADMIN setting). */
+  freeDrinkMaxCents: number | null;
   featured: PublicReward | null; rewards: PublicReward[];
 };
 export async function publicRewards(db?: Db): Promise<PublicRewards> {
@@ -70,7 +78,7 @@ export async function publicRewards(db?: Db): Promise<PublicRewards> {
   const featured = rewards.find(r => r.id === "free-drink") ?? null;
   return { previewVisible: program.previewVisible, operational: program.active, accrualOperational: stages.accrualOperational, redemptionOperational: stages.redemptionOperational,
     stampsRequired: featured?.pointsCost ?? stampsForReward, maxStampsPerOrder, minOrderCents: program.minOrderCents,
-    categoryRestricted: Boolean(program.earnCategories?.length), featured, rewards };
+    categoryRestricted: Boolean(program.earnCategories?.length), freeDrinkMaxCents: program.freeDrinkMaxCents, featured, rewards };
 }
 
 /** Rewards a customer could redeem right now. Empty when the program is inactive. */
@@ -127,6 +135,18 @@ export async function redeemReward(input: { token: string; rewardId: string; key
   try {
     const { rows: [row] } = await (db ?? await database()).query<{ o_duplicate: boolean; o_balance: number; o_txn: string; o_reward: string }>(
       "SELECT * FROM loyalty_redeem($1, $2, $3, $4)", [hashToken(input.token), input.rewardId, input.key, input.actor]);
+    const tokenOwner = (await (db ?? await database()).query<{ account_id: string }>("SELECT account_id FROM loyalty_qr_tokens WHERE token_hash = $1", [hashToken(input.token)])).rows[0];
+    if (tokenOwner && !row.o_duplicate) await notifyPassChange(tokenOwner.account_id, db);
+    return { duplicate: row.o_duplicate, balance: row.o_balance, reward: row.o_reward };
+  } catch (error) { return coded(error); }
+}
+
+/** Counter redemption for a member identified by the stable identifier (card QR or Wallet). The caller has verified the staff session. */
+export async function redeemForMember(input: { accountId: string; rewardId: string; key: string; actor: string }, db?: Db) {
+  try {
+    const { rows: [row] } = await (db ?? await database()).query<{ o_duplicate: boolean; o_balance: number; o_txn: string; o_reward: string }>(
+      "SELECT * FROM loyalty_redeem_member($1, $2, $3, $4)", [input.accountId, input.rewardId, input.key, input.actor]);
+    if (!row.o_duplicate) await notifyPassChange(input.accountId, db);
     return { duplicate: row.o_duplicate, balance: row.o_balance, reward: row.o_reward };
   } catch (error) { return coded(error); }
 }
@@ -135,6 +155,7 @@ async function post(account: string, kind: "earn" | "adjust", points: number, ke
   try {
     const { rows: [row] } = await (db ?? await database()).query<{ o_duplicate: boolean; o_balance: number }>(
       "SELECT * FROM loyalty_post($1, $2, $3, $4, $5, NULL, NULL, $6, $7, $8)", [account, kind, points, key, extra.order ?? null, extra.reason ?? null, extra.actor, extra.eligible ?? null]);
+    if (!row.o_duplicate) await notifyPassChange(account, db);
     return { duplicate: row.o_duplicate, balance: row.o_balance };
   } catch (error) { return coded(error); }
 }
@@ -248,11 +269,14 @@ export async function pointsForOrder(orderNumber: string, db?: Db) {
 export type ProgramInput = {
   active: boolean; minOrderCents: number; categories: string[];
   previewVisible: boolean; accrualEnabled: boolean; redemptionEnabled: boolean; commercialAuthorized: boolean;
+  /** Omitted: unchanged. */
+  freeDrinkMaxCents?: number | null; identifierRedemption?: boolean;
 };
 /** Validates and saves the program configuration with an audit entry. `production` blocks activation without authorization. */
 export async function saveProgramConfig(input: ProgramInput, actor: string, options: { production: boolean }, db?: Db) {
   if (!Number.isInteger(input.minOrderCents) || input.minOrderCents < 0 || input.minOrderCents > 1_000_000) throw new LoyaltyError("FAILED");
   // Production operation needs the owner's recorded authorization.
+  if (input.freeDrinkMaxCents != null && (!Number.isInteger(input.freeDrinkMaxCents) || input.freeDrinkMaxCents < 100 || input.freeDrinkMaxCents > 5000)) throw new LoyaltyError("FAILED");
   if (input.active && options.production && !input.commercialAuthorized) throw new LoyaltyError("NOT_AUTHORIZED");
   await (db ?? await database()).query(`
     WITH before AS (SELECT commercial_authorized FROM loyalty_program WHERE id = 1),
@@ -264,8 +288,11 @@ export async function saveProgramConfig(input: ProgramInput, actor: string, opti
           WHEN NOT $8::boolean THEN NULL ELSE commercial_authorized_at END,
         commercial_authorized_by = CASE WHEN $8::boolean AND NOT (SELECT commercial_authorized FROM before) THEN $4
           WHEN NOT $8::boolean THEN NULL ELSE commercial_authorized_by END,
+        free_drink_max_cents = CASE WHEN $9::boolean THEN $10::int ELSE free_drink_max_cents END,
+        identifier_redemption = COALESCE($11::boolean, identifier_redemption),
         updated_at = now(), updated_by = $4
-      WHERE id = 1 RETURNING active, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized
+      WHERE id = 1 RETURNING free_drink_max_cents, identifier_redemption, active, earn_categories, min_order_cents, preview_visible, accrual_enabled, redemption_enabled, commercial_authorized
     ) INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.program', 'program', to_jsonb(saved) || jsonb_build_object('actor', $4::text) FROM saved
-  `, [input.active, input.categories, input.minOrderCents, actor, input.previewVisible, input.accrualEnabled, input.redemptionEnabled, input.commercialAuthorized]);
+  `, [input.active, input.categories, input.minOrderCents, actor, input.previewVisible, input.accrualEnabled, input.redemptionEnabled, input.commercialAuthorized,
+    input.freeDrinkMaxCents !== undefined, input.freeDrinkMaxCents ?? null, input.identifierRedemption ?? null]);
 }

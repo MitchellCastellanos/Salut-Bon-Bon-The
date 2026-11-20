@@ -14,7 +14,7 @@ const statuses = { fr: ["Reçue", "Confirmée", "En préparation", "Prête", "Re
 const money = (cents: number, lang: Lang) => new Intl.NumberFormat(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 const price = (line: Item) => {
   const p = catalog.products.find(p => p.id === line.product);
-  return ((p ? rates[p.category] : 0) + (line.size === "large" ? 100 : 0) + (line.topping === "none" ? 0 : 75)) * line.quantity;
+  return ((p ? rates[p.category] : 0) + (line.size === "large" ? 100 : 0) + (line.topping === "none" ? 0 : 100)) * line.quantity;
 };
 const api = "/api/demo-orders";
 export function OrderRewardsDemo({ lang }: { lang: Lang }) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Lang } from "../../src/domain";
+import { demoMode } from "../../src/demo-mode";
 import { staffProfile, staffRole } from "../../src/staff";
 import { logout } from "./staff/actions";
 import { ConsoleSidebar, type ConsoleSection } from "./console-sidebar";
@@ -15,7 +16,8 @@ export async function ConsoleShell({ lang, children }: { lang: Lang; children: R
   </main>;
   const p = `/${lang}`;
   const sales: ConsoleSection = { title: fr ? "Ventes" : "Sales", links: [
-    { href: `${p}/staff`, label: fr ? "Commandes" : "Orders" },
+    { href: `${p}/staff`, label: fr ? "File en direct" : "Live queue" },
+    ...(role === "ADMIN" ? [{ href: `${p}/admin/orders`, label: "Order history" }] : []),
     { href: `${p}/staff/counter`, label: fr ? "Vente au comptoir" : "Counter sale" },
   ] };
   const sections: ConsoleSection[] = role === "ADMIN" ? [
@@ -39,9 +41,17 @@ export async function ConsoleShell({ lang, children }: { lang: Lang; children: R
       { href: `${p}/admin/analytics`, label: fr ? "Audience" : "Analytics" },
       { href: `${p}/admin/team`, label: fr ? "Équipe et accès" : "Team and access" },
     ] },
+    { title: "System", links: [
+      { href: `${p}/admin/notifications`, label: "Notifications" },
+      { href: `${p}/admin/wallet`, label: "Card QR and Wallet" },
+      { href: `${p}/admin/activity`, label: "Change history" },
+    ] },
   ] : [{ ...sales, links: [...sales.links, { href: `${p}/staff/rewards`, label: fr ? "Scanner une carte" : "Scan a card" }] }];
   return <div className="console">
     <ConsoleSidebar lang={lang} sections={sections} name={profile?.name ?? ""} role={role} siteHref={siteHref} logout={logout.bind(null, lang)}/>
-    <main id="main" className="console-main">{children}</main>
+    <main id="main" className="console-main">
+      {demoMode() && <p className="panel" role="note" style={{ marginBottom: 16 }}><strong>Demo store.</strong> Nothing is charged and no email is sent. This is the screen your team uses to receive and prepare orders. <Link href={`${p}/demo`}>Open the demo guide</Link> · <Link href={`${p}/demo/side-by-side`}>customer and team side by side</Link></p>}
+      {children}
+    </main>
   </div>;
 }

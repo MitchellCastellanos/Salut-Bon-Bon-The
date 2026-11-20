@@ -32,5 +32,5 @@ jobs:
       - run: node scripts/import-catalog.mjs
       - run: npm test
       - run: npm run build
-      # picomatch GHSA-fc5q-39xc-vjpf has no patched release yet (see docs/SECURITY.md). Fail only on critical.
+      # picomatch GHSA-fc5q-39xc-vjpf has no patched release yet (see docs/TECHNICAL.md, Security). Fail only on critical.
       - run: npm audit --omit=dev --audit-level=critical

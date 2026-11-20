@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import pg from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { upcomingPickup, type PickupPolicy } from "../src/pickup-policy";
 import { computeTax, fiscalSchema } from "../src/business-core";
 
@@ -19,6 +19,9 @@ suite("pickup capacity under concurrency on real PostgreSQL", () => {
   let checkoutSchema: typeof import("../src/domain").checkoutSchema;
   beforeAll(async () => {
     process.env.DATABASE_URL = url;
+    // Orders left behind by an interrupted earlier run would occupy the slots under test.
+    await admin.query("DELETE FROM order_events WHERE order_number IN (SELECT number FROM orders WHERE customer LIKE 'CAPACITY-%')");
+    await admin.query("DELETE FROM orders WHERE customer LIKE 'CAPACITY-%'");
     ({ placeOrder } = await import("../src/orders"));
     ({ checkoutSchema } = await import("../src/domain"));
     await admin.query("UPDATE catalog_products SET available = true WHERE id = '201'");
@@ -28,6 +31,8 @@ suite("pickup capacity under concurrency on real PostgreSQL", () => {
       ('fiscal_settings', $2::jsonb), ('business_profile', $3::jsonb) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
       [JSON.stringify(policy), JSON.stringify(fiscal), JSON.stringify({ displayName: "Test Shop", street: "1 Test St", city: "Montréal", province: "Québec", postalCode: "H2X 1Y4", country: "Canada", phone: "+1 514-000-0000", verification: { status: "unverified" } })]);
   });
+  // The checkout rate limit (60 per minute) is a shared counter in the database; clear it so repeated runs in the same minute stay independent.
+  beforeEach(async () => { await admin.query("DELETE FROM checkout_rate_limit"); });
   afterAll(async () => {
     await admin.query("DELETE FROM catalog_store_settings WHERE key IN ('pickup_policy','pickup_checkout_enabled','fiscal_settings','business_profile')");
     await admin.query("UPDATE catalog_products SET available = false WHERE id = '201'");

@@ -20,7 +20,8 @@ export async function saveProgram(lang: string, form: FormData) {
   if (!language(lang)) return;
   const parsed = z.object({
     min: z.union([z.literal(""), dollars]),
-  }).safeParse({ min: form.get("min") ?? "" });
+    freeDrink: z.union([z.literal(""), dollars]),
+  }).safeParse({ min: form.get("min") ?? "", freeDrink: form.get("freeDrink") ?? "" });
   if (!parsed.success) back(lang, "error=program");
   const flag = (name: string) => form.get(name) === "on";
   const categories = form.getAll("category").map(String).filter(value => /^[a-z0-9-]{1,48}$/.test(value));
@@ -30,6 +31,8 @@ export async function saveProgram(lang: string, form: FormData) {
       minOrderCents: parsed.data!.min ? Math.round(Number(parsed.data!.min) * 100) : 0, categories,
       previewVisible: flag("previewVisible"), accrualEnabled: flag("accrualEnabled"), redemptionEnabled: flag("redemptionEnabled"),
       commercialAuthorized: flag("commercialAuthorized"),
+      freeDrinkMaxCents: parsed.data!.freeDrink ? Math.round(Number(parsed.data!.freeDrink) * 100) : null,
+      identifierRedemption: flag("identifierRedemption"),
     }, actor, { production: process.env.VERCEL_ENV === "production" });
   } catch (error) {
     back(lang, `error=${error instanceof LoyaltyError ? error.code : "program"}`);

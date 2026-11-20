@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { QrCard } from "../app/[lang]/account/qr-card";
-import { officialLogo } from "./brand-server";
+import { MemberCard } from "./member-card";
 import type { Lang } from "./domain";
 import { currentGuestCard } from "./guest-card";
 import { accountHistory, loyaltyProgram } from "./loyalty";
@@ -40,7 +39,7 @@ export async function GuestCardPage({ lang, error, notice }: { lang: Lang; error
         <button className="outline">{fr ? "Restaurer ma carte" : "Restore my card"}</button></form>
     </> : <>
       <StampProgress balance={card.account.balance} lang={lang}/>
-      <QrCard lang={lang} memberCode={card.account.member_code} logo={officialLogo()}/>
+      <MemberCard lang={lang} accountId={card.account.id} memberCode={card.account.member_code}/>
       <details className="panel"><summary>{fr ? "Code de secours (à garder privé)" : "Backup code (keep it private)"}</summary>
         <p>{fr ? "Ce code donne accès à votre carte. Conservez-le dans un endroit sûr; ne le partagez avec personne." : "This code gives access to your card. Store it somewhere safe and share it with no one."}</p>
         <code className="member-code" style={{ wordBreak: "break-all" }}>{card.secret}</code></details>

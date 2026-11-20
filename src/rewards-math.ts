@@ -55,3 +55,10 @@ export function stampCard(balance: number, required = stampsForReward): StampCar
   const filled = Math.min(safe, need);
   return { filled, required: need, toGo: Math.max(0, need - safe), share: filled / need, ready: freeDrinks > 0, freeDrinks, carried: freeDrinks > 0 ? safe - need : 0 };
 }
+
+/** "up to $7.99" wording for the maximum value of the free drink, driven by the ADMIN setting. Empty when no ceiling is set. */
+export function freeDrinkValueNote(cents: number | null | undefined, lang: "fr" | "en") {
+  if (!cents) return "";
+  const amount = (cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" });
+  return lang === "fr" ? `Valeur maximale : ${amount} (prix du format régulier ; les extras sont au prix habituel).` : `Worth up to ${amount} (regular size price; extras are charged normally).`;
+}

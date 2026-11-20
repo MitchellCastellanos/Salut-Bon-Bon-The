@@ -20,8 +20,20 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 ## Salut Rewards 5 % (2026-11-18)
 
-- Added migration 009, the public pages `/fr/recompenses` and `/en/rewards` (hero, three steps, calculator driven by the real configuration, reward states, ways to participate, FAQ, final CTA), the guest card (no account), refund reversal, guest-to-account linking, the five program states in ADMIN, cart and product points hints, header/footer/home integration, localized metadata and sitemap, the commercial proposal and the new tests. See [Rewards](REWARDS.md).
+- Added migration 009, the public pages `/fr/recompenses` and `/en/rewards` (hero, three steps, calculator driven by the real configuration, reward states, ways to participate, FAQ, final CTA), the guest card (no account), refund reversal, guest-to-account linking, the five program states in ADMIN, cart and product points hints, header/footer/home integration, localized metadata and sitemap, the commercial proposal and the new tests. See [archived Rewards notes](archive/REWARDS_POINTS_ERA_2026-11-18.md) and [Product spec](PRODUCT_SPEC.md#salut-rewards-91).
 
 ## Free-drink stamp card, 9 + 1 (2026-11-19)
 
-- Replaced the points scheme with a stamp card: one stamp per eligible drink, the 10th drink free. Added migration 011 (free-drink reward at 9 stamps, `rabais-5` withdrawn, preview balances cleared through the ledger), stamp earning for completed online orders and in-store visits, the `StampProgress` bar on account, guest card, staff counter and public page, stamp wording across cart, product, home, track and admin screens, image prompts BATCH-07 and new tests. The points calculator and earning-rate field were removed. See [Rewards](REWARDS.md).
+- Replaced the points scheme with a stamp card: one stamp per eligible drink, the 10th drink free. Added migration 011 (free-drink reward at 9 stamps, `rabais-5` withdrawn, preview balances cleared through the ledger), stamp earning for completed online orders and in-store visits, the `StampProgress` bar on account, guest card, staff counter and public page, stamp wording across cart, product, home, track and admin screens, image prompts BATCH-07 and new tests. The points calculator and earning-rate field were removed. See [archived Rewards notes](archive/REWARDS_POINTS_ERA_2026-11-18.md) and [Product spec](PRODUCT_SPEC.md#salut-rewards-91).
+
+## Documentation consolidation and Salut Plus audit (2026-11-20)
+
+- Merged the former README-linked and specialized documents into `COMMERCIAL.md`, `PRODUCT_SPEC.md`, `PROJECT_STATUS.md` and `TECHNICAL.md`; archived the points-era loyalty proposal and rewards notes under `docs/archive/`; refreshed `README.md`, `AGENTS.md` and `CLAUDE.md`. Recorded the audited implementation state, the owner decisions pending and the roadmap to finish Salut Plus. No application code or migration changed.
+
+## Salut Plus demo completion (2026-11-20)
+
+- Migration 012; demo mode with a simulated payment page, recorded-not-sent email, auto-enrolment and `/demo` guides; stable revocable card identification with a level-H logo QR and `/s/<code>` scanner entry; in-page camera scanner and redemption by identified member; Apple Wallet pass builder, update web service and admin panel (inactive without Apple credentials); free-drink ceiling ($7.99, editable); favorites and reorder; admin order history, cancel and refund, notification log, change history, wallet status, dashboard stages and attention list; header and product links now lead to the real ordering; card orders are accepted by the official catalog (previously refused); `frame-ancestors 'self'`. New tests: `tests/plus-completion.test.ts`, `tests/plus-demo-smoke.mjs`; existing rewards suites adapted to the new card.
+
+## Topping rule (2026-11-20)
+
+- One included topping (tapioca or a popping pearl, customer's choice) and $1.00 per extra topping on the official menu and customization screen (grouped choices, tapioca first); the isolated demo menu moved from $0.75 to $1.00. New `tests/toppings.test.ts`; the free-drink value is shown on the card, rewards page, product pages, scanner and Wallet pass.

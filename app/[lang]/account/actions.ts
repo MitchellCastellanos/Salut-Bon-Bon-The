@@ -5,12 +5,15 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { demoMode } from "../../../src/demo-mode";
 import { customerAuth } from "../../../src/auth";
 import { accountEmailAvailable, instantAccounts } from "../../../src/account-email";
 import { customerSession } from "../../../src/customer";
 import { database } from "../../../src/db";
 import { language } from "../../../src/domain";
 import { enroll, accountForUser, issueQr } from "../../../src/loyalty";
+import { toggleFavorite } from "../../../src/favorites";
+import { rotateIdentifier } from "../../../src/identification";
 import { allow, clientAddress } from "../../../src/rate-limit";
 import { currentGuestCard } from "../../../src/guest-card";
 
@@ -47,6 +50,11 @@ export async function login(lang: string, form: FormData) {
     await auth!.api.signInEmail({ body: { email: address, password: secret, rememberMe: true }, headers: await headers() });
   } catch { failed = true; }
   if (failed) back(lang, "error=login");
+  // Demo mode: the Salut Rewards card exists from the first sign-in, so the whole stamp journey can be shown without an extra step.
+  if (demoMode()) {
+    const { rows: [user] } = await (await database()).query<{ id: string }>(`SELECT "id" FROM "user" WHERE "email" = $1 AND "role" = 'CUSTOMER'`, [address]);
+    if (user) await enroll(user.id).catch(() => undefined);
+  }
   redirect(`/${lang}/account`);
 }
 
@@ -124,6 +132,27 @@ export async function newQr(lang: string): Promise<{ svg: string; expiresAt: str
   const h = await headers();
   const origin = process.env.SITE_URL || `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
   const svg = await QRCode.toString(new URL(`/${lang}/staff/rewards?t=${token}`, origin).href,
-    { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#4A2C1A", light: "#FFF8EF" } });
+    { type: "svg", margin: 4, errorCorrectionLevel: "Q", color: { dark: "#4A2C1A", light: "#FFF8EF" } });
   return { svg, expiresAt };
+}
+
+/** The member (or guest card holder) replaces their own card QR: the old QR and Wallet barcode stop working at once. */
+export async function replaceCardQr(lang: string) {
+  if (!language(lang)) return;
+  const session = await customerSession();
+  const account = (session ? await accountForUser(session.id) : undefined) ?? (await currentGuestCard())?.account;
+  if (!account || account.status !== "active") return;
+  if (!await allow("qr-replace", account.id, 5, 3600)) return;
+  await rotateIdentifier(account.id, `member:${account.member_code}`);
+  revalidatePath(`/${lang}/account/rewards`);
+}
+
+/** Saves or removes a favorite drink for the signed-in customer. */
+export async function toggleFavoriteAction(lang: string, productId: string) {
+  if (!language(lang) || !/^[a-z0-9-]{1,64}$/.test(productId)) return;
+  const session = await customerSession();
+  if (!session) redirect(`/${lang}/account`);
+  await toggleFavorite(session!.id, productId);
+  revalidatePath(`/${lang}/account`);
+  revalidatePath(`/${lang}/catalog/products/${productId}`);
 }

@@ -47,7 +47,7 @@ export function quote(lines: Line[]) {
   return lines.map(line => {
     const product = products.find(p => p.id === line.product);
     if (line.optionIds?.length || !product || !product.topping.some(topping => topping === line.topping)) throw new Error("MENU");
-    return { ...line, name: product.name, subtotal: (product.price + (line.size === "large" ? 100 : 0) + (line.topping === "none" ? 0 : 75)) * line.quantity };
+    return { ...line, name: product.name, subtotal: (product.price + (line.size === "large" ? 100 : 0) + (line.topping === "none" ? 0 : 100)) * line.quantity };
   });
 }
 export const states = ["RECEIVED", "CONFIRMED", "PREPARING", "READY", "COMPLETED", "CANCELLED"] as const;

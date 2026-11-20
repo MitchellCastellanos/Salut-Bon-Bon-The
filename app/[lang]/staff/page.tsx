@@ -1,3 +1,4 @@
+import { demoMode } from "../../../src/demo-mode";
 import { notFound } from "next/navigation";
 import { language, modifiers, money, pickupDate, stateLabels, states, transitions } from "../../../src/domain";
 import { demoStaff, staffRole } from "../../../src/staff";
@@ -10,7 +11,7 @@ const settledPayments = ["PAID_AT_PICKUP", "PAID_ONLINE", "DEMO_PAID"];
 const paymentLabels: Record<string, Record<"fr" | "en", string>> = {
   UNPAID: { fr: "À payer", en: "Unpaid" }, PAID_AT_PICKUP: { fr: "Payée à la cueillette", en: "Paid at pickup" },
   DEMO_PAID: { fr: "Paiement simulé", en: "Simulated payment" }, PAID_ONLINE: { fr: "Payée en ligne", en: "Paid online" },
-  PAYMENT_FAILED: { fr: "Paiement échoué", en: "Payment failed" }, REFUND_REQUIRED: { fr: "Remboursement requis", en: "Refund required" },
+  PAYMENT_FAILED: { fr: "Paiement échoué", en: "Payment failed" }, REFUND_REQUIRED: { fr: "Remboursement requis", en: "Refund required" }, REFUNDED: { fr: "Remboursée", en: "Refunded" },
 };
 
 export const metadata = { robots: { index: false, follow: false } };
@@ -43,9 +44,10 @@ export default async function Staff({ params, searchParams }: PageProps<"/[lang]
       <label>{fr ? "Statut" : "Status"}<select name="status" defaultValue={status}><option value="">{fr ? "Tous" : "All"}</option>{states.map(state => <option key={state} value={state}>{stateLabels[state][lang]}</option>)}</select></label>
       <button className="outline">{fr ? "Filtrer" : "Filter"}</button>
     </form>
-    {!orders.length && <p>{fr ? "Aucune commande." : "No orders yet."}</p>}
+    {!orders.length && <p>{fr ? "Aucune commande." : "No orders yet."}{demoMode() && " New online orders appear here by themselves within a few seconds. Place one from the customer side to see it arrive."}</p>}
+    {demoMode() && orders.some(order => order.status === "RECEIVED") && <p className="panel" role="status"><strong>{orders.filter(order => order.status === "RECEIVED").length} new order(s)</strong> waiting. Tap “Confirmed”, then “Preparing”, then “Ready”: the customer&apos;s tracking page updates live. When the customer collects it, tap “Completed”.</p>}
     <div className="order-grid">{orders.map(order => <article className="panel" key={order.number.toString()}>
-      <div className="section-head"><h2>#{order.number.toString()}</h2><strong className="pill">{order.channel === "COUNTER" ? `${fr ? "Comptoir" : "Counter"} · ` : ""}{stateLabels[order.status][lang]}</strong></div>
+      <div className="section-head"><h2>#{order.number.toString()}</h2><strong className="pill">{order.status === "RECEIVED" && order.channel !== "COUNTER" ? "NEW · " : ""}{order.channel === "COUNTER" ? `${fr ? "Comptoir" : "Counter"} · ` : ""}{stateLabels[order.status][lang]}</strong></div>
       <p><strong>{order.customer}</strong> · {pickupDate(new Date(order.pickup_at).toISOString(), lang)}</p>
       <small>{fr ? "Reçue" : "Received"} {pickupDate(new Date(order.created_at).toISOString(), lang)}</small>
       <ul>{order.items.map((item, i) => <li key={i}>{item.quantity} × {item.name[lang]} · {modifiers[item.size][lang]} · {"selectedModifiers" in item ? item.selectedModifiers.map(option => option[lang]).join(", ") || modifiers.none[lang] : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</li>)}</ul>

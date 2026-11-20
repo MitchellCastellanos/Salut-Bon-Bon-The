@@ -1,3 +1,4 @@
+import { freeDrinkValueNote } from "./rewards-math";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -49,7 +50,7 @@ export async function RewardsPage({ lang }: { lang: Lang }) {
     ["Comment gagner des tampons ?", `Chaque boisson admissible achetée vous donne un tampon. Après ${n} tampons, votre ${nth} boisson est gratuite. Un maximum de ${cap} tampons peut être crédité par commande ou par passage en boutique.`],
     ["Quand les tampons sont-ils crédités ?", "Pour une commande en ligne, une fois la commande remise et terminée par l’équipe (pas avant, et jamais pour une commande annulée). En magasin, au moment où l’équipe saisit le nombre de boissons après avoir scanné votre code."],
     ["Comment obtenir ma boisson gratuite ?", `Présentez votre code QR au comptoir : l’équipe confirme l’échange de ${n} tampons contre une boisson gratuite et vous la prépare. L’échange se fait uniquement au comptoir; aucun rabais n’est appliqué automatiquement à la commande en ligne.`],
-    ["Quelle boisson puis-je choisir ?", "Les règles précises (boissons admissibles et valeur maximale de la boisson gratuite) seront confirmées avant l’ouverture du programme."],
+    ["Quelle boisson puis-je choisir ?", data?.freeDrinkMaxCents ? `Toutes les boissons comptent pour les tampons. ${freeDrinkValueNote(data.freeDrinkMaxCents, "fr")}` : "Toutes les boissons comptent pour les tampons. La valeur maximale de la boisson gratuite sera confirmée avant l’ouverture du programme."],
     ["Que se passe-t-il en cas de remboursement ?", "Les tampons gagnés sur les boissons remboursées sont repris, en proportion pour un remboursement partiel et en totalité pour un remboursement complet. Votre solde ne devient jamais négatif."],
     ["Puis-je combiner la boisson gratuite avec des promotions ?", "Aucune règle de cumul avec d’autres promotions n’a encore été approuvée. Une boisson gratuite échangée ne rapporte pas de tampon."],
     ["Les tampons expirent-ils ?", "Aucune politique d’expiration n’a été définie à ce jour. S’il y en a une, elle sera annoncée clairement avant l’activation du programme."],
@@ -59,7 +60,7 @@ export async function RewardsPage({ lang }: { lang: Lang }) {
     ["How do I earn stamps?", `Every eligible drink you buy earns one stamp. After ${n} stamps, your ${nth} drink is free. At most ${cap} stamps can be credited per order or counter visit.`],
     ["When are stamps credited?", "For online orders, once the team hands over and completes the order (never before, and never for a cancelled order). In store, when the team enters the number of drinks after scanning your code."],
     ["How do I get my free drink?", `Show your QR code at the counter: the team confirms the exchange of ${n} stamps for a free drink and prepares it for you. Redemption happens at the counter only; no discount is applied automatically to online orders.`],
-    ["Which drink can I choose?", "The exact rules (eligible drinks and the maximum value of the free drink) will be confirmed before the program opens."],
+    ["Which drink can I choose?", data?.freeDrinkMaxCents ? `Every drink earns stamps. ${freeDrinkValueNote(data.freeDrinkMaxCents, "en")}` : "Every drink earns stamps. The maximum value of the free drink will be confirmed before the program opens."],
     ["What happens with refunds?", "Stamps earned on refunded drinks are taken back: proportionally for a partial refund and entirely for a full refund. Your balance never goes below zero."],
     ["Can I combine the free drink with promotions?", "No rule for combining with other promotions has been approved yet. A redeemed free drink earns no stamp."],
     ["Do stamps expire?", "No expiry policy has been defined so far. If one is adopted, it will be announced clearly before the program is activated."],
@@ -99,6 +100,7 @@ export async function RewardsPage({ lang }: { lang: Lang }) {
           <ul className="rw-cards">{[...data.rewards].sort((a, b) => Number(b.id === featured?.id) - Number(a.id === featured?.id)).map(reward => <li key={reward.id} className={`rw-card ${reward.state} ${reward.id === featured?.id ? "featured" : ""}`} data-state={reward.state}>
             <div><h3>{fr ? reward.nameFr : reward.nameEn} — {nf.format(reward.pointsCost)} {fr ? "tampons" : "stamps"}</h3>
               {(fr ? reward.descriptionFr : reward.descriptionEn) && <p>{fr ? reward.descriptionFr : reward.descriptionEn}</p>}
+              {reward.id === featured?.id && data?.freeDrinkMaxCents ? <p data-testid="free-drink-value"><strong>{freeDrinkValueNote(data.freeDrinkMaxCents, lang)}</strong></p> : null}
 </div>
             {reward.id === featured?.id && <div className="rw-art" aria-hidden="true"><StorefrontIcon name="gift"/></div>}
           </li>)}</ul>}</section>

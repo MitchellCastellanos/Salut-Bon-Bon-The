@@ -15,3 +15,31 @@ Option B (10 points per $1, 1,000 points = $5) is the preview program; option A 
 ## 2026-11-19 · Stamp card (9 + 1) replaces the points scheme; stamps reuse the ledger
 
 The owner chose option A, "the 10th drink is free", as the program. One stamp is stored as one unit of the existing ledger balance and the free drink is an ordinary reward costing 9, so accounts, guest cards, QR redemption, refund reversal, idempotency, append-only history and concurrency guarantees are unchanged and no second store exists. Earning counts drink quantity (capped at 10 per order or visit), not dollars; `points_per_dollar` is retired but its column kept. Migration 011 clears preview balances through the ledger and refuses to run if the program is commercially authorized and balances exist. Open owner decisions: eligible drinks, free-drink value cap, per-order cap, promotion stacking, expiry.
+
+## 2026-11-20 · Commercial packages and Salut Plus as the development target
+
+Packages are Essential ($1,799 setup, $49/month), **Plus** ($3,199, $79, recommended) and Premium ($4,999, $129), CAD, **proposed and not yet accepted by the client**. Premium includes Plus, Plus includes Essential. Plus adds Stripe payments, customer accounts, history and favorites, Salut Rewards 9+1, digital QR card, **Apple Wallet**, automated notifications and basic analytics. Referrals, birthday promotions, advanced analytics, scheduled campaigns, promo codes and gift cards are Premium and are not built during Plus. Apple Wallet is Plus, not Premium (the former Premium roadmap entry is withdrawn). See [COMMERCIAL.md](COMMERCIAL.md).
+
+## 2026-11-20 · Wallet and printed QR use a separate stable identification token
+
+The 5-minute single-use redemption token must never be embedded in an Apple Wallet pass or a printed card. A separate opaque, stable, revocable identification token, resolvable only by an authenticated staff member, identifies the member; awarding and redeeming remain separate, confirmed, idempotent, audited operations. Whether Wallet alone may authorize a redemption is an open owner/security decision (D6 in [PROJECT_STATUS.md](PROJECT_STATUS.md#decisions-the-owner-must-make); recommendation: the short-lived code is still required). Logo size inside the QR is decided by scan tests with error correction H, not by a fixed ratio.
+
+## 2026-11-20 · Documentation consolidated
+
+Roughly 45 documents were merged into README, COMMERCIAL, PRODUCT_SPEC, PROJECT_STATUS and TECHNICAL, keeping TAX, DECISIONS, CHANGELOG and the image manifest because they carry independent legal, historical or asset responsibilities. The points-era loyalty documents moved to `docs/archive/`. Only PROJECT_STATUS states what is built.
+
+## 2026-11-20 · Rewards rules from the project lead, and a demo mode
+
+Every drink earns a stamp (no category restriction). The free drink is the middle price tier: implemented as a value ceiling of $7.99 on the regular size price (the middle of $5.99/$7.99/$8.99), stored in `loyalty_program.free_drink_max_cents` and editable by an ADMIN; to be confirmed with the owner. A member identified by the stable card QR or Wallet pass may redeem with a STAFF "member present" confirmation (ADMIN switch `identifier_redemption`), superseding the earlier recommendation that the short-lived code always be required.
+
+The site is a **test store until the client approves**: `SALUT_DEMO_MODE=1` turns on a simulated Stripe-style payment page (only while Stripe is not configured), records emails without sending them, creates accounts without verification and auto-enrolls them in Rewards, and enables the demo guide and the admin **Apply demo settings** action. Stripe, Resend and Apple Wallet adapters stay connected to the interface and take over as soon as credentials exist. Demo mode must be off for a real launch.
+
+Apple Wallet passes are built in-repo (ZIP + SHA-1 manifest + PKCS#7 via `node-forge`) instead of with `passkit-generator`, which depends on a vulnerable `joi`.
+
+## 2026-11-20 · Production prepared for the demo
+
+With the project lead's authorization: a backup branch and a rehearsal branch were made in Neon, migration 012 was rehearsed and then applied to `production`, large sizes were set to regular + $1.00 (the production values were inconsistent), the demo settings were applied (hours Mon–Sat 10:30–20:00, 10 min lead time, 10 orders per slot, tax "not registered", all priced products offered, Rewards active, authorization recorded for "project lead (test site)"), and `SALUT_DEMO_MODE=1` was set for Vercel Production. All of it is test-site configuration and is audited in `catalog_audit_history`; none of it is a client approval.
+
+## 2026-11-20 · Topping rule: one included topping, every extra $1.00
+
+Every drink includes one topping chosen from tapioca or the popping pearls; each additional topping, of any kind, costs $1.00 (not $0.75). Implemented in `selectionCost` (`src/catalog-options.ts`): the most expensive selected tapioca/popping option is free, and the base tapioca stored at $0 counts as a standard topping when it is an extra. No catalog migration was needed, so the rule works with the data already in production and with the code deployed before it.

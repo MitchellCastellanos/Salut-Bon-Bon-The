@@ -1,3 +1,4 @@
+import { orderHref } from "../../../src/order-links";
 import Image from "next/image";
 import { hasPublicImage } from "../../../src/storefront-art";
 import Link from "next/link";
@@ -31,7 +32,7 @@ export async function CatalogList({ lang, category, search = "", ids, previewPri
       <Link href={`/${lang}/catalog/products/${product.id}`}><strong>{product[lang]}</strong></Link>
       <small>{categories.find(item => item.id === product.category)?.[lang]}</small>
       {previewPrices?.[product.id] && <span className="catalog-preview-price">{(previewPrices[product.id].cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" })}</span>}
-      <Link className="catalog-add" href={`/${lang}/${lang === "fr" ? "demo-commande" : "demo-order"}?product=${encodeURIComponent(product.id)}`}>{lang === "fr" ? "Ajouter au panier +" : "Add to cart +"}</Link>
+      <Link className="catalog-add" href={orderHref(lang, product.id)}>{lang === "fr" ? "Ajouter au panier +" : "Add to cart +"}</Link>
       {ids && <Link href={`/${lang}/catalog?category=${product.category}#${product.id}`}>
         {lang === "fr" ? "Voir au menu" : "View on the menu"}
       </Link>}
