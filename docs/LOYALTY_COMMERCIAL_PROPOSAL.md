@@ -3,7 +3,7 @@
 **Document préparé par Gaban Solutions à l’intention du propriétaire**
 Statut : proposition commerciale et état d’avancement technique, aucune activation commerciale n’a eu lieu.
 
-> **Mise à jour 2026-11-19 : l’option A (9 boissons achetées, la 10e gratuite) est maintenant celle qui est développée et remplace l’option B dans le site (carte de tampons avec barre de progression, migration 010). Voir [Récompenses](REWARDS.md). Le texte ci-dessous est conservé comme historique de la proposition.**
+> **Mise à jour 2026-11-19 : l’option A (9 boissons achetées, la 10e gratuite) est maintenant celle qui est développée et remplace l’option B dans le site (carte de tampons avec barre de progression, migration 011). Voir [Récompenses](REWARDS.md). Le texte ci-dessous est conservé comme historique de la proposition.**
 >
 > **En bref.** Nous vous présentons deux façons de récompenser vos clients fidèles. Pour l’aperçu du site, nous avons réalisé l’**option B, Récompenses Salut** (10 points par 1 $, 1 000 points = 5 $ de rabais), parce qu’elle s’appuie sur le moteur de fidélité déjà construit. L’**option A, la carte de fidélité numérique** (9 boissons achetées, la 10e gratuite), est présentée comme **proposition seulement** : elle n’est pas développée. Rien dans ce document ne constitue une promesse de résultats de vente, et aucun prix de boisson n’a été inventé : tous les montants ci-dessous sont des **exemples chiffrés**, pas des prix de votre menu.
 
