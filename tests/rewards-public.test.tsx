@@ -32,7 +32,7 @@ describe("public Salut Rewards page (no login, FR/EN)", () => {
     expect(page).toContain('aria-valuemax="9"');
     expect(page).toContain("Boisson gratuite — 9 tampons");
     expect(page).not.toMatch(/5 \$ de rabais|10 points par/);
-    expect(page).toContain("Bientôt disponible");
+    expect(page).not.toMatch(/Bientôt disponible|Pas encore échangeable/);
     expect(page).toContain("Aperçu : pas encore actif");
     for (const q of ["Est-ce gratuit", "Ai-je besoin d’un compte", "Les tampons expirent-ils", "remboursement"]) expect(page).toContain(q);
     expect(page).toContain("Aucune politique d’expiration");
@@ -46,7 +46,8 @@ describe("public Salut Rewards page (no login, FR/EN)", () => {
     for (const word of ["Order", "Collect", "Enjoy"]) expect(page).toContain(word);
     expect(page).toContain('data-testid="stamp-progress"');
     expect(page).toContain("Free drink — 9 stamps");
-    expect(page).toContain("Coming soon");
+    expect(page).not.toMatch(/Coming soon|Not redeemable yet/);
+    expect(page).toContain("the <strong>10th</strong> is free");
     expect(page).toContain("Do stamps expire?");
     expect(page).not.toMatch(/\$5 off|points per/);
     expect(page).toContain(cardPath.en);

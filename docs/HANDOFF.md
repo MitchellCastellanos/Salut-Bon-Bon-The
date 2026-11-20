@@ -24,7 +24,7 @@ Branch `feat/business-profile-fiscal`. Added the persisted business profile (`bu
 
 ## Update 2026-11-19 (free-drink stamp card)
 
-The loyalty program is now the 9 + 1 stamp card (migration 010, `src/stamp-progress.tsx`); see [Rewards](REWARDS.md) and the decision of the same date. Next steps: run `npm run db:migrate` on each database (it aborts if real balances exist under an authorized program), run the browser smoke scripts `npm run test:rewards` and `npm run test:rewards-public` on a disposable PostgreSQL fixture (updated for stamps but **not executed** in the session that wrote them), generate the BATCH-07 stamp artwork, and get the owner's decisions on eligible drinks, free-drink value cap, per-order cap, promotion stacking and expiry before activation.
+The loyalty program is now the 9 + 1 stamp card (migration 011, `src/stamp-progress.tsx`); see [Rewards](REWARDS.md) and the decision of the same date. Next steps: run `npm run db:migrate` on each database (it aborts if real balances exist under an authorized program), run the browser smoke scripts `npm run test:rewards` and `npm run test:rewards-public` on a disposable PostgreSQL fixture (updated for stamps but **not executed** in the session that wrote them), generate the BATCH-07 stamp artwork, and get the owner's decisions on eligible drinks, free-drink value cap, per-order cap, promotion stacking and expiry before activation.
 
 ## Update 2026-11-18 (Salut Rewards 5 % and public page)
 

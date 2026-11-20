@@ -326,3 +326,16 @@ describe("ADMIN configuration", () => {
     await expect(loyalty.saveProgramConfig({ ...base, minOrderCents: -1 }, "a", { production: false }, db)).rejects.toMatchObject({ code: "FAILED" });
   });
 });
+
+describe("a database that still holds the old points reward", () => {
+  it("never turns the 1,000-point reward into a card size", async () => {
+    await q("UPDATE loyalty_rewards SET preview_visible = true, available = true WHERE id='rabais-5'");
+    await q("UPDATE loyalty_rewards SET preview_visible = false WHERE id='free-drink'");
+    const pub = await loyalty.publicRewards(db);
+    expect(pub.stampsRequired).toBe(9);
+    expect(pub.featured).toBeNull();
+    expect(pub.rewards.map(r => r.id)).not.toContain("rabais-5");
+    await q("UPDATE loyalty_rewards SET preview_visible = true WHERE id='free-drink'");
+    await q("UPDATE loyalty_rewards SET preview_visible = false, available = false WHERE id='rabais-5'");
+  });
+});

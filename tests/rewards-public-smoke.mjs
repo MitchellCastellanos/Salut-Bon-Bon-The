@@ -60,7 +60,7 @@ try {
       assert.match(text, fr ? /Aperçu : pas encore actif/ : /Preview: not active yet/);
       assert.equal(await p.locator('[data-testid="status-pill"]').count(), 1);
       assert.equal(await p.locator('.rw-card[data-state="available"]').count(), 0, "no reward is redeemable while the program is a preview");
-      assert.ok(await p.locator('.rw-card[data-state="coming_soon"]').count() >= 1);
+      assert.ok(await p.locator(".rw-card").count() >= 1); assert.doesNotMatch(text, /Bientôt disponible|Coming soon/);
       assert.equal(await p.locator("details").count(), 9, "nine FAQ entries");
       await p.locator("details summary").first().click();
       assert.equal(await p.locator("details").first().evaluate(d => d.open), true);

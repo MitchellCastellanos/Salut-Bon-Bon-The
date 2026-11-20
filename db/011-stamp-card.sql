@@ -14,7 +14,7 @@ BEGIN
   END IF;
   FOR acct IN SELECT id, balance FROM loyalty_accounts WHERE balance > 0 LOOP
     PERFORM loyalty_post(acct.id, 'adjust', -acct.balance, 'stamps-migration:' || acct.id, NULL, NULL, NULL,
-      'Switch from points to the free-drink stamp card', 'system:migration-010');
+      'Switch from points to the free-drink stamp card', 'system:migration-011');
   END LOOP;
 END $$;
 

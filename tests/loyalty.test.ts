@@ -44,7 +44,7 @@ describe("enrollment and safe defaults", () => {
   it("ships inactive with the stamp-card terms so nothing can be awarded or redeemed unapproved", async () => {
     const [p] = await q("SELECT active FROM loyalty_program");
     expect(p).toEqual({ active: false });
-    // Migration 010: the free drink costs 9 stamps; the old $5 reward is withdrawn.
+    // Migration 011: the free drink costs 9 stamps; the old $5 reward is withdrawn.
     expect((await q("SELECT id, points_cost, available FROM loyalty_rewards WHERE id IN ('free-drink','rabais-5') ORDER BY id"))).toEqual([
       { id: "free-drink", points_cost: 9, available: true }, { id: "rabais-5", points_cost: 1000, available: false }]);
     const c = await customer();
