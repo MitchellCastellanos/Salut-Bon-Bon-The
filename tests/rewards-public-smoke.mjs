@@ -124,7 +124,7 @@ try {
   const g = await context();
   await g.p.goto(`${BASE}/fr/recompenses/carte`);
   await g.p.getByRole("button", { name: "Obtenir ma carte" }).click();
-  await g.p.locator(".qr svg").waitFor();
+  await g.p.getByText(/Single-use redemption code|Code d’échange à usage unique/).click(); await g.p.locator("details .qr svg").waitFor(); // the redemption code is generated only when opened
   const cookie = (await g.c.cookies()).find(x => x.name === "salut-guest-card");
   assert.ok(cookie && cookie.httpOnly && /^[0-9a-f]{64}$/.test(cookie.value), "httpOnly secret cookie");
   const cardAccount = (await q("SELECT id, user_id, member_code, guest_secret_hash FROM loyalty_accounts WHERE guest_secret_hash = $1", [hash(cookie.value)]))[0];
@@ -147,7 +147,7 @@ try {
   await restore(cardAccount.member_code);
   await other.p.getByText("Code de secours invalide").waitFor();
   await restore(backup);
-  await other.p.locator(".qr svg").waitFor();
+  await other.p.locator(".qr svg").first().waitFor();
   step("restore: wrong codes and the short member code are rejected; the real backup code restores the card");
   await other.c.close();
 

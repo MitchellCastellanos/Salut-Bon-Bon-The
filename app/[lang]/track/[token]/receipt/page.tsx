@@ -8,7 +8,7 @@ export const metadata = { robots: { index: false, follow: false } };
 const taxName: Record<string, [string, string]> = { GST: ["TPS", "GST"], QST: ["TVQ", "QST"] };
 const payment: Record<string, [string, string]> = {
   UNPAID: ["À payer à la cueillette", "To be paid at pickup"], PAID_AT_PICKUP: ["Payée à la cueillette", "Paid at pickup"], PAID_ONLINE: ["Payée en ligne", "Paid online"],
-  DEMO_PAID: ["Paiement simulé", "Simulated payment"], PAYMENT_FAILED: ["Paiement échoué", "Payment failed"], REFUND_REQUIRED: ["Remboursement requis", "Refund required"],
+  DEMO_PAID: ["Paiement simulé", "Simulated payment"], PAYMENT_FAILED: ["Paiement échoué", "Payment failed"], REFUND_REQUIRED: ["Remboursement requis", "Refund required"], REFUNDED: ["Remboursée", "Refunded"],
 };
 
 /**

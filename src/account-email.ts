@@ -1,3 +1,4 @@
+import { demoMode } from "./demo-mode";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { emailMode } from "./notifications";
@@ -54,12 +55,12 @@ export async function sendAccountEmail(kind: AccountEmailKind, to: string, name:
 }
 
 /**
- * With SALUT_INSTANT_ACCOUNTS=1 a new customer is marked verified at sign-up, with no email, so the customer journey can be shown
+ * With SALUT_INSTANT_ACCOUNTS=1 (or demo mode, SALUT_DEMO_MODE=1) a new customer is marked verified at sign-up, with no email, so the customer journey can be shown
  * before a mail provider is configured. It is honoured in every environment, including production, because setting the variable is
  * the explicit decision: while it is on, anyone can register an address they do not own. Remove it once Resend is configured.
  */
 export function instantAccounts() {
-  return process.env.SALUT_INSTANT_ACCOUNTS === "1";
+  return process.env.SALUT_INSTANT_ACCOUNTS === "1" || demoMode();
 }
 
 /** Registration is only offered when verification email can actually be delivered (or captured in non-deployed testing). */

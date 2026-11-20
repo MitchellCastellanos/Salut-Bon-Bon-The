@@ -1,9 +1,12 @@
 import Stripe from "stripe";
+import { demoMode } from "../demo-mode";
 
 export type PaymentOrder = {
   number: string;
   lang: "fr" | "en";
   taxCents: number;
+  /** Private tracking token: the customer returns to their order after paying. */
+  trackingToken?: string;
   items: { name: { fr: string; en: string }; quantity: number; subtotal: number }[];
 };
 
@@ -17,8 +20,13 @@ export function stripeMode(): "test" | "live" | "disabled" {
   return process.env.SALUT_STRIPE_TEST_ENABLED === "1" && key.startsWith("sk_test_") ? "test" : "disabled";
 }
 
+/** Demo mode without Stripe credentials: the simulated hosted payment page stands in for Stripe Checkout. */
+export function simulatedPayments() {
+  return demoMode() && stripeMode() === "disabled";
+}
+
 export function cardPaymentsEnabled() {
-  return stripeMode() !== "disabled" && Boolean(process.env.STRIPE_WEBHOOK_SECRET);
+  return (stripeMode() !== "disabled" && Boolean(process.env.STRIPE_WEBHOOK_SECRET)) || simulatedPayments();
 }
 
 function stripeClient() {
@@ -56,7 +64,7 @@ export async function createCheckout(order: PaymentOrder, siteUrl = process.env.
     locale: order.lang,
     client_reference_id: order.number,
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-    success_url: new URL(`/${order.lang}?payment=returned`, site).href,
+    success_url: new URL(order.trackingToken ? `/${order.lang}/track/${order.trackingToken}?payment=returned` : `/${order.lang}?payment=returned`, site).href,
     cancel_url: new URL(`/${order.lang}/menu`, site).href,
     line_items: checkoutLineItems(order),
   }, { idempotencyKey: `salut-checkout:${order.number}` });
@@ -69,4 +77,14 @@ export function verifyWebhook(payload: string, signature: string) {
   const event = stripeClient().webhooks.constructEvent(payload, signature, secret);
   if (event.livemode !== (stripeMode() === "live")) throw new Error("Stripe event mode does not match this environment");
   return event;
+}
+
+/** Refunds part or all of a paid Checkout Session. Idempotent per key. Needs real Stripe credentials; simulated payments never reach this. */
+export async function refundCheckoutSession(sessionId: string, cents: number, key: string) {
+  const client = stripeClient();
+  const session = await client.checkout.sessions.retrieve(sessionId);
+  const intent = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+  if (!intent) throw new Error("No payment to refund");
+  const refund = await client.refunds.create({ payment_intent: intent, amount: cents }, { idempotencyKey: `salut-refund:${key}` });
+  return refund.id;
 }

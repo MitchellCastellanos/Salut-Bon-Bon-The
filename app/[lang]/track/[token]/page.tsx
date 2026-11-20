@@ -7,8 +7,9 @@ import { getBusinessProfile } from "../../../../src/business";
 import { PickupInstructions } from "../../../../src/business-view";
 
 export const metadata = { robots: { index: false, follow: false } };
-export default async function Tracking({ params }: PageProps<"/[lang]/track/[token]">) {
+export default async function Tracking({ params, searchParams }: PageProps<"/[lang]/track/[token]">) {
   const { lang, token } = await params;
+  const payment = (await searchParams).payment;
   if (!language(lang)) notFound();
   const order = await trackOrder(token);
   const fr = lang === "fr";
@@ -18,6 +19,8 @@ export default async function Tracking({ params }: PageProps<"/[lang]/track/[tok
     <Refresh />
     <p className="eyebrow">{fr ? "SUIVI PRIVÉ" : "PRIVATE TRACKING"}</p>
     <h1>{fr ? "Commande" : "Order"} #{order.number.toString()}</h1>
+    {payment === "returned" && <p className="panel" role="status">{fr ? "Merci ! Votre paiement a été reçu. Cette page se met à jour toute seule à mesure que votre commande est préparée." : "Thank you! Your payment was received. This page updates by itself as your order is prepared."}</p>}
+    {payment === "cancelled" && <p className="panel" role="status">{fr ? "Le paiement a été annulé : la commande n’a pas été conservée." : "Payment was cancelled: the order was not kept."}</p>}
     <div className="panel"><p>{fr ? "Cueillette prévue" : "Scheduled pickup"} <strong>{pickupDate(new Date(order.pickup_at).toISOString(), lang)}</strong></p>
       <p role="status" className="pill">{stateLabels[order.status][lang]}</p>
       {order.status !== "CANCELLED" && <ol className="timeline">{states.slice(0, -1).map((status, index) => <li key={status} aria-current={status === order.status ? "step" : undefined} className={index <= states.indexOf(order.status) ? "passed" : ""}>{stateLabels[status][lang]}</li>)}</ol>}

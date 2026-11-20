@@ -10,7 +10,10 @@ import { language, money, pickupDate, stateLabels, type State } from "../../../s
 import { accountForUser, loyaltyProgram } from "../../../src/loyalty";
 import { rewardsName } from "../../../src/storefront-content";
 import { hasPublicImage, StorefrontArt } from "../../../src/storefront-art";
-import { forgotPassword, joinRewards, login, logout, register, updateProfile } from "./actions";
+import { forgotPassword, joinRewards, login, logout, register, toggleFavoriteAction, updateProfile } from "./actions";
+import { favoriteProducts } from "../../../src/favorites";
+import { orderHref } from "../../../src/order-links";
+import { ReorderButton } from "./reorder-button";
 
 export const metadata = { robots: { index: false, follow: false } };
 
@@ -79,8 +82,9 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
   }
   const db = await database();
   const [account, program] = await Promise.all([accountForUser(session.id, db), loyaltyProgram(db)]);
-  const { rows: orders } = await db.query<{ number: string; status: State; pickup_at: Date | string; total: number; created_at: Date | string; tracking_token: string }>(
-    `SELECT number::text AS number, status, pickup_at, total, created_at, tracking_token FROM orders WHERE customer_user_id = $1 ORDER BY created_at DESC LIMIT 50`, [session.id]);
+  const favorites = await favoriteProducts(session.id, db);
+  const { rows: orders } = await db.query<{ number: string; status: State; pickup_at: Date | string; total: number; created_at: Date | string; tracking_token: string; items: { product: string; size: string; sugar: string; ice: string; topping: string; optionIds?: string[]; quantity: number }[] }>(
+    `SELECT number::text AS number, status, pickup_at, total, created_at, tracking_token, items FROM orders WHERE customer_user_id = $1 ORDER BY created_at DESC LIMIT 50`, [session.id]);
   return <section className="wrap section">
     <div className="section-head"><div><p className="eyebrow">{rewardsName[lang]}</p><h1>{fr ? "Mon compte" : "My account"}<span>.</span></h1></div>
       <form action={logout.bind(null, lang)}><button className="outline">{fr ? "Se déconnecter" : "Sign out"}</button></form></div>
@@ -105,6 +109,12 @@ export default async function AccountPage({ params, searchParams }: PageProps<"/
       <ul className="catalog-grid">{orders.map(order => <li key={order.number}>
         <Link href={`/${lang}/track/${order.tracking_token}`}><strong>#{order.number}</strong></Link>
         <small>{stateLabels[order.status][lang]} · {pickupDate(new Date(order.pickup_at).toISOString(), lang)}</small>
-        <span>{money(order.total, lang)}</span></li>)}</ul>}
+        <span>{money(order.total, lang)}</span>
+        {order.status !== "CANCELLED" && <ReorderButton label={fr ? "Commander à nouveau" : "Order again"} href={orderHref(lang)} lines={order.items.map(item => ({ product: item.product, size: item.size, sugar: item.sugar, ice: item.ice, topping: item.topping, ...(item.optionIds ? { optionIds: item.optionIds } : {}), quantity: item.quantity }))}/>}</li>)}</ul>}
+    <h2>{fr ? "Mes favoris" : "My favorites"}</h2>
+    {!favorites.length ? <p>{fr ? "Aucun favori. Ajoutez-en depuis la fiche d’une boisson." : "No favorites yet. Add some from a drink page."}</p> :
+      <ul className="catalog-grid">{favorites.map(item => <li key={item.product_id}><Link href={`/${lang}/catalog/products/${item.product_id}`}><strong>{fr ? item.fr : item.en}</strong></Link>
+        <Link className="outline" href={orderHref(lang, item.product_id)}>{fr ? "Commander" : "Order"}</Link>
+        <form action={toggleFavoriteAction.bind(null, lang, item.product_id)}><button className="outline">{fr ? "Retirer" : "Remove"}</button></form></li>)}</ul>}
   </section>;
 }

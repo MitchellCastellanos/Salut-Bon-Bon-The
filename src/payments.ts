@@ -12,13 +12,13 @@ export type Reconciliation =
   | { outcome: "failed"; order: string };
 
 export async function recordCheckoutSession(
-  input: { order: string; sessionId: string; url: string | null; cents: number }, db?: Db,
+  input: { order: string; sessionId: string; url: string | null; cents: number; provider?: "stripe" | "simulated" }, db?: Db,
 ) {
   const connection = db ?? await database();
   await connection.query(`
     INSERT INTO payment_attempts (order_number, provider, provider_session_id, checkout_url, amount_cents)
-    VALUES ($1, 'stripe', $2, $3, $4) ON CONFLICT (provider_session_id) DO NOTHING
-  `, [input.order, input.sessionId, input.url, input.cents]);
+    VALUES ($1, $5, $2, $3, $4) ON CONFLICT (provider_session_id) DO NOTHING
+  `, [input.order, input.sessionId, input.url, input.cents, input.provider ?? "stripe"]);
 }
 
 export async function openCheckoutUrl(order: string, db?: Db) {
@@ -95,4 +95,28 @@ export async function applyStripeEvent(event: Stripe.Event, db?: Db): Promise<Re
     return { outcome: "paid", order: row.attempt_order, payment: (row.payment ?? "PAID_ONLINE") as "PAID_ONLINE" };
   }
   return { outcome: "failed", order: row.attempt_order };
+}
+
+/** The simulated payment page's view of a checkout session: only simulated attempts are ever exposed. */
+export async function simulatedAttempt(sessionId: string, db?: Db) {
+  if (!/^sim_cs_[0-9a-f]{32}$/.test(sessionId)) return undefined;
+  const connection = db ?? await database();
+  const { rows: [row] } = await connection.query<{ order_number: string; status: string; amount_cents: number; lang: "fr" | "en"; token: string; items: { name: { fr: string; en: string }; quantity: number; subtotal: number }[]; tax_cents: number; customer: string }>(`
+    SELECT a.order_number::text, a.status, a.amount_cents, o.locale AS lang, o.tracking_token AS token, o.items, o.tax_cents, o.customer
+    FROM payment_attempts a JOIN orders o ON o.number = a.order_number
+    WHERE a.provider = 'simulated' AND a.provider_session_id = $1`, [sessionId]);
+  return row;
+}
+
+/** Settles or fails a simulated session through exactly the same reconciliation as a signed Stripe webhook event. */
+export async function applySimulatedPayment(sessionId: string, outcome: "paid" | "failed", db?: Db) {
+  const attempt = await simulatedAttempt(sessionId, db);
+  if (!attempt) return { outcome: "ignored" } as Reconciliation;
+  const event = {
+    id: `evt_sim_${outcome}_${sessionId}`,
+    type: outcome === "paid" ? "checkout.session.completed" : "checkout.session.expired",
+    livemode: false,
+    data: { object: { id: sessionId, mode: "payment", payment_status: outcome === "paid" ? "paid" : "unpaid", amount_total: attempt.amount_cents, currency: "cad", client_reference_id: attempt.order_number } },
+  } as unknown as Stripe.Event;
+  return applyStripeEvent(event, db);
 }

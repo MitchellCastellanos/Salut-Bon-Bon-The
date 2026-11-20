@@ -1,3 +1,4 @@
+import { demoMode } from "./demo-mode";
 import { database } from "./db";
 import { money, pickupDate, type Lang } from "./domain";
 import { emailLogoUrl } from "./brand-server";
@@ -84,11 +85,11 @@ export async function enqueueOrderEmails(number: string, kinds: EmailKind[], db?
   await connection.query(`
     INSERT INTO email_outbox (order_number, kind, recipient, locale)
     SELECT o.number, k.kind,
-      CASE WHEN k.kind = 'store_notification' THEN $3 ELSE o.customer_email END, o.locale
+      COALESCE(CASE WHEN k.kind = 'store_notification' THEN $3 ELSE o.customer_email END, CASE WHEN $4::boolean THEN '(no address on file)' END), o.locale
     FROM orders o CROSS JOIN unnest($2::text[]) AS k(kind)
-    WHERE o.number = $1 AND (CASE WHEN k.kind = 'store_notification' THEN $3 ELSE o.customer_email END) IS NOT NULL
+    WHERE o.number = $1 AND COALESCE(CASE WHEN k.kind = 'store_notification' THEN $3 ELSE o.customer_email END, CASE WHEN $4::boolean THEN 'x' END) IS NOT NULL
     ON CONFLICT (order_number, kind) DO NOTHING
-  `, [number, kinds, process.env.STORE_NOTIFICATION_EMAIL || null]);
+  `, [number, kinds, process.env.STORE_NOTIFICATION_EMAIL || null, demoMode()]);
 }
 
 type Claimed = { id: string; order_number: string; kind: EmailKind; recipient: string; locale: Lang };
@@ -140,6 +141,12 @@ export async function deliverPendingEmails(options: { limit?: number; db?: Db; f
 export async function notifyOrder(number: string, kinds: EmailKind[]) {
   try {
     await enqueueOrderEmails(number, kinds);
+    // Provider not connected (demo): the message stays visible in the admin notification log but is never sent, and is never
+    // queued for a later delivery once a provider is connected.
+    if (emailMode() === "disabled") {
+      if (demoMode()) await (await database()).query("UPDATE email_outbox SET status = 'SKIPPED', last_error = 'Not sent: email provider not connected (demo mode)' WHERE order_number = $1 AND status = 'PENDING'", [number]);
+      return;
+    }
     await deliverPendingEmails();
   } catch (error) {
     console.error("order notification failed", { order: number, message: error instanceof Error ? error.message : "unknown" });

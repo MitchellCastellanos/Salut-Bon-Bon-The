@@ -2,7 +2,7 @@
 
 Gaban Solutions is building **Salut Plus**, the recommended package of a bilingual (FR/EN) pickup-ordering and loyalty platform for a Montréal bubble tea shop. Next.js App Router, strict TypeScript, Tailwind CSS, Zod, PostgreSQL (Neon in deployment, PGlite for the local demo), Better Auth, Stripe (test mode) and Resend.
 
-**Status in one line:** ordering, staff operations, customer accounts, tax, scheduling and a 9+1 stamp engine are built and tested; the logo QR, stable identification token, Apple Wallet, favorites/reorder, refunds and several owner admin screens are not. Loyalty, live payment and live email are inactive by design. Details: [Project status](docs/PROJECT_STATUS.md).
+**Status in one line:** Salut Plus is complete in demo mode (`SALUT_DEMO_MODE=1`): ordering, simulated Stripe-style payment, live staff queue, stamps, logo QR card, scanner, refunds and owner admin work end to end; Stripe, Resend and Apple Wallet are wired and switch on when credentials exist. Details: [Project status](docs/PROJECT_STATUS.md). Demo walkthrough: [Product spec](docs/PRODUCT_SPEC.md#demo-script-plus-test-environment).
 
 ## Run locally
 

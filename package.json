@@ -17,12 +17,16 @@
     "test:rewards": "node tests/rewards-browser-smoke.mjs",
     "test:rewards-public": "node tests/rewards-public-smoke.mjs",
     "test:storefront": "node tests/storefront-audit.mjs",
-    "business:init": "node scripts/init-business.mjs"
+    "business:init": "node scripts/init-business.mjs",
+    "test:plus-demo": "node tests/plus-demo-smoke.mjs",
+    "qr:calibrate": "node scripts/qr-logo-calibrate.mjs",
+    "wallet:assets": "node scripts/build-wallet-assets.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.3.16",
     "better-auth": "1.7.25",
     "next": "16.4.6",
+    "node-forge": "1.4.3",
     "pg": "8.23.1",
     "qrcode": "1.5.4",
     "react": "19.3.1",
@@ -33,13 +37,16 @@
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.5",
     "@types/node": "24.19.2",
+    "@types/node-forge": "1.3.14",
     "@types/pg": "8.23.1",
     "@types/qrcode": "1.5.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
+    "jsqr": "1.4.0",
     "playwright-core": "1.65.1",
+    "sharp": "0.35.5",
     "tailwindcss": "4.3.5",
     "typescript": "5.9.3",
     "vitest": "4.1.12"

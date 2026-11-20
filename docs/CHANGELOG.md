@@ -29,3 +29,7 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 ## Documentation consolidation and Salut Plus audit (2026-11-20)
 
 - Merged the former README-linked and specialized documents into `COMMERCIAL.md`, `PRODUCT_SPEC.md`, `PROJECT_STATUS.md` and `TECHNICAL.md`; archived the points-era loyalty proposal and rewards notes under `docs/archive/`; refreshed `README.md`, `AGENTS.md` and `CLAUDE.md`. Recorded the audited implementation state, the owner decisions pending and the roadmap to finish Salut Plus. No application code or migration changed.
+
+## Salut Plus demo completion (2026-11-20)
+
+- Migration 012; demo mode with a simulated payment page, recorded-not-sent email, auto-enrolment and `/demo` guides; stable revocable card identification with a level-H logo QR and `/s/<code>` scanner entry; in-page camera scanner and redemption by identified member; Apple Wallet pass builder, update web service and admin panel (inactive without Apple credentials); free-drink ceiling ($7.99, editable); favorites and reorder; admin order history, cancel and refund, notification log, change history, wallet status, dashboard stages and attention list; header and product links now lead to the real ordering; card orders are accepted by the official catalog (previously refused); `frame-ancestors 'self'`. New tests: `tests/plus-completion.test.ts`, `tests/plus-demo-smoke.mjs`; existing rewards suites adapted to the new card.

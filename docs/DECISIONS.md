@@ -27,3 +27,11 @@ The 5-minute single-use redemption token must never be embedded in an Apple Wall
 ## 2026-11-20 · Documentation consolidated
 
 Roughly 45 documents were merged into README, COMMERCIAL, PRODUCT_SPEC, PROJECT_STATUS and TECHNICAL, keeping TAX, DECISIONS, CHANGELOG and the image manifest because they carry independent legal, historical or asset responsibilities. The points-era loyalty documents moved to `docs/archive/`. Only PROJECT_STATUS states what is built.
+
+## 2026-11-20 · Rewards rules from the project lead, and a demo mode
+
+Every drink earns a stamp (no category restriction). The free drink is the middle price tier: implemented as a value ceiling of $7.99 on the regular size price (the middle of $5.99/$7.99/$8.99), stored in `loyalty_program.free_drink_max_cents` and editable by an ADMIN; to be confirmed with the owner. A member identified by the stable card QR or Wallet pass may redeem with a STAFF "member present" confirmation (ADMIN switch `identifier_redemption`), superseding the earlier recommendation that the short-lived code always be required.
+
+The site is a **test store until the client approves**: `SALUT_DEMO_MODE=1` turns on a simulated Stripe-style payment page (only while Stripe is not configured), records emails without sending them, creates accounts without verification and auto-enrolls them in Rewards, and enables the demo guide and the admin **Apply demo settings** action. Stripe, Resend and Apple Wallet adapters stay connected to the interface and take over as soon as credentials exist. Demo mode must be off for a real launch.
+
+Apple Wallet passes are built in-repo (ZIP + SHA-1 manifest + PKCS#7 via `node-forge`) instead of with `passkit-generator`, which depends on a vulnerable `joi`.

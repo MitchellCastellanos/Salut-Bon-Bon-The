@@ -35,15 +35,17 @@ Definition of done:
 
 ### Demo script (Plus, test environment)
 
-1. Admin confirms hours, capacity, tax status, prices and "Offered", and switches pickup ordering on (`/admin/hours`, `/admin/business`, `/admin/prices`).
-2. Customer registers and verifies, browses the photo catalog, customizes (size, toppings), adds to the cart, picks a slot and pays with a Stripe test card.
-3. Customer follows the order under *My orders* and the private tracking page.
-4. Staff sign in at `/en/staff`, move the order through confirmed → preparing → ready → completed.
-5. Customer sees the new stamp on the card, shows the QR, adds the pass to Apple Wallet.
-6. Staff scan the QR or Wallet barcode at `/staff/rewards`, award in-store stamps, and redeem the free drink after nine stamps.
-7. Admin reviews the customer, the ledger and the sales dashboard.
+The test store runs in **demo mode** (`SALUT_DEMO_MODE=1`): payments use a simulated page that stands in for Stripe Checkout, emails are recorded but never sent, accounts need no verification email and receive a Rewards card at sign-in. `/en/demo` explains each step with a button to the real screen and `/en/demo/side-by-side` shows the customer's phone and the team's screen together.
 
-Use synthetic names only. The credential-free local demo (no database) uses the staff password `salut-demo` and `.salut-data`, must stay private, and is never a production path.
+1. ADMIN signs in at `/en/staff` and presses **Apply demo settings** on the dashboard (hours, lead time, capacity, tax status, offered products, Rewards active and authorized).
+2. Customer creates an account at `/en/account`, picks a drink from the catalog's *Available for pickup* section, customizes it (size, sugar, ice, toppings), adds it to the cart, chooses a pickup time and pays by card on the simulated page.
+3. The customer lands on the private tracking page, which updates live, and finds the order later under *My orders* (with **Order again**) and can save favorites.
+4. STAFF at `/en/staff` see the new order appear, then tap Confirmed → Preparing → Ready → Completed; the customer's page follows each step.
+5. The customer sees the new stamps on the card, the QR with the official logo, the Apple Wallet action (active only once Apple credentials exist) and can replace the QR.
+6. STAFF scan the card at `/en/staff/rewards` (camera app, in-page camera, scanner or typed), add in-store stamps, and confirm the free drink after nine stamps.
+7. ADMIN reviews the order and refunds it, reads the notification log and the change history, and checks the Wallet panel.
+
+`npm run test:plus-demo` automates steps 1–7 except real-device scanning. Use synthetic names only. The credential-free local demo (no database) uses the staff password `salut-demo` and `.salut-data`, stays private and is never a production path.
 
 ## Catalog and pricing
 
@@ -72,16 +74,17 @@ Decision (owner, 2026-11-19): **9 eligible drinks purchased, the 10th is free.**
 
 Rules as specified:
 
-- One stamp per eligible drink; quantity counts, dollars do not. The free drink costs 9 stamps; extra stamps carry over. The free drink itself earns nothing.
+- **Every drink is eligible** (owner decision 2026-11-20): one stamp per drink; quantity counts, dollars do not. The free drink costs 9 stamps; extra stamps carry over. The free drink itself earns nothing.
+- **Value of the free drink** (owner decision 2026-11-20, to be confirmed): the middle price tier, implemented as a ceiling of $7.99 on the regular size price (editable by ADMIN); extras and upgrades are charged at normal price.
 - **Online earning:** when STAFF mark a paid order COMPLETED, the account linked to the order (member or guest card) receives `min(drinks, per-order cap)` stamps, once per order. Cancelled or unfinished orders earn nothing; the program must be active with earning enabled; nothing is back-filled for orders completed while it was off.
 - **In-store earning:** after an identification scan, STAFF enter the number of eligible drinks (1 to the per-order cap), idempotent per form.
 - **Refunds:** stamps are taken back proportionally to the refunded pre-tax amount; a full refund takes all; the balance never goes negative and any shortfall is recorded.
-- **Redemption** happens at the counter. Online checkout totals are never changed.
+- **Redemption** happens at the counter: a STAFF member scans the card, confirms the member is present and the free drink is deducted once (idempotent). Online checkout totals are never changed. A member identified by the stable QR or Wallet pass may redeem this way; an ADMIN can require the single-use code instead.
 - **ADMIN controls:** active, public-preview visibility, earning enabled, redemption enabled, recorded owner authorization (required to activate in production), minimum purchase, eligible categories, reward availability and eligibility, manual adjustments with a mandatory reason, account suspension, refund reversal, customer lookup with history.
 - **Guests** may hold a card without an account (random 256-bit secret, hashed at rest, httpOnly cookie plus a backup code); cards can be linked to an account later. Claiming purchases from a receipt/tracking link and phone-number identification were rejected as unsafe.
 - Loyalty details never appear on private tracking links. Public pages show only program terms.
 
-**Owner decisions still open** (not decided in code): which categories are eligible, maximum value of the free drink, per-order cap (10 is a placeholder), combination with promotions, expiry, treatment of a refund after redemption, whether redemption may ever be online, the launch date and the recorded authorization. Tracked in [PROJECT_STATUS.md](PROJECT_STATUS.md#decisions-the-owner-must-make).
+**Owner decisions still open** (not decided in code): per-order cap (10 is a placeholder), combination with promotions, expiry, treatment of a refund after redemption, whether redemption may ever be online, confirmation of the free-drink value, the launch date and the client's own authorization. Tracked in [PROJECT_STATUS.md](PROJECT_STATUS.md#decisions-the-owner-must-make).
 
 ## QR and Wallet identification
 
@@ -99,7 +102,7 @@ Requirements for the identification token and Wallet pass:
 
 1. Opaque and short (shorter payload means fewer QR modules, so a bigger logo is possible). Recommended design: a stable public `serial` plus a revocable per-account `version`, with the barcode value derived server-side (e.g. HMAC of serial and version with a server key) so rotation is a version bump and no raw secret needs storing. Final design is an implementation decision, subject to the rules here.
 2. Lookup is rate limited and staff-authenticated; anonymous or customer requests learn nothing (uniform not-found).
-3. Identification alone may show the card and allow **awarding** stamps. **Redeeming** a free drink must still be authorized by a fresh confirmation by STAFF and, unless the owner decides otherwise, by the short-lived single-use code from the customer's account page (a leaked or photographed stable QR must not be enough to redeem). Owner/security decision recorded in PROJECT_STATUS.
+3. Identification alone shows the card and allows **awarding** stamps. **Redeeming** requires a STAFF confirmation that the member is present. Decision of 2026-11-20: this is enough for the test site; an ADMIN switch (`identifier_redemption`) restores the stricter rule that also requires the single-use code. A leaked or photographed stable QR can therefore be replaced by the member or revoked by an ADMIN at any time.
 4. Every award/redeem is idempotent, attributable to a staff member, and written to the append-only ledger.
 5. Revoking an identification also marks the Wallet pass invalid and stops pass updates; reissue creates a new pass for the same account.
 

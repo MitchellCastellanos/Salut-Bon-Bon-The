@@ -216,7 +216,7 @@ try {
   assert.equal((await q(`SELECT role FROM "user" WHERE email = 'ana@example.invalid'`))[0].role, "CUSTOMER");
   await ana.getByRole("button", { name: "Adhérer à Récompenses Salut" }).click();
   await ana.getByRole("heading", { name: "Récompenses Salut" }).first().waitFor();
-  await ana.locator(".qr svg").waitFor();
+  await ana.getByText(/Single-use redemption code|Code d’échange à usage unique/).click(); await ana.locator("details .qr svg").waitFor(); // the redemption code is generated only when opened
   const code = (await ana.locator(".member-code").textContent()).trim();
   assert.match(code, /^[A-Z2-9]{8}$/);
   const qrTokens = await q("SELECT token_hash FROM loyalty_qr_tokens");
@@ -318,7 +318,7 @@ try {
   await ana.goto(`${BASE}/fr/account/rewards`);
   assert.equal(await ana.locator('[data-testid="stamp-progress"]').getAttribute("data-filled"), String(Math.min(stamps, 9)));
   await ana.getByText("Tampons gagnés").waitFor();
-  await ana.locator(".qr svg").waitFor();            // her page requests a fresh QR after load, which supersedes older tokens
+  await ana.getByText(/Single-use redemption code|Code d’échange à usage unique/).click(); await ana.locator("details .qr svg").waitFor(); // the redemption code is generated only when opened            // her page requests a fresh QR after load, which supersedes older tokens
   await ana.waitForLoadState("networkidle");
   step("completed order earned one stamp per drink; shown in the customer's history");
 
