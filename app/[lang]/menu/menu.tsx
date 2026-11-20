@@ -38,7 +38,8 @@ const demoProducts: MenuProduct[] = products.map(product => ({
 export type CartRewards = {
   operational: boolean; allEligible: boolean; minOrderCents: number; linked: boolean; rewardsHref: string; cardHref: string; accountHref: string;
 };
-export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
+export function Menu({ lang, demo, photos, initialCategory, initialProduct, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
+  initialProduct?: string;
   rewards?: CartRewards;
   logo?: string;
   pickupInfo?: { displayName: string; street: string; city: string; province: string; postalCode: string; phone: string };
@@ -59,7 +60,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
   const checkoutStarted = useRef(false);
   const customization = useRef<HTMLFormElement>(null);
   const [category, setCategory] = useState<"all" | keyof typeof categories>(initialCategory);
-  const [selected, setSelected] = useState<MenuProduct>();
+  const [selected, setSelected] = useState<MenuProduct | undefined>(() => listing.find(p => p.id === initialProduct));
   const [cart, setCart] = useState<Line[]>([]);
   const [times, setTimes] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
@@ -104,6 +105,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
     setMessage(fr ? "Boisson ajoutée au panier." : "Drink added to cart.");
     setSelected(undefined);
     setSelectionError("");
+    if (initialProduct) router.replace(`/${lang}/catalog#orderable`);
   }
   async function checkout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -155,10 +157,10 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
   return <div className="menu-layout">
     <div>
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
-      <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
+      {!initialProduct && <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
         {photos[p.id]}<div><strong>{p.name[lang]}</strong><span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span></div>{p.description && <p>{p.description[lang]}</p>}
         <button className="outline" onClick={() => { setSelectionError(""); setIncluded(baseTapiocaId); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>
-      </article>)}</div>
+      </article>)}</div>}
       {selected && <form ref={customization} className="panel customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>
         <div className="fields">
           <label>{fr ? "Format" : "Size"}<select name="size">{(["regular", "large"] as const).filter(s => selected.prices[s] !== undefined).map(s => <option key={s} value={s}>{modifiers[s][lang]}{official ? ` · ${money(selected.prices[s]!, lang)}` : s === "large" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>
