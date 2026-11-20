@@ -1,51 +1,21 @@
-import { officialLogo } from "../../../src/brand-server";
-import { cardPaymentsEnabled } from "../../../src/providers/stripe";
-import { pickupConfiguration } from "../../../src/store-settings";
-import { Menu } from "../menu/menu";
-import { officialPrices } from "../../../src/catalog-pricing";
-import { displayedCatalogPrices } from "../../../src/catalog-display-prices";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import { catalogCategories, catalogCollections, catalogProducts } from "../../../src/catalog";
-import { hasPublicImage } from "../../../src/storefront-art";
+import { catalogCategories, catalogCollections } from "../../../src/catalog";
 import { language } from "../../../src/domain";
 import { CatalogList } from "./catalog-list";
-import { customerSession } from "../../../src/customer";
-import { currentGuestCard } from "../../../src/guest-card";
-import { loyaltyProgram, programStages } from "../../../src/loyalty";
-import { cardPath, rewardsPath } from "../../../src/rewards-paths";
-
+import { RestoreCatalogPosition } from "./restore-position";
 export default async function CatalogPage({ params, searchParams }: PageProps<"/[lang]/catalog">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
-  const { category, q, product } = await searchParams;
-  const selectedProduct = typeof product === "string" ? product : "";
+  const { category, q } = await searchParams;
   const selected = typeof category === "string" ? category : "";
   const search = typeof q === "string" ? q.slice(0, 100) : "";
-  const config = process.env.DATABASE_URL ? await pickupConfiguration() : null;
-  const prices = config?.enabled ? await officialPrices() : [];
-  const orderable = [...new Set(prices.map(row => row.id))].map(id => {
-    const variants = prices.filter(row => row.id === id);
-    return {
-      id, category: "", name: { fr: variants[0].fr, en: variants[0].en },
-      topping: ["none" as const], groups: variants[0].groups,
-      prices: Object.fromEntries(variants.map(row => [row.size, row.cents])),
-    };
-  });
-  const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
+  const [categories, collections] = await Promise.all([catalogCategories(), catalogCollections()]);
   const fr = lang === "fr";
   const displayRows = await displayedCatalogPrices();
   const demoPrices = Object.fromEntries(displayRows.filter(row => row.size === "regular").map(row => [row.id, { cents: row.cents, approved: true }]));
-  // Cart rewards hint: only with a configured, publicly visible program. Reading failures simply hide the hint.
-  const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
-  const linked = program ? Boolean(await customerSession().catch(() => undefined) || await currentGuestCard().catch(() => undefined)) : false;
-  const rewardsInfo = program?.previewVisible ? {
-    operational: programStages(program).accrualOperational, allEligible: !program.earnCategories?.length,
-    minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
   return <section className="wrap catalog-page">
-    {selectedProduct && <Link className="outline" href={`/${lang}/catalog`}>← {fr ? "Retour au catalogue" : "Back to catalog"}</Link>}
-    {!selectedProduct && <>
+    <RestoreCatalogPosition />
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
     
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
@@ -60,10 +30,5 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
       <button className="button catalog-filter-submit">{fr ? "Afficher" : "Show"}</button>
     </form>
     <CatalogList lang={lang} category={selected} search={search} previewPrices={demoPrices}/>
-    </>}
-    {orderable.length > 0 && (!selectedProduct || orderable.some(item => item.id === selectedProduct)) && <section aria-labelledby="orderable">
-      <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} rewards={rewardsInfo} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" initialProduct={selectedProduct || undefined} officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
-    </section>}
   </section>;
 }
