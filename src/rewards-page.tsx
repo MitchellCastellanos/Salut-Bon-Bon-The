@@ -31,8 +31,6 @@ export async function rewardsMetadata(lang: Lang): Promise<Metadata> {
     openGraph: { title: rewardsName[lang], description: base.description, url: rewardsPath[lang], locale: fr ? "fr_CA" : "en_CA" } } : base;
 }
 
-const stateLabel = { available: ["Disponible", "Available"], coming_soon: ["Bientôt disponible", "Coming soon"], unavailable: ["Non disponible", "Unavailable"] } as const;
-
 export async function RewardsPage({ lang }: { lang: Lang }) {
   const fr = lang === "fr";
   const data = await load();
@@ -99,10 +97,9 @@ export async function RewardsPage({ lang }: { lang: Lang }) {
       <section className="rw-block" id="rewards" aria-labelledby="rewards-title"><h2 id="rewards-title">{fr ? "Récompenses" : "Rewards"}</h2>
         {!data?.rewards.length ? <p>{fr ? "Les récompenses seront annoncées bientôt." : "Rewards will be announced soon."}</p> :
           <ul className="rw-cards">{[...data.rewards].sort((a, b) => Number(b.id === featured?.id) - Number(a.id === featured?.id)).map(reward => <li key={reward.id} className={`rw-card ${reward.state} ${reward.id === featured?.id ? "featured" : ""}`} data-state={reward.state}>
-            <div><span className={`rw-state ${reward.state}`}>{stateLabel[reward.state][fr ? 0 : 1]}</span>
-              <h3>{fr ? reward.nameFr : reward.nameEn} — {nf.format(reward.pointsCost)} {fr ? "tampons" : "stamps"}</h3>
+            <div><h3>{fr ? reward.nameFr : reward.nameEn} — {nf.format(reward.pointsCost)} {fr ? "tampons" : "stamps"}</h3>
               {(fr ? reward.descriptionFr : reward.descriptionEn) && <p>{fr ? reward.descriptionFr : reward.descriptionEn}</p>}
-              {reward.state !== "available" && <p className="fine-print">{reward.state === "coming_soon" ? (fr ? "Pas encore échangeable." : "Not redeemable yet.") : (fr ? "Cette récompense n’est pas offerte pour le moment." : "This reward is not offered right now.")}</p>}</div>
+</div>
             {reward.id === featured?.id && <div className="rw-art" aria-hidden="true"><StorefrontIcon name="gift"/></div>}
           </li>)}</ul>}</section>
 

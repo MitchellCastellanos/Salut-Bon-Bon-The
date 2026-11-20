@@ -62,10 +62,12 @@ export async function publicRewards(db?: Db): Promise<PublicRewards> {
   const connection = db ?? await database();
   const program = await loyaltyProgram(connection);
   const stages = programStages(program);
-  const { rows } = await connection.query<Reward>("SELECT * FROM loyalty_rewards WHERE preview_visible ORDER BY points_cost, id");
+  const { rows } = await connection.query<Reward>("SELECT * FROM loyalty_rewards WHERE preview_visible AND id <> 'rabais-5' ORDER BY points_cost, id");
   const rewards = rows.map<PublicReward>(r => ({ id: r.id, nameFr: r.name_fr, nameEn: r.name_en, descriptionFr: r.description_fr, descriptionEn: r.description_en,
     pointsCost: r.points_cost, discountCents: r.discount_cents, state: rewardState(r, { active: program.active, redemptionOperational: stages.redemptionOperational }) }));
-  const featured = rewards.find(r => r.id === "free-drink") ?? rewards[0] ?? null;
+  // Only the free drink defines the card size. A database that has not run migration 010 yet still holds the old
+  // 1,000-point reward, which must never be shown as "N drinks".
+  const featured = rewards.find(r => r.id === "free-drink") ?? null;
   return { previewVisible: program.previewVisible, operational: program.active, accrualOperational: stages.accrualOperational, redemptionOperational: stages.redemptionOperational,
     stampsRequired: featured?.pointsCost ?? stampsForReward, maxStampsPerOrder, minOrderCents: program.minOrderCents,
     categoryRestricted: Boolean(program.earnCategories?.length), featured, rewards };
