@@ -4,6 +4,7 @@ import { catalogCategories, catalogCollections } from "../../../src/catalog";
 import { language } from "../../../src/domain";
 import { CatalogList } from "./catalog-list";
 import { RestoreCatalogPosition } from "./restore-position";
+import { displayedCatalogPrices } from "../../../src/catalog-display-prices";
 export default async function CatalogPage({ params, searchParams }: PageProps<"/[lang]/catalog">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
