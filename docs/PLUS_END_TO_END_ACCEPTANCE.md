@@ -22,3 +22,7 @@ Demonstrate a genuine integrated customer journey in FR and EN: register -> veri
 - Reconcile docs: README.md; docs/IMPLEMENTATION_STATUS.md; docs/IMPLEMENTATION_PLAN.md; docs/LAUNCH_READINESS.md; docs/HANDOFF.md; docs/REWARDS.md; docs/LOYALTY_COMMERCIAL_PROPOSAL.md; docs/DEMO_GUIDE.md; docs/ARCHITECTURE.md; docs/ENVIRONMENT_SETUP.md; docs/TESTING.md; and any pricing/proposal documents found. Do not overwrite historical migrations or misstate legacy points as active.
 - Compare this contract and docs/COMMERCIAL_PACKAGES.md to actual code. Identify conflicts, security concerns, missing owner decisions, credential prerequisites and minimal incremental implementation plan with tests and demo steps.
 - Keep a clean feature branch and PR; no production activation, live charges, destructive migrations or unapproved customer emails. Report precise changes and blockers.
+
+
+## Administrative scope
+Salut Plus includes the owner-facing controls required to operate every included feature. The detailed capability checklist and separately planned full admin UX/UI audit are in [PLUS_ADMIN_REQUIREMENTS.md](PLUS_ADMIN_REQUIREMENTS.md). Functional completeness is a demo acceptance requirement; a broad admin redesign is a later phase.
