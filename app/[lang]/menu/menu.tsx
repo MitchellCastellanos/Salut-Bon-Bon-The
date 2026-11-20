@@ -38,8 +38,9 @@ const demoProducts: MenuProduct[] = products.map(product => ({
 export type CartRewards = {
   operational: boolean; allEligible: boolean; minOrderCents: number; linked: boolean; rewardsHref: string; cardHref: string; accountHref: string;
 };
-export function Menu({ lang, demo, photos, initialCategory, initialProduct, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
+export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode = "legacy", officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
   initialProduct?: string;
+  mode?: "legacy" | "product" | "cart";
   rewards?: CartRewards;
   logo?: string;
   pickupInfo?: { displayName: string; street: string; city: string; province: string; postalCode: string; phone: string };
@@ -69,6 +70,9 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, offi
   const [message, setMessage] = useState("");
   const [selectionError, setSelectionError] = useState("");
   const [included, setIncluded] = useState(baseTapiocaId);
+  const [size, setSize] = useState<Line["size"]>("regular");
+  const [quantity, setQuantity] = useState(1);
+  const [extras, setExtras] = useState<string[]>([]);
   useEffect(() => {
     const init = window.setTimeout(() => {
       try {
@@ -77,9 +81,9 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, offi
       } catch { /* An invalid or unavailable cart starts empty. */ }
       setReady(true);
     }, 0);
-    slots().then(setTimes).catch(() => setError(fr ? "Heures indisponibles." : "Pickup times unavailable."));
+    if (mode !== "product") slots().then(setTimes).catch(() => setError(fr ? "Heures indisponibles." : "Pickup times unavailable."));
     return () => window.clearTimeout(init);
-  }, [fr, listing, official, storageKey]);
+  }, [fr, listing, official, storageKey, mode]);
   useEffect(() => {
     if (selected) customization.current?.querySelector("select")?.focus();
   }, [selected]);
@@ -105,7 +109,8 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, offi
     setMessage(fr ? "Boisson ajoutée au panier." : "Drink added to cart.");
     setSelected(undefined);
     setSelectionError("");
-    if (initialProduct) router.replace(`/${lang}/catalog#orderable`);
+    if (mode === "product") router.push(`/${lang}/cart`);
+    else if (initialProduct) router.replace(`/${lang}/catalog`);
   }
   async function checkout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,17 +162,17 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, offi
   return <div className="menu-layout">
     <div>
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
-      {!initialProduct && <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
+      {mode === "legacy" && !initialProduct && <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
         {photos[p.id]}<div><strong>{p.name[lang]}</strong><span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span></div>{p.description && <p>{p.description[lang]}</p>}
         <button className="outline" onClick={() => { setSelectionError(""); setIncluded(baseTapiocaId); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>
       </article>)}</div>}
-      {selected && <form ref={customization} className="panel customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>
+      {mode !== "cart" && selected && <form ref={customization} className="panel customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>
         <div className="fields">
-          <label>{fr ? "Format" : "Size"}<select name="size">{(["regular", "large"] as const).filter(s => selected.prices[s] !== undefined).map(s => <option key={s} value={s}>{modifiers[s][lang]}{official ? ` · ${money(selected.prices[s]!, lang)}` : s === "large" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>
+          <label>{fr ? "Format" : "Size"}<select name="size" value={selected.prices[size] !== undefined ? size : (selected.prices.regular !== undefined ? "regular" : "large")} onChange={event => setSize(event.target.value as Line["size"])}>{(["regular", "large"] as const).filter(s => selected.prices[s] !== undefined).map(s => <option key={s} value={s}>{modifiers[s][lang]}{official ? ` · ${money(selected.prices[s]!, lang)}` : s === "large" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>
           <label>{fr ? "Sucre" : "Sugar"}<select name="sugar" defaultValue="100">{["0", "50", "100"].map(s => <option key={s} value={s}>{s}%</option>)}</select></label>
           <label>{fr ? "Glace" : "Ice"}<select name="ice" defaultValue="100">{["0", "50", "100"].map(s => <option key={s} value={s}>{s}%</option>)}</select></label>
           {official ? <input type="hidden" name="topping" value="none"/> : <label>{fr ? "Garniture" : "Topping"}<select name="topping">{selected.topping.map(s => <option key={s} value={s}>{modifiers[s][lang]}{s !== "none" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>}
-          <label>{fr ? "Quantité" : "Quantity"}<input name="quantity" type="number" min={1} max={10} defaultValue={1} required/></label>
+          <label>{fr ? "Quantité" : "Quantity"}<input name="quantity" type="number" min={1} max={10} value={quantity} onChange={event => setQuantity(Math.max(1, Math.min(10, Number(event.target.value) || 1)))} required/></label>
         </div>
         {official && selected.groups && (() => {
           const label: Record<string, string> = { tapioca: fr ? "Tapioca" : "Tapioca", popping: fr ? "Perles éclatantes" : "Popping pearls", jelly: fr ? "Gelées" : "Jellies", "brown-sugar": fr ? "Boba à la cassonade" : "Brown Sugar Boba" };
@@ -181,17 +186,18 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, offi
             </fieldset>}
             {extras.map(group => <fieldset key={group.id} className="topping-grid">
               <legend>{label[group.id] ?? group.id} · {fr ? "extras" : "extras"} {price(group.options[0]?.cents ?? 100)} {fr ? "chacun" : "each"}</legend>
-              {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} disabled={option.id === current}/> {option[lang]} {option.cents > 0 ? price(option.cents) : ""}</label>)}
+              {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} checked={extras.includes(option.id)} onChange={event => setExtras(previous => event.target.checked ? [...previous, option.id] : previous.filter(id => id !== option.id))} disabled={option.id === current}/> {option[lang]} {option.cents > 0 ? price(option.cents) : ""}</label>)}
             </fieldset>)}
           </>;
         })()}
         {selectionError && <p role="alert">{selectionError}</p>}
+        {mode === "product" && <p className="total">{fr ? "Total estimé" : "Estimated total"} <strong>{(() => { try { const chosenSize = selected.prices[size] !== undefined ? size : selected.prices.regular !== undefined ? "regular" : "large"; return money(((selected.prices[chosenSize] ?? 0) + selectionCost(selected.groups ?? [], official ? [...new Set([included, ...extras.filter(id => id !== included)])] : []).cents) * quantity, lang); } catch { return "—"; } })()}</strong></p>}
         <button className="button" disabled={!ready || cart.length >= 20}>{fr ? "Ajouter au panier" : "Add to cart"}</button>{" "}
-        <button className="outline" type="button" onClick={() => setSelected(undefined)}>{fr ? "Fermer" : "Close"}</button>
+        {mode === "legacy" && <button className="outline" type="button" onClick={() => setSelected(undefined)}>{fr ? "Fermer" : "Close"}</button>}
       </form>}
-      <p role="status">{message}</p>
+      {message && <p role="status">{message}</p>}
     </div>
-    <aside className="panel cart" id="cart"><p className="checkout-brand" aria-hidden="true">{logo ? <Image src={logo} alt="" width={90} height={42} unoptimized/> : "Salut Bon Bon Thé"}</p><h2>{fr ? "Ton panier" : "Your cart"}</h2>
+    {mode !== "product" && <aside className="panel cart" id="cart"><p className="checkout-brand" aria-hidden="true">{logo ? <Image src={logo} alt="" width={90} height={42} unoptimized/> : "Salut Bon Bon Thé"}</p><h2>{fr ? "Ton panier" : "Your cart"}</h2>
       {!priced.length ? <p>{fr ? "Ton panier est vide." : "Your cart is empty."}</p> : <>
         <ul className="cart-lines">{priced.map(item => <li key={item.index}><div><strong>{item.quantity} × {item.name[lang]}</strong><small>{modifiers[item.size][lang]} · {item.chosen.length ? item.chosen.map(option => option[lang]).join(", ") : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</small></div><div className="qty" role="group" aria-label={fr ? `Quantité de ${item.name[lang]}` : `Quantity of ${item.name[lang]}`}>
             <button type="button" className="outline" aria-label={fr ? `Diminuer la quantité de ${item.name[lang]}` : `Decrease quantity of ${item.name[lang]}`} disabled={item.quantity <= 1} onClick={() => save(cart.map((line, i) => i === item.index ? { ...line, quantity: Math.max(1, line.quantity - 1) } : line))}>−</button>
@@ -227,6 +233,6 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, offi
         </form>
       </>}
       {error && <p role="alert">{error}</p>}
-    </aside>
+    </aside>}
   </div>;
 }
