@@ -522,3 +522,13 @@ a.stat:hover{border-color:#c9a98e}
 .console-main a:focus-visible,.console-main button:focus-visible,.console-main input:focus-visible,.console-main select:focus-visible,.console-main textarea:focus-visible,.console-main summary:focus-visible{outline:3px solid #1d6fd6;outline-offset:2px}
 .console-links a:focus-visible,.console-foot a:focus-visible,.console-logout:focus-visible,.console-bar button:focus-visible{outline:3px solid #f4b14a;outline-offset:2px}
 .skip-link{position:absolute;left:-999px;top:8px;background:#fff;color:#3b2216;padding:8px 14px;border-radius:8px;z-index:50}.skip-link:focus{left:8px}
+
+/* Dedicated storefront ordering screens */
+.menu-layout--product, .menu-layout--cart { display: block; max-width: 760px; }
+.menu-layout--product .customize { margin-top: 0; }
+.menu-layout--product .customize h2 { margin-top: 0; }
+.menu-layout--product .customize .total { margin: 1.25rem 0; font-size: 1.2rem; }
+.menu-layout--product .customize > .button { width: 100%; min-height: 48px; }
+.menu-layout--cart .cart { position: static; }
+.catalog-page > .outline:first-child { display: inline-flex; margin-bottom: 1rem; }
+.catalog-grid li { scroll-margin-top: 110px; }
