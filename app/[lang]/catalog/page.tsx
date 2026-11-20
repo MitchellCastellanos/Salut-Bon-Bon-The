@@ -19,7 +19,8 @@ import { cardPath, rewardsPath } from "../../../src/rewards-paths";
 export default async function CatalogPage({ params, searchParams }: PageProps<"/[lang]/catalog">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
-  const { category, q } = await searchParams;
+  const { category, q, product } = await searchParams;
+  const selectedProduct = typeof product === "string" ? product : "";
   const selected = typeof category === "string" ? category : "";
   const search = typeof q === "string" ? q.slice(0, 100) : "";
   const config = process.env.DATABASE_URL ? await pickupConfiguration() : null;
@@ -43,6 +44,8 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
     operational: programStages(program).accrualOperational, allEligible: !program.earnCategories?.length,
     minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
   return <section className="wrap catalog-page">
+    {selectedProduct && <Link className="outline" href={`/${lang}/catalog`}>← {fr ? "Retour au catalogue" : "Back to catalog"}</Link>}
+    {!selectedProduct && <>
     <h1>{fr ? "Notre menu" : "Our menu"}</h1>
     
     <nav className="catalog-links" aria-label={fr ? "Collections" : "Collections"}>
@@ -57,9 +60,10 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
       <button className="button catalog-filter-submit">{fr ? "Afficher" : "Show"}</button>
     </form>
     <CatalogList lang={lang} category={selected} search={search} previewPrices={demoPrices}/>
-    {orderable.length > 0 && <section aria-labelledby="orderable">
+    </>}
+    {orderable.length > 0 && (!selectedProduct || orderable.some(item => item.id === selectedProduct)) && <section aria-labelledby="orderable">
       <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} rewards={rewardsInfo} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
+      <Menu lang={lang} demo={false} rewards={rewardsInfo} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" initialProduct={selectedProduct || undefined} officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
     </section>}
   </section>;
 }
