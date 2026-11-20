@@ -8,7 +8,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { catalogCategories, catalogCollections, catalogProducts } from "../../../src/catalog";
-import { hasPublicImage } from "../../../src/storefront-art";
+import { hasPublicImage, StorefrontIcon } from "../../../src/storefront-art";
 import { language } from "../../../src/domain";
 import { CatalogList } from "./catalog-list";
 import { customerSession } from "../../../src/customer";
@@ -19,20 +19,25 @@ import { cardPath, rewardsPath } from "../../../src/rewards-paths";
 export default async function CatalogPage({ params, searchParams }: PageProps<"/[lang]/catalog">) {
   const { lang } = await params;
   if (!language(lang)) notFound();
-  const { category, q } = await searchParams;
+  const { category, q, customize } = await searchParams;
   const selected = typeof category === "string" ? category : "";
   const search = typeof q === "string" ? q.slice(0, 100) : "";
   const config = process.env.DATABASE_URL ? await pickupConfiguration() : null;
   const prices = config?.enabled ? await officialPrices() : [];
+  const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
+  const normalize = (value: string) => value.toLocaleLowerCase(lang).normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  const query = normalize(search.trim());
+  const byId = new Map(products.map(item => [item.id, item]));
+  // One list: the same cards browse and order. Filters narrow it; "Customize" opens the options right on the card.
   const orderable = [...new Set(prices.map(row => row.id))].map(id => {
     const variants = prices.filter(row => row.id === id);
     return {
-      id, category: "", name: { fr: variants[0].fr, en: variants[0].en },
+      id, category: byId.get(id)?.category ?? "", name: { fr: variants[0].fr, en: variants[0].en },
       topping: ["none" as const], groups: variants[0].groups,
       prices: Object.fromEntries(variants.map(row => [row.size, row.cents])),
     };
   });
-  const [categories, collections, products] = await Promise.all([catalogCategories(), catalogCollections(), catalogProducts()]);
+  const visible = orderable.filter(item => (!selected || item.category === selected) && [item.name.fr, item.name.en, item.id].some(value => normalize(value).includes(query)));
   const fr = lang === "fr";
   const displayRows = await displayedCatalogPrices();
   const demoPrices = Object.fromEntries(displayRows.filter(row => row.size === "regular").map(row => [row.id, { cents: row.cents, approved: true }]));
@@ -56,10 +61,10 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
       </select></label>
       <button className="button catalog-filter-submit">{fr ? "Afficher" : "Show"}</button>
     </form>
-    <CatalogList lang={lang} category={selected} search={search} previewPrices={demoPrices}/>
-    {orderable.length > 0 && <section aria-labelledby="orderable">
-      <h2 id="orderable">{fr ? "Disponibles pour la cueillette" : "Available for pickup"}</h2>
-      <Menu lang={lang} demo={false} rewards={rewardsInfo} photos={Object.fromEntries(products.filter(item => item.image && hasPublicImage(item.image)).map(item => [item.id, <div className="product-photo" key={item.id}><Image src={item.image!} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div>]))} initialCategory="all" officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
+    {orderable.length === 0 ? <CatalogList lang={lang} category={selected} search={search} previewPrices={demoPrices} browseOnly/> : <section aria-labelledby="orderable">
+      <h2 id="orderable" className="catalog-count">{visible.length} {fr ? `boisson${visible.length > 1 ? "s" : ""} · touche Personnaliser pour l’ajouter à ton panier` : `drink${visible.length === 1 ? "" : "s"} · tap Customize to add one to your cart`}</h2>
+      <Menu lang={lang} demo={false} rewards={rewardsInfo} openProduct={typeof customize === "string" ? customize : undefined} cartHref={`/${lang}/catalog#cart`} photos={Object.fromEntries(products.map(item => [item.id, item.image && hasPublicImage(item.image) ? <div className="product-photo" key={item.id}><Image src={item.image} alt="" width={1200} height={1140} sizes="(max-width: 760px) 46vw, 240px"/></div> : <span className="catalog-fallback" key={item.id}><StorefrontIcon name={item.category === "matcha" ? "matcha" : item.category === "smoothies" ? "smoothie" : item.category === "lemonade" ? "lemonade" : item.category === "fruit-tea" ? "fruit" : "milk"}/></span>]))} initialCategory="all" officialProducts={typeof customize === "string" && !visible.some(item => item.id === customize) ? [...visible, ...orderable.filter(item => item.id === customize)] : visible} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>
+      {visible.length === 0 && <p>{fr ? "Aucun résultat." : "No results."}</p>}
     </section>}
   </section>;
 }

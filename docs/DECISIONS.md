@@ -43,3 +43,7 @@ With the project lead's authorization: a backup branch and a rehearsal branch we
 ## 2026-11-20 · Topping rule: one included topping, every extra $1.00
 
 Every drink includes one topping chosen from tapioca or the popping pearls; each additional topping, of any kind, costs $1.00 (not $0.75). Implemented in `selectionCost` (`src/catalog-options.ts`): the most expensive selected tapioca/popping option is free, and the base tapioca stored at $0 counts as a standard topping when it is an extra. No catalog migration was needed, so the rule works with the data already in production and with the code deployed before it.
+
+## 2026-11-20 · One "Menu", one list, one customization step
+
+Customers saw "Menu" and "Catalog" for the same thing, and `/catalog` rendered every drink twice: a browse grid whose "Add to cart +" only scrolled down to a second grid ("Available for pickup") whose "Customize +" opened the options after the last card. Decision: customer-facing copy says **Menu** only ("catalog" stays a back-office term and the `/catalog` route is kept, so links and SEO do not move); `/catalog` is a single list in which filters and search apply; "Customize" opens a dialog on the spot (product pages and collections link to it with `?customize=<id>`); extras are collapsed under "Add extras"; the header cart icon goes to the cart. The browse-only grid remains only when online ordering is closed.

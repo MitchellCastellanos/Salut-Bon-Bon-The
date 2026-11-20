@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { cartKey, cartChanged, officialCartKey } from "../../../src/cart";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categories, lineSchema, modifiers, money, pickupDate, products, quote, type Lang, type Line } from "../../../src/domain";
 import { salesTax } from "../../../src/pickup-policy";
@@ -38,8 +39,11 @@ const demoProducts: MenuProduct[] = products.map(product => ({
 export type CartRewards = {
   operational: boolean; allEligible: boolean; minOrderCents: number; linked: boolean; rewardsHref: string; cardHref: string; accountHref: string;
 };
-export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
+export function Menu({ lang, demo, photos, initialCategory, officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards, openProduct, cartHref = "#cart" }: {
   rewards?: CartRewards;
+  /** Product whose customization opens on arrival (links such as "Customize for pickup" on a product page). */
+  openProduct?: string;
+  cartHref?: string;
   logo?: string;
   pickupInfo?: { displayName: string; street: string; city: string; province: string; postalCode: string; phone: string };
   lang: Lang;
@@ -58,6 +62,8 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
   const router = useRouter();
   const checkoutStarted = useRef(false);
   const customization = useRef<HTMLFormElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const opened = useRef(false);
   const [category, setCategory] = useState<"all" | keyof typeof categories>(initialCategory);
   const [selected, setSelected] = useState<MenuProduct>();
   const [cart, setCart] = useState<Line[]>([]);
@@ -75,13 +81,27 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
         setCart(saved.filter(line => (official || !line.optionIds?.length) && listing.some(product => product.id === line.product && product.prices[line.size] !== undefined && product.topping.includes(line.topping))));
       } catch { /* An invalid or unavailable cart starts empty. */ }
       setReady(true);
+      const wanted = !opened.current && openProduct ? listing.find(product => product.id === openProduct) : undefined;
+      if (wanted) { opened.current = true; setIncluded(baseTapiocaId); setSelected(wanted); }
     }, 0);
     slots().then(setTimes).catch(() => setError(fr ? "Heures indisponibles." : "Pickup times unavailable."));
     return () => window.clearTimeout(init);
-  }, [fr, listing, official, storageKey]);
+  }, [fr, listing, official, openProduct, storageKey]);
   useEffect(() => {
+    const element = dialog.current;
+    if (!element) return;
+    if (selected && !element.open) element.showModal();
+    if (!selected && element.open) element.close();
     if (selected) customization.current?.querySelector("select")?.focus();
   }, [selected]);
+  function closeCustomization() {
+    setSelected(undefined);
+    setSelectionError("");
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("customize")) { url.searchParams.delete("customize"); window.history.replaceState(null, "", url); }
+    } catch { /* The address bar is cosmetic. */ }
+  }
   function save(lines: Line[]) {
     setCart(lines);
     try { localStorage.setItem(storageKey, JSON.stringify(lines)); window.dispatchEvent(new Event(cartChanged)); } catch { /* Keep the current cart usable. */ }
@@ -102,8 +122,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
     save([...cart, line]);
     if (official) trackInteraction("add_to_cart");
     setMessage(fr ? "Boisson ajoutée au panier." : "Drink added to cart.");
-    setSelected(undefined);
-    setSelectionError("");
+    closeCustomization();
   }
   async function checkout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -156,10 +175,11 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
     <div>
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
       <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
-        {photos[p.id]}<div><strong>{p.name[lang]}</strong><span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span></div>{p.description && <p>{p.description[lang]}</p>}
+        {photos[p.id]}<div><strong>{official ? <Link href={`/${lang}/catalog/products/${p.id}`}>{p.name[lang]}</Link> : p.name[lang]}</strong><span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span></div>{p.description && <p>{p.description[lang]}</p>}
         <button className="outline" onClick={() => { setSelectionError(""); setIncluded(baseTapiocaId); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>
       </article>)}</div>
-      {selected && <form ref={customization} className="panel customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>
+      <dialog ref={dialog} className="customize-dialog" aria-label={selected?.name[lang]} onClose={closeCustomization} onClick={event => { if (event.target === event.currentTarget) closeCustomization(); }}>
+      {selected && <form ref={customization} className="customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>
         <div className="fields">
           <label>{fr ? "Format" : "Size"}<select name="size">{(["regular", "large"] as const).filter(s => selected.prices[s] !== undefined).map(s => <option key={s} value={s}>{modifiers[s][lang]}{official ? ` · ${money(selected.prices[s]!, lang)}` : s === "large" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>
           <label>{fr ? "Sucre" : "Sugar"}<select name="sugar" defaultValue="100">{["0", "50", "100"].map(s => <option key={s} value={s}>{s}%</option>)}</select></label>
@@ -177,17 +197,20 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
             {pool.length > 0 && <fieldset className="topping-grid"><legend>{fr ? "Garniture incluse · choisis-en 1 : tapioca ou perles éclatantes" : "Included topping · choose 1: tapioca or popping pearls"}</legend>
               {pool.map(option => <label key={option.id}><input type="radio" name="included" value={option.id} checked={current === option.id} onChange={() => setIncluded(option.id)}/> {option.group === "popping" ? `${option[lang]} (${fr ? "perles éclatantes" : "popping"})` : option[lang]}</label>)}
             </fieldset>}
-            {extras.map(group => <fieldset key={group.id} className="topping-grid">
-              <legend>{label[group.id] ?? group.id} · {fr ? "extras" : "extras"} {price(group.options[0]?.cents ?? 100)} {fr ? "chacun" : "each"}</legend>
-              {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} disabled={option.id === current}/> {option[lang]} {option.cents > 0 ? price(option.cents) : ""}</label>)}
-            </fieldset>)}
+            {extras.length > 0 && <details className="extras"><summary>{fr ? "Ajouter des extras" : "Add extras"} · {price(extras[0].options[0]?.cents ?? 100)} {fr ? "chacun" : "each"}</summary>
+              {extras.map(group => <fieldset key={group.id} className="topping-grid">
+                <legend>{label[group.id] ?? group.id}</legend>
+                {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} disabled={option.id === current}/> {option[lang]} {option.cents > 0 ? price(option.cents) : ""}</label>)}
+              </fieldset>)}
+            </details>}
           </>;
         })()}
         {selectionError && <p role="alert">{selectionError}</p>}
         <button className="button" disabled={!ready || cart.length >= 20}>{fr ? "Ajouter au panier" : "Add to cart"}</button>{" "}
-        <button className="outline" type="button" onClick={() => setSelected(undefined)}>{fr ? "Fermer" : "Close"}</button>
+        <button className="outline" type="button" onClick={closeCustomization}>{fr ? "Fermer" : "Close"}</button>
       </form>}
-      <p role="status">{message}</p>
+      </dialog>
+      <p role="status">{message}{message && <> <a href={cartHref}>{fr ? "Voir le panier" : "View cart"}</a></>}</p>
     </div>
     <aside className="panel cart" id="cart"><p className="checkout-brand" aria-hidden="true">{logo ? <Image src={logo} alt="" width={90} height={42} unoptimized/> : "Salut Bon Bon Thé"}</p><h2>{fr ? "Ton panier" : "Your cart"}</h2>
       {!priced.length ? <p>{fr ? "Ton panier est vide." : "Your cart is empty."}</p> : <>

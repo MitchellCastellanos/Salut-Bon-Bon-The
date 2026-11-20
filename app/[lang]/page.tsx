@@ -96,7 +96,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
 
     <div className="wrap home-content">
       <section className="home-section" aria-labelledby="explore">
-        <div className="section-head"><h2 id="explore">{fr ? "Explorez notre menu" : "Explore Our Menu"}</h2><Link className="menu-link" href={menu}>{fr ? "Voir le menu complet" : "Explore the menu"} <span aria-hidden="true">→</span></Link></div>
+        <div className="section-head"><h2 id="explore">{fr ? "Explorez notre menu" : "Explore Our Menu"}</h2><Link className="menu-link" href={official ? `/${lang}/catalog` : menu}>{fr ? "Voir le menu complet" : "See the full menu"} <span aria-hidden="true">→</span></Link></div>
         <ul className="category-grid">{official ? officialTiles.map(tile => {
           const href = "category" in tile ? `/${lang}/catalog?category=${tile.category}` : `/${lang}/catalog/${tile.collection}`;
           const item = "category" in tile ? categories.find(item => item.id === tile.category) : collections.find(item => item.id === tile.collection);
@@ -138,7 +138,7 @@ export default async function Home({ params }: PageProps<"/[lang]">) {
           <div className="promo-art" aria-hidden="true"><StorefrontArt path="/promotions/pickup.webp" sizes="(max-width: 650px) 32vw, 190px"><span className="phone-art"><StorefrontIcon name="bag"/></span></StorefrontArt></div>
           <div><h2>{official ? fr ? "Cueillette en magasin" : "In-store pickup" : fr ? "Commandez en ligne et récupérez en magasin" : "Order Online and Pick Up In Store"}</h2>
             {!official && <p>{fr ? "Choisissez votre boisson et votre heure de cueillette." : "Choose your drink and pickup time."}</p>}
-            <Link className="button" href={menu}>{official ? fr ? "Voir le catalogue" : "Browse the catalog" : fr ? "Commander pour emporter" : "Order for pickup"} <span aria-hidden="true">→</span></Link></div>
+            <Link className="button" href={official ? `/${lang}/catalog` : menu}>{fr ? "Commander pour emporter" : "Order for pickup"} <span aria-hidden="true">→</span></Link></div>
         </section>
         {(!rewards || rewards.previewVisible) && <section className="promo-banner rewards-banner" id="rewards">
           <div><h2><StorefrontIcon name="gift"/>{rewardsName[lang]}</h2>
