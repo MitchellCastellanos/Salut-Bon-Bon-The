@@ -1,5 +1,5 @@
 {
-  "_comment": "One-time initialisation data supplied by the owner on 2026-11-18. The application never reads this file; it is loaded once by scripts/init-business.mjs and is then edited in /admin. Opening hours are held back until verified (see docs/BUSINESS_PROFILE.md).",
+  "_comment": "One-time initialisation data supplied by the owner on 2026-11-18. The application never reads this file; it is loaded once by scripts/init-business.mjs and is then edited in /admin. Opening hours are held back until verified (see docs/TECHNICAL.md, Neon).",
   "profile": {
     "displayName": "Salut Bon Bon Thé",
     "street": "1175 Rue Notre Dame",

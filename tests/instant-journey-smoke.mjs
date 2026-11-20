@@ -1,6 +1,6 @@
 // Full rehearsal: customer sign-up without email (SALUT_INSTANT_ACCOUNTS=1), ADMIN team management, order, fulfilment.
 // Needs an app on SMOKE_BASE_URL (default http://localhost:3100) started with SALUT_INSTANT_ACCOUNTS=1 against a disposable database
-// with ADMIN admin@example.invalid / AdminPassw0rd!x, an open checkout (see docs/TESTING.md) and a priced catalog.
+// with ADMIN admin@example.invalid / AdminPassw0rd!x, an open checkout (see docs/TECHNICAL.md, Testing) and a priced catalog.
 import assert from "node:assert/strict";
 import { chromium } from "playwright-core";
 

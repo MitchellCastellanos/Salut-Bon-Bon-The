@@ -1,10 +1,12 @@
+> **ARCHIVED, HISTORICAL (2026-11-20).** This is the former `docs/REWARDS.md`. Its opening "stamp card" section and the accounts, QR and security sections are still broadly accurate; the **"Salut Rewards 5 %" part (points, $5 reward, calculator, formulas) is superseded** by migration 011 and must not be read as current behaviour. Current rules: [PRODUCT_SPEC.md](../PRODUCT_SPEC.md#salut-rewards-91). Current mechanics: [TECHNICAL.md](../TECHNICAL.md#loyalty-engine-and-customer-accounts). Kept unchanged below for the record.
+
 # Customer accounts and Récompenses Salut / Salut Rewards
 
 FR **Récompenses Salut**, EN **Salut Rewards**: one loyalty program. Gift cards are out of scope for this phase: there are no gift-card tables, issuance, balances or redemption anywhere in the schema or code.
 
 # Salut Rewards: free-drink stamp card, 9 + 1 (migration 011, 2026-11-19)
 
-**Current program.** Every eligible drink earns one stamp; after 9 stamps the 10th drink is free. This is option A of the [commercial proposal](LOYALTY_COMMERCIAL_PROPOSAL.md) and **replaces** the points scheme (10 points per $1, $5 reward) described in the "5 %" section below, which is kept as history. Where the older text below says "points", read "stamps".
+**Current program.** Every eligible drink earns one stamp; after 9 stamps the 10th drink is free. This is option A of the [commercial proposal](LOYALTY_PROPOSAL_2026-11-18.md) and **replaces** the points scheme (10 points per $1, $5 reward) described in the "5 %" section below, which is kept as history. Where the older text below says "points", read "stamps".
 
 ## How it is built
 
@@ -17,7 +19,7 @@ FR **Récompenses Salut**, EN **Salut Rewards**: one loyalty program. Gift cards
 
 ## Progress bar
 
-`src/stamp-progress.tsx` renders `<StampProgress balance lang/>` from the balance only: a gradient bar (`role="progressbar"`, `aria-valuenow/max`), ten slots (9 stamps + a gift slot for the free drink), a bilingual message ("3 more drinks and your next one is free!", "Your free drink is ready!", extra stamps shown as carried over) and a highlighted state when a free drink is ready. It is used on `/account`, `/account/rewards`, the guest card, the staff counter and, as a clearly labelled illustrative example (6 of 9), on the public page. Optional artwork in `public/rewards/stamp-filled.webp`, `stamp-empty.webp` and `stamp-free.webp` replaces the built-in SVG icons when present (prompts: [BATCH-07](image-prompts/BATCH-07.md)). Cart, product and home copy now speak of stamps; the public calculator was removed because there is no rate to simulate.
+`src/stamp-progress.tsx` renders `<StampProgress balance lang/>` from the balance only: a gradient bar (`role="progressbar"`, `aria-valuenow/max`), ten slots (9 stamps + a gift slot for the free drink), a bilingual message ("3 more drinks and your next one is free!", "Your free drink is ready!", extra stamps shown as carried over) and a highlighted state when a free drink is ready. It is used on `/account`, `/account/rewards`, the guest card, the staff counter and, as a clearly labelled illustrative example (6 of 9), on the public page. Optional artwork in `public/rewards/stamp-filled.webp`, `stamp-empty.webp` and `stamp-free.webp` replaces the built-in SVG icons when present (prompts: [BATCH-07](../image-prompts/BATCH-07.md)). Cart, product and home copy now speak of stamps; the public calculator was removed because there is no rate to simulate.
 
 ## Owner decisions still open
 
@@ -77,14 +79,14 @@ Program activation, points per dollar, minimum purchase, earning categories; rew
 
 ## Verification
 
-`tests/loyalty.test.ts` (enrolment, defaults, earning rules, QR lifetime, redemption, replay, insufficient balance, isolation, adjustments), `tests/loyalty-concurrency.test.ts` (real PostgreSQL: parallel redemptions never overspend, one scan wins per token, same-key parallel submits deduct once, parallel earn once), and `tests/rewards-browser-smoke.mjs` (full browser flow, see [Testing](TESTING.md)).
+`tests/loyalty.test.ts` (enrolment, defaults, earning rules, QR lifetime, redemption, replay, insufficient balance, isolation, adjustments), `tests/loyalty-concurrency.test.ts` (real PostgreSQL: parallel redemptions never overspend, one scan wins per token, same-key parallel submits deduct once, parallel earn once), and `tests/rewards-browser-smoke.mjs` (full browser flow, see [Testing](../TECHNICAL.md#testing)).
 
 
 ---
 
 # Salut Rewards 5 % (migration 009, 2026-11-18)
 
-Commercial comparison of the two proposals: [Loyalty commercial proposal](LOYALTY_COMMERCIAL_PROPOSAL.md) (French). **Option B (this program) is the one implemented for the preview; option A (9 + 1 stamp card) is a proposal only and has no code.**
+Commercial comparison of the two proposals: [Loyalty commercial proposal](LOYALTY_PROPOSAL_2026-11-18.md) (French). **Option B (this program) is the one implemented for the preview; option A (9 + 1 stamp card) is a proposal only and has no code.**
 
 ## 1. Real architecture
 
@@ -143,7 +145,7 @@ Scan or paste the link, identify, award points on the pre-tax amount, confirm a 
 
 ## 13. Tests
 
-`tests/rewards-five-percent.test.ts` (31: arithmetic, rounding, seed state, states, 5 % earning, duplicates, cancelled orders, guests, secure identification, link, QR expiry, duplicate redemption, insufficient points, inactive program/reward, refunds, ADMIN config); `tests/rewards-public.test.tsx` (rendered public pages FR/EN, no private data, metadata); `tests/rewards-permissions.test.ts` (STAFF/visitor/customer role gates); `tests/loyalty-concurrency.test.ts` (real PostgreSQL, now also parallel refunds and parallel guest links); `tests/rewards-public-smoke.mjs` (browser at 390 px and 1280 px, FR/EN, guest card, counter flow, cart hint). See [Testing](TESTING.md).
+`tests/rewards-five-percent.test.ts` (31: arithmetic, rounding, seed state, states, 5 % earning, duplicates, cancelled orders, guests, secure identification, link, QR expiry, duplicate redemption, insufficient points, inactive program/reward, refunds, ADMIN config); `tests/rewards-public.test.tsx` (rendered public pages FR/EN, no private data, metadata); `tests/rewards-permissions.test.ts` (STAFF/visitor/customer role gates); `tests/loyalty-concurrency.test.ts` (real PostgreSQL, now also parallel refunds and parallel guest links); `tests/rewards-public-smoke.mjs` (browser at 390 px and 1280 px, FR/EN, guest card, counter flow, cart hint). See [Testing](../TECHNICAL.md#testing).
 
 ## 14. External dependencies
 
@@ -155,7 +157,7 @@ Nothing is active. Program inactive, reward not offered, authorization not recor
 
 ## 16. Owner decisions pending
 
-Rate and reward confirmation, eligible categories, minimum purchase, expiry policy (none today), promotion stacking, commercial authorization and launch date, automatic online discount (not built), legal/privacy copy, accountant opinion on the discount's tax treatment. Details: [commercial proposal](LOYALTY_COMMERCIAL_PROPOSAL.md#6-décisions-attendues-du-propriétaire).
+Rate and reward confirmation, eligible categories, minimum purchase, expiry policy (none today), promotion stacking, commercial authorization and launch date, automatic online discount (not built), legal/privacy copy, accountant opinion on the discount's tax treatment. Details: [commercial proposal](LOYALTY_PROPOSAL_2026-11-18.md#6-décisions-attendues-du-propriétaire).
 
 ## 17. Preview versus active program
 

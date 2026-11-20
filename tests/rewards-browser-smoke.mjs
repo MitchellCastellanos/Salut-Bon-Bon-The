@@ -1,6 +1,6 @@
 // End-to-end: admin configuration, customer accounts, ordering, staff fulfilment, loyalty and isolation.
 // Needs a migrated database with the official catalog, ADMIN admin@example.invalid and STAFF staff@example.invalid,
-// and a server started with SALUT_EMAIL_CAPTURE_DIR set. See docs/TESTING.md.
+// and a server started with SALUT_EMAIL_CAPTURE_DIR set. See docs/TECHNICAL.md, Testing.
 import assert from "node:assert/strict";
 import { createHash, randomBytes } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";

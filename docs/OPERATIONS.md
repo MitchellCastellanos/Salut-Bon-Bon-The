@@ -1,3 +1,0 @@
-# Store operations
-
-Use the staff feed to confirm incoming orders, begin preparation, mark ready, then collect and record pickup payment before completion. Cancel only when appropriate. Refresh manually if connectivity remains interrupted. Order history in this slice is limited to the latest 100 orders after prioritizing active orders. There are no automatic notifications or refund tools. For demo backup stop the server before copying the local database directory. For a Neon pilot, configure and rehearse recovery using an isolated branch. Menu changes, order pause, customer support automation and loyalty workflows are pending.

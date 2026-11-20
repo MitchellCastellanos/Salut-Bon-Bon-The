@@ -15,3 +15,15 @@ Option B (10 points per $1, 1,000 points = $5) is the preview program; option A 
 ## 2026-11-19 · Stamp card (9 + 1) replaces the points scheme; stamps reuse the ledger
 
 The owner chose option A, "the 10th drink is free", as the program. One stamp is stored as one unit of the existing ledger balance and the free drink is an ordinary reward costing 9, so accounts, guest cards, QR redemption, refund reversal, idempotency, append-only history and concurrency guarantees are unchanged and no second store exists. Earning counts drink quantity (capped at 10 per order or visit), not dollars; `points_per_dollar` is retired but its column kept. Migration 011 clears preview balances through the ledger and refuses to run if the program is commercially authorized and balances exist. Open owner decisions: eligible drinks, free-drink value cap, per-order cap, promotion stacking, expiry.
+
+## 2026-11-20 · Commercial packages and Salut Plus as the development target
+
+Packages are Essential ($1,799 setup, $49/month), **Plus** ($3,199, $79, recommended) and Premium ($4,999, $129), CAD, **proposed and not yet accepted by the client**. Premium includes Plus, Plus includes Essential. Plus adds Stripe payments, customer accounts, history and favorites, Salut Rewards 9+1, digital QR card, **Apple Wallet**, automated notifications and basic analytics. Referrals, birthday promotions, advanced analytics, scheduled campaigns, promo codes and gift cards are Premium and are not built during Plus. Apple Wallet is Plus, not Premium (the former Premium roadmap entry is withdrawn). See [COMMERCIAL.md](COMMERCIAL.md).
+
+## 2026-11-20 · Wallet and printed QR use a separate stable identification token
+
+The 5-minute single-use redemption token must never be embedded in an Apple Wallet pass or a printed card. A separate opaque, stable, revocable identification token, resolvable only by an authenticated staff member, identifies the member; awarding and redeeming remain separate, confirmed, idempotent, audited operations. Whether Wallet alone may authorize a redemption is an open owner/security decision (D6 in [PROJECT_STATUS.md](PROJECT_STATUS.md#decisions-the-owner-must-make); recommendation: the short-lived code is still required). Logo size inside the QR is decided by scan tests with error correction H, not by a fixed ratio.
+
+## 2026-11-20 · Documentation consolidated
+
+Roughly 45 documents were merged into README, COMMERCIAL, PRODUCT_SPEC, PROJECT_STATUS and TECHNICAL, keeping TAX, DECISIONS, CHANGELOG and the image manifest because they carry independent legal, historical or asset responsibilities. The points-era loyalty documents moved to `docs/archive/`. Only PROJECT_STATUS states what is built.
