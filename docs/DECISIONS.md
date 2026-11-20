@@ -39,3 +39,7 @@ Apple Wallet passes are built in-repo (ZIP + SHA-1 manifest + PKCS#7 via `node-f
 ## 2026-11-20 · Production prepared for the demo
 
 With the project lead's authorization: a backup branch and a rehearsal branch were made in Neon, migration 012 was rehearsed and then applied to `production`, large sizes were set to regular + $1.00 (the production values were inconsistent), the demo settings were applied (hours Mon–Sat 10:30–20:00, 10 min lead time, 10 orders per slot, tax "not registered", all priced products offered, Rewards active, authorization recorded for "project lead (test site)"), and `SALUT_DEMO_MODE=1` was set for Vercel Production. All of it is test-site configuration and is audited in `catalog_audit_history`; none of it is a client approval.
+
+## 2026-11-20 · Topping rule: one included topping, every extra $1.00
+
+Every drink includes one topping chosen from tapioca or the popping pearls; each additional topping, of any kind, costs $1.00 (not $0.75). Implemented in `selectionCost` (`src/catalog-options.ts`): the most expensive selected tapioca/popping option is free, and the base tapioca stored at $0 counts as a standard topping when it is an extra. No catalog migration was needed, so the rule works with the data already in production and with the code deployed before it.

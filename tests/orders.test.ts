@@ -21,7 +21,7 @@ function checkout() {
 }
 describe("order rules", () => {
   it("prices modifier surcharges in integer cents", () => {
-    expect(quote([line])[0].subtotal).toBe(1700);
+    expect(quote([line])[0].subtotal).toBe(1750); // the demo menu now charges $1.00 per topping, like the official one
     expect(() => quote([{ ...line, topping: "pearls" }])).toThrow("MENU");
     expect(checkoutSchema.safeParse({ ...checkout(), lines: [{ ...line, quantity: 11 }] }).success).toBe(false);
   });

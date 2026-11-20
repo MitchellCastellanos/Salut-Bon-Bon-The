@@ -465,3 +465,9 @@ a.category-tile:hover{box-shadow:inset 0 0 0 2px var(--detail)}
 .console-stats span{font-size:.85rem;color:#6b4a3a}
 .console-links a{padding:7px 12px}
 .console-foot{position:sticky;bottom:-22px;margin-bottom:-22px;padding:14px 0 22px;background:#3b2216}
+
+/* Customization: included topping and extras as a tidy grid of choices */
+.topping-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 14px;border:1px solid var(--line);border-radius:14px;padding:10px 14px 12px;margin:12px 0}
+.topping-grid legend{font-weight:800;padding-inline:6px}
+.topping-grid label{display:flex;flex-direction:row;align-items:center;gap:8px;margin:0;font-weight:600}
+.topping-grid input{width:auto;margin:0;flex:none}

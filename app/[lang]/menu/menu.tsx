@@ -7,7 +7,7 @@ import { categories, lineSchema, modifiers, money, pickupDate, products, quote, 
 import { salesTax } from "../../../src/pickup-policy";
 import { stampsForItems } from "../../../src/rewards-math";
 import { PickupInstructions } from "../../../src/business-view";
-import { selectionCost, type CatalogOptionGroup } from "../../../src/catalog-options";
+import { baseTapiocaId, isIncludedChoice, selectionCost, type CatalogOptionGroup } from "../../../src/catalog-options";
 import { selectedCampaign, trackInteraction } from "../analytics-client";
 import { slots, submitOrder } from "./actions";
 
@@ -67,6 +67,7 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [selectionError, setSelectionError] = useState("");
+  const [included, setIncluded] = useState(baseTapiocaId);
   useEffect(() => {
     const init = window.setTimeout(() => {
       try {
@@ -89,8 +90,8 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
     event.preventDefault();
     if (!selected || !ready || cart.length >= 20) return;
     const form = new FormData(event.currentTarget);
-    const optionIds = official ? form.getAll("option").map(String) : undefined;
-    if (official && selected.groups?.some(group => group.id === "tapioca") && !optionIds?.includes("tapioca-tapioca")) optionIds?.push("tapioca-tapioca");
+    // Official menu: the included topping (tapioca or a popping pearl) plus any extras, each extra priced by the server.
+    const optionIds = official ? [...new Set([...(form.get("included") ? [String(form.get("included"))] : []), ...form.getAll("option").map(String)])] : undefined;
     try {
       selectionCost(selected.groups ?? [], optionIds ?? []);
     } catch {
@@ -156,20 +157,32 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
       <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
         {photos[p.id]}<div><strong>{p.name[lang]}</strong><span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span></div>{p.description && <p>{p.description[lang]}</p>}
-        <button className="outline" onClick={() => { setSelectionError(""); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>
+        <button className="outline" onClick={() => { setSelectionError(""); setIncluded(baseTapiocaId); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>
       </article>)}</div>
       {selected && <form ref={customization} className="panel customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>
         <div className="fields">
           <label>{fr ? "Format" : "Size"}<select name="size">{(["regular", "large"] as const).filter(s => selected.prices[s] !== undefined).map(s => <option key={s} value={s}>{modifiers[s][lang]}{official ? ` · ${money(selected.prices[s]!, lang)}` : s === "large" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>
           <label>{fr ? "Sucre" : "Sugar"}<select name="sugar" defaultValue="100">{["0", "50", "100"].map(s => <option key={s} value={s}>{s}%</option>)}</select></label>
           <label>{fr ? "Glace" : "Ice"}<select name="ice" defaultValue="100">{["0", "50", "100"].map(s => <option key={s} value={s}>{s}%</option>)}</select></label>
-          {official ? <input type="hidden" name="topping" value="none"/> : <label>{fr ? "Garniture" : "Topping"}<select name="topping">{selected.topping.map(s => <option key={s} value={s}>{modifiers[s][lang]}{s !== "none" ? ` +${money(75, lang)}` : ""}</option>)}</select></label>}
+          {official ? <input type="hidden" name="topping" value="none"/> : <label>{fr ? "Garniture" : "Topping"}<select name="topping">{selected.topping.map(s => <option key={s} value={s}>{modifiers[s][lang]}{s !== "none" ? ` +${money(100, lang)}` : ""}</option>)}</select></label>}
           <label>{fr ? "Quantité" : "Quantity"}<input name="quantity" type="number" min={1} max={10} defaultValue={1} required/></label>
         </div>
-        {selected.groups?.filter(group => group.options.length > 0).map(group => <fieldset key={group.id}>
-          <legend>{({ tapioca: fr ? "Tapioca · 1 portion incluse" : "Tapioca · 1 serving included", "brown-sugar": fr ? "Boba à la cassonade" : "Brown Sugar Boba", popping: fr ? "Perles éclatantes" : "Popping pearls", jelly: fr ? "Gelées" : "Jellies" } as Record<string, string>)[group.id]} · {group.min}–{group.max}</legend>
-          {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} defaultChecked={option.default} disabled={group.id === "tapioca" && option.default}/> {option[lang]}{option.cents > 0 ? ` +${money(option.cents, lang)}` : ""}</label>)}
-        </fieldset>)}
+        {official && selected.groups && (() => {
+          const label: Record<string, string> = { tapioca: fr ? "Tapioca" : "Tapioca", popping: fr ? "Perles éclatantes" : "Popping pearls", jelly: fr ? "Gelées" : "Jellies", "brown-sugar": fr ? "Boba à la cassonade" : "Brown Sugar Boba" };
+          const pool = selected.groups.flatMap(group => group.options.filter(option => isIncludedChoice(group.id, option.id)).map(option => ({ ...option, group: group.id }))).sort((a, b) => Number(b.id === baseTapiocaId) - Number(a.id === baseTapiocaId));
+          const extras = selected.groups.filter(group => group.id !== "tapioca" || group.options.some(option => option.id !== baseTapiocaId)).map(group => ({ ...group, options: group.options.filter(option => !(group.id === "tapioca" && option.id === baseTapiocaId)) })).filter(group => group.options.length > 0);
+          const price = (cents: number) => `+${money(cents, lang)}`;
+          const current = pool.some(option => option.id === included) ? included : pool[0]?.id;
+          return <>
+            {pool.length > 0 && <fieldset className="topping-grid"><legend>{fr ? "Garniture incluse · choisis-en 1 : tapioca ou perles éclatantes" : "Included topping · choose 1: tapioca or popping pearls"}</legend>
+              {pool.map(option => <label key={option.id}><input type="radio" name="included" value={option.id} checked={current === option.id} onChange={() => setIncluded(option.id)}/> {option.group === "popping" ? `${option[lang]} (${fr ? "perles éclatantes" : "popping"})` : option[lang]}</label>)}
+            </fieldset>}
+            {extras.map(group => <fieldset key={group.id} className="topping-grid">
+              <legend>{label[group.id] ?? group.id} · {fr ? "extras" : "extras"} {price(group.options[0]?.cents ?? 100)} {fr ? "chacun" : "each"}</legend>
+              {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} disabled={option.id === current}/> {option[lang]} {option.cents > 0 ? price(option.cents) : ""}</label>)}
+            </fieldset>)}
+          </>;
+        })()}
         {selectionError && <p role="alert">{selectionError}</p>}
         <button className="button" disabled={!ready || cart.length >= 20}>{fr ? "Ajouter au panier" : "Add to cart"}</button>{" "}
         <button className="outline" type="button" onClick={() => setSelected(undefined)}>{fr ? "Fermer" : "Close"}</button>

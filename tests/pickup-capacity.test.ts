@@ -19,6 +19,9 @@ suite("pickup capacity under concurrency on real PostgreSQL", () => {
   let checkoutSchema: typeof import("../src/domain").checkoutSchema;
   beforeAll(async () => {
     process.env.DATABASE_URL = url;
+    // Orders left behind by an interrupted earlier run would occupy the slots under test.
+    await admin.query("DELETE FROM order_events WHERE order_number IN (SELECT number FROM orders WHERE customer LIKE 'CAPACITY-%')");
+    await admin.query("DELETE FROM orders WHERE customer LIKE 'CAPACITY-%'");
     ({ placeOrder } = await import("../src/orders"));
     ({ checkoutSchema } = await import("../src/domain"));
     await admin.query("UPDATE catalog_products SET available = true WHERE id = '201'");

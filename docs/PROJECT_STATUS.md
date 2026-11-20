@@ -31,7 +31,7 @@ Production (Neon `production`) is **ready for the demo**: migration 012 is appli
 | --- | --- | --- | --- | --- |
 | 1 | Create account, verify email, sign in/out, reset | **IMPLEMENTED; email delivery BLOCKED** | `src/auth.ts`, `app/[lang]/account/*`; demo mode skips verification and auto-enrolls in Rewards at sign-in | Real verification email needs a Resend domain and key; then turn demo mode off |
 | 2 | Catalog with photos and real prices | **PARTIAL** | 62 products, 26 photos, 124 priced variants in production | Owner must confirm large-size and matcha prices; production large prices are lower than regular for two categories (see risks) |
-| 3 | Drink customization | **PARTIAL** | Size, sugar, ice, included tapioca, extra toppings (`menu.tsx`, `catalog-options.ts`) | Second tapioca as a paid extra, per-drink topping eligibility (D8) |
+| 3 | Drink customization | **IMPLEMENTED** | Size, sugar, ice; one included topping (tapioca or a popping pearl, chosen by the customer) and every extra at $1.00 (`src/catalog-options.ts`, `menu.tsx`, `tests/toppings.test.ts`); verified in a browser: $5.99 with tapioca or a popping pearl, $7.99 with an included topping plus a jelly plus an extra pearl | Per-drink topping eligibility is not modeled: every drink offers every topping (D8) |
 | 4 | Cart and pickup checkout | **IMPLEMENTED** | `src/orders.ts`, tested incl. concurrency | Owner sets real lead time and capacity (demo settings use 10 min / 10 per slot) |
 | 5 | Online payment | **IMPLEMENTED in simulation; Stripe adapter BLOCKED on keys** | `/[lang]/pay/[session]`, `src/card-checkout.ts`, `applySimulatedPayment` (same reconciliation as signed webhooks), `tests/plus-completion.test.ts`. Fixed: card orders were rejected by the official catalog (`placeOrder`), so the Stripe path was unreachable before | Real Stripe test session never exercised; success redirect now returns to the order |
 | 6 | Order status and history for the customer | **IMPLEMENTED** | Tracking page with live timeline, *My orders* with **Order again** | – |
@@ -92,7 +92,7 @@ Findings only; the full audit is a separate later phase.
 2. **`SALUT_INSTANT_ACCOUNTS=1` is enabled in production** (2026-11-19); anyone can register an address they do not own. Demo mode supersedes it; remove both for launch.
 3. **An ADMIN password was shared in chat** (2026-11-19). Change it.
 4. **Prices are demo values, not owner-confirmed.** On 2026-11-20 production large sizes were set to regular + $1.00 for every product (they were inconsistent: large was cheaper than regular for crème brûlée and smoothies). Regular prices are the owner's (matcha $6.75 is not confirmed). Confirm in `/admin/prices` (D8).
-5. **Topping rule is not what the owner stated.** Tapioca is capped at one selection (a second tapioca cannot be charged as an extra) and every modifier is assigned to every product.
+5. **Every modifier is assigned to every product** (unconfirmed by the owner). The topping rule itself (one included, extras $1.00) is implemented; the base tapioca is stored at $0 in the catalog and the pricing code treats it as a standard topping when it is an extra.
 6. **Free-drink rule interpretation.** "The free drink is the middle price" was implemented as a value ceiling of $7.99 (the middle of $5.99/$7.99/$8.99), editable in the admin. Confirm that it is not "only drinks priced exactly $7.99".
 7. **Wallet is untested on a device.** The pass signature validates with OpenSSL against test certificates only.
 8. **`demo_orders` has no DDL in the repository** and `/api/demo-orders` depends on it; the legacy isolated demo cannot be rebuilt from the repo (the header now leads to the real flow).
@@ -111,7 +111,7 @@ Decided on 2026-11-20 by the project lead: **D1** every drink earns a stamp (no 
 | D4 | Stacking with promotions and discounts | Earning/redemption |
 | D5 | Stamp expiry (none today) and a refund after redemption | Policy |
 | D7 | Whether online redemption will ever exist (spec: counter only) | Scope |
-| D8 | Large-size price differential, matcha price, topping eligibility, second tapioca treatment | Pricing and checkout |
+| D8 | Large-size price differential, matcha price, which toppings apply to which drinks | Pricing and checkout |
 | D9 | Real lead time, per-slot capacity and confirmed opening hours (demo uses Mon–Sat 10:30–20:00, 10 min, 10 orders) | Opening checkout |
 | D10 | GST/QST legal name and numbers (the demo uses "not registered", so no tax), accountant's answer on a certified sales recording system | Tax and receipts |
 | D11 | Confirm business address and phone (unverified) | Profile and structured data |
