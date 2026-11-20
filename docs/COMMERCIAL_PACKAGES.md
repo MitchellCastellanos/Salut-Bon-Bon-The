@@ -20,3 +20,7 @@ Owner: Gaban Solutions. Currency: CAD. These are **proposed launch prices**, not
 **Client positioning (EN):** Salut Plus — Turn every order into a returning customer. Online ordering and payment, a personalized 9+1 digital loyalty card with QR, and an Apple Wallet pass for easy in-store identification.
 
 **Commercial next step:** validate deliverables, recurring costs, payment fees, messaging allowances, support terms, Apple Developer ownership, privacy/consent and implementation timeline in the signed proposal. Never silently invent these contractual terms.
+
+
+## Administrative scope
+Salut Plus includes the owner-facing controls required to operate every included feature. The detailed capability checklist and separately planned full admin UX/UI audit are in [PLUS_ADMIN_REQUIREMENTS.md](PLUS_ADMIN_REQUIREMENTS.md). Functional completeness is a demo acceptance requirement; a broad admin redesign is a later phase.
