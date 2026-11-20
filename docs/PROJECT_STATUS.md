@@ -9,12 +9,13 @@ Audit of 2026-11-20 (documentation consolidation) and the implementation pass of
 | Check | Result |
 | --- | --- |
 | `npm run check` (route types, `tsc --noEmit`, ESLint) | Passed |
-| `npm test` with a real PostgreSQL 16 (`TEST_DATABASE_URL`) | **All passed** (140 tests incl. concurrency, capacity, counter and the new `tests/plus-completion.test.ts`); without PostgreSQL 13 skip |
+| `npm test` with a real PostgreSQL 16 (`TEST_DATABASE_URL`) | **All passed** (163 tests incl. the admin suites `admin-ops` and `admin-permissions`); without PostgreSQL some skip |
 | `npm run build` | Passed |
 | `npm audit --omit=dev` | 0 vulnerabilities |
-| Browser: `tests/plus-demo-smoke.mjs` (new, whole Plus journey, demo mode) | Passed |
+| Browser: `tests/plus-demo-smoke.mjs` (whole Plus journey, demo mode) | Passed after the admin restructure (2026-11-20 audit session) |
+| Browser: `tests/admin-audit-smoke.mjs` (new: all admin destinations, ordering switch, menu to storefront, permissions, phone/tablet overflow) | Passed |
 | Browser: `test:rewards`, `test:rewards-public` (existing, adapted to the new card) | Passed |
-| Not run | Camera scan on a phone, Apple Wallet on a real iPhone, real Stripe and Resend, Vercel preview, storefront/staff/catalog suites, accessibility tooling |
+| Not run | `admin-complete-smoke` and `rewards-*` browser scripts (need instant accounts / capture directory; not updated for the new wording except admin-complete), Camera scan on a phone, Apple Wallet on a real iPhone, real Stripe and Resend, Vercel preview, storefront/staff/catalog suites, accessibility tooling |
 | Neon `production`, 2026-11-20 after the release | Migration 012 applied (12 in the ledger, rehearsed first on branch `rehearsal-012`, backup branch `pre-release-20261120`); 62 products offered; Rewards active with the free drink at $7.99; checkout enabled with tax status "not registered"; 0 orders, 1 ADMIN |
 
 ## Summary
@@ -50,6 +51,10 @@ Production (Neon `production`) is **ready for the demo**: migration 012 is appli
 | 19 | Package entitlements | **ABSENT** | – | Product decision D15 |
 | 20 | Live-activation gates | **IMPLEMENTED** | Stripe/Resend modes, demo mode explicit, loyalty authorization recorded by the ADMIN | – |
 
+## Admin audit outcome (2026-11-20, second pass)
+
+Navigation is now Orders, Menu, Customers and loyalty, Store, Reports, Settings, in plain English. Resolved from the earlier findings: product setup split across four pages (now `/admin/menu`), typed identifiers (now checkboxes), duplicate counter/scan entries (sidebar only, dashboard has quick actions), long dashboard (attention first), dormant French admin strings (removed from every rewritten page; staff queue and counter screens still hold dormant `fr` branches), mixed identifiers, missing links to history, missing feedback (every save and failure now shows a message), mobile layout (list rows, no horizontal overflow, verified at 390 px and 820 px). Fixed on the way: hiding a drink did not hide it from the public menu (new sold out / hidden model), cancel reported success when nothing changed, a second stamp-reversal path contradicted order refunds. Still open: STAFF cannot see order history (owner decision), no photo upload (photos are developer-supplied), template editing and notification resend, accessibility tooling (only focus styles, labels and keyboard-reachable controls were checked by hand), Stripe/Resend/Apple items below.
+
 ## Admin coverage
 
 Admin checklist numbers refer to [PRODUCT_SPEC.md](PRODUCT_SPEC.md#admin-requirements-for-salut-plus). Server-side roles are enforced on every admin page and action (`/admin/*` is ADMIN only, `/staff*` is STAFF or ADMIN). Admin writes are recorded in `catalog_audit_history` and are now readable at `/admin/activity`.
@@ -58,22 +63,20 @@ Admin checklist numbers refer to [PRODUCT_SPEC.md](PRODUCT_SPEC.md#admin-require
 | --- | --- | --- | --- | --- |
 | 1 | Overview | **IMPLEMENTED** | `/admin`: readiness blockers, sales, orders by stage, "needs attention" (stale new orders, refunds due, failed emails), system status, demo settings | Last-updated indication |
 | 2 | Orders | **IMPLEMENTED** | `/admin/orders` search by number/name/email, status, payment and date range; detail with items, payments, events, emails, stamps; cancel with reason; refund (partial or full, idempotent, audited) | Stripe refunds untested against real Stripe |
-| 3 | Catalog | **PARTIAL** | `/admin/catalog`, `/admin/prices`, `/admin/campaigns`: edit categories, collections, modifiers, products, eligibility, prices, offered flag | Cannot create products or categories; no stock-out shortcut, preview before publish or image upload |
-| 4 | Store and pickup | **IMPLEMENTED** | `/admin/hours`, `/admin/business`, demo settings | Customer-visible notice banner |
+| 3 | Catalog | **IMPLEMENTED** | `/admin/menu`: create and edit drinks, prices and sale prices, sold out and hidden, photo choice, FR/EN names, featured slot, topping checkboxes with limits, categories and toppings; `/admin/website` collections and campaigns | Photo upload (developer-supplied images only) |
+| 4 | Store and pickup | **IMPLEMENTED** | `/admin/hours` (hours, closures, lead time, capacity, ordering pause/resume), `/admin/business` | Customer-visible notice banner |
 | 5 | Payments and taxes | **PARTIAL** | Fiscal settings, receipts, refunds, payment status in order detail, provider status on the dashboard | No payment reconciliation list |
 | 6 | Customers | **IMPLEMENTED** | List, detail, orders, ledger, card QR replace/revoke | Privacy export/delete |
 | 7 | Rewards rules | **IMPLEMENTED** | `/admin/rewards`: states, rules, free-drink ceiling, identifier-redemption switch, adjustments, suspension, refund reversal | Expiry and stacking are not modeled |
 | 8 | Wallet and QR | **IMPLEMENTED** | `/admin/wallet`: readiness (names only), counts, recent passes, errors; QR rotation/revocation on the customer page | Pass design preview |
 | 9 | Notifications | **PARTIAL** | `/admin/notifications`: log, status filter, FR/EN preview, provider status | Editing templates, resend button |
-| 10 | Analytics | **PARTIAL** | Sales, orders by stage, event analytics | Product and loyalty reports |
+| 10 | Analytics | **IMPLEMENTED** | `/admin/reports`: date presets and custom range, sales net of refunds, daily sales, top drinks, loyalty participation and redemptions, site visits | – |
 | 11 | Staff and access | **IMPLEMENTED** | `/admin/team`, `/admin/activity` change history | Sign-in diagnostics |
-| 12 | Content and settings | **PARTIAL** | Campaigns, business profile, hours | Editors for homepage copy, SEO and legal pages |
+| 12 | Content and settings | **PARTIAL** | Campaigns, collections, business profile, hours, integrations status | Editors for homepage copy and legal pages |
 
 ADMIN versus STAFF is clean in code: STAFF reach the live queue, counter sales and the card scanner; everything under `/admin` is ADMIN only; secrets, certificates, migrations and provider keys are environment-only and never displayed (only "present/missing").
 
-## Preliminary admin UX/UI findings (no redesign yet)
-
-Findings only; the full audit is a separate later phase.
+## Preliminary admin UX/UI findings (superseded: resolved in the audit above)
 
 1. **Orders are split between `/staff` (live queue) and `/admin/orders` (history).** Both are linked from the sidebar, but the owner may expect one place.
 2. **Product setup is split across four pages** (`/admin/catalog`, `/admin/prices`, `/admin/campaigns` "quick pricing", `/admin/rewards` categories): the same product is edited in three places. Group under one Menu section.

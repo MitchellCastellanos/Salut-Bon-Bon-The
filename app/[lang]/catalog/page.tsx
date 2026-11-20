@@ -37,7 +37,12 @@ export default async function CatalogPage({ params, searchParams }: PageProps<"/
       prices: Object.fromEntries(variants.map(row => [row.size, row.cents])),
     };
   });
-  const visible = orderable.filter(item => (!selected || item.category === selected) && [item.name.fr, item.name.en, item.id].some(value => normalize(value).includes(query)));
+  // Sold-out drinks (published but not available) stay in the list, marked unavailable, as the ADMIN decided.
+  const listing = products.flatMap(item => {
+    const priced = orderable.find(entry => entry.id === item.id);
+    return priced ? [priced] : item.available ? [] : [{ id: item.id, category: item.category, name: { fr: item.fr, en: item.en }, topping: ["none" as const], groups: [], prices: {}, soldOut: true }];
+  });
+  const visible = listing.filter(item => (!selected || item.category === selected) && [item.name.fr, item.name.en, item.id].some(value => normalize(value).includes(query)));
   const fr = lang === "fr";
   const displayRows = await displayedCatalogPrices();
   const demoPrices = Object.fromEntries(displayRows.filter(row => row.size === "regular").map(row => [row.id, { cents: row.cents, approved: true }]));

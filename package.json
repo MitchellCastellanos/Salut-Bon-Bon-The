@@ -19,6 +19,7 @@
     "test:storefront": "node tests/storefront-audit.mjs",
     "business:init": "node scripts/init-business.mjs",
     "test:plus-demo": "node tests/plus-demo-smoke.mjs",
+    "test:admin": "node tests/admin-audit-smoke.mjs",
     "qr:calibrate": "node scripts/qr-logo-calibrate.mjs",
     "wallet:assets": "node scripts/build-wallet-assets.mjs"
   },

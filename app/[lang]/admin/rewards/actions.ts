@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { database } from "../../../../src/db";
 import { language } from "../../../../src/domain";
-import { adjustPoints, LoyaltyError, reverseForRefund, saveProgramConfig } from "../../../../src/loyalty";
+import { adjustPoints, LoyaltyError, saveProgramConfig } from "../../../../src/loyalty";
 import { staffActor, staffRole } from "../../../../src/staff";
 
 async function admin() {
@@ -99,21 +99,6 @@ export async function setAccountStatus(lang: string, form: FormData) {
     WITH saved AS (UPDATE loyalty_accounts SET status = $2 WHERE id = $1 RETURNING id, status)
     INSERT INTO catalog_audit_history (action, subject, details) SELECT 'loyalty.account', id::text, to_jsonb(saved) || jsonb_build_object('actor', $3::text) FROM saved
   `, [parsed.data!.account, parsed.data!.status, actor]);
+  revalidatePath(`/${lang}/admin/rewards`);
   back(lang, `q=${encodeURIComponent(parsed.data!.q)}&saved=account`);
-}
-
-export async function recordRefund(lang: string, form: FormData) {
-  const actor = await admin();
-  if (!language(lang)) return;
-  const parsed = z.object({ order: z.string().regex(/^[1-9]\d{0,17}$/), amount: dollars, reason: z.string().trim().min(3).max(280), key: z.string().min(8).max(120) }).safeParse(Object.fromEntries(form));
-  if (!parsed.success) back(lang, "error=refund");
-  const r = parsed.data!;
-  try {
-    const result = await reverseForRefund({ order: r.order, refundCents: Math.round(Number(r.amount) * 100), reason: r.reason, key: r.key, actor });
-    revalidatePath(`/${lang}/admin/rewards`);
-    back(lang, `saved=refund&reversed=${result.reversed}&shortfall=${result.shortfall}`);
-  } catch (error) {
-    if (error instanceof LoyaltyError) back(lang, `error=${error.code}`);
-    throw error;
-  }
 }

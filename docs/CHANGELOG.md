@@ -6,7 +6,7 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 ## Unreleased
 
-- Menu journey: one drink list instead of two on `/catalog`, "Customize" opens a dialog (deep link `?customize=<id>`), extras collapsed, header cart icon goes to the cart, "catalog" wording removed from the storefront. `npm run check`, `npm test` (134 passed, 13 need PostgreSQL) and `npm run build` pass; verified in a browser in demo mode only. The official-catalog browser suites (`tests/catalog-browser-smoke.mjs`, `tests/plus-demo-smoke.mjs`) were not run: they need PostgreSQL.
+- Menu journey: one drink list instead of two on `/catalog`, "Customize" opens a dialog (deep link `?customize=<id>`), extras collapsed, header cart icon goes to the cart, "catalog" wording removed from the storefront. `npm run check`, `npm test` (134 passed, 13 need PostgreSQL) and `npm run build` pass; sold-out drinks stay in the single list marked unavailable (merged with main's sold-out/hidden work); verified in a browser in demo mode only. The official-catalog browser suites (`tests/catalog-browser-smoke.mjs`, whose matcha count now reads the single list, `tests/plus-demo-smoke.mjs`, `tests/admin-audit-smoke.mjs`) were not run: they need PostgreSQL.
 
 - Added source-ready art direction and ordered image generation requirements for the five wired storefront slots, plus reserved promotion and owner-supplied asset paths.
 - Added individual Better Auth staff accounts, PostgreSQL migration 002, operator provisioning, and server authorization for STAFF and ADMIN order operations.
@@ -39,3 +39,7 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 ## Topping rule (2026-11-20)
 
 - One included topping (tapioca or a popping pearl, customer's choice) and $1.00 per extra topping on the official menu and customization screen (grouped choices, tapioca first); the isolated demo menu moved from $0.75 to $1.00. New `tests/toppings.test.ts`; the free-drink value is shown on the card, rewards page, product pages, scanner and Wallet pass.
+
+## 2026-11-20 · Administration audit and restructure
+
+Navigation regrouped (Orders, Menu, Customers and loyalty, Store, Reports, Settings). Drinks, prices and toppings merged into one Menu area (the old catalog, price sheet and "quick pricing" are gone); product and category creation, topping checkboxes instead of typed identifiers, sold-out versus hidden (migration 013). One "Temporarily stop new orders" switch on the dashboard and hours page. New Reports (sales net of refunds, daily sales, top drinks, loyalty), Payments and integrations status page, Website content page, plain-language change history with filter by item. Duplicate stamp-reversal form removed from Rewards (refunds reverse stamps from the order page). Cancellation now reports a stale state instead of a false success. Confirmations on risky actions, English-only labels, mobile-friendly lists. Tests: `tests/admin-ops.test.ts`, `tests/admin-permissions.test.ts`, `tests/admin-audit-smoke.mjs`.

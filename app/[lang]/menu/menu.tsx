@@ -28,6 +28,8 @@ type MenuProduct = {
   topping: readonly Line["topping"][];
   prices: Partial<Record<Line["size"], number>>;
   groups?: CatalogOptionGroup[];
+  /** Published but not orderable right now: shown, marked unavailable. */
+  soldOut?: boolean;
 };
 
 const demoProducts: MenuProduct[] = products.map(product => ({
@@ -175,8 +177,8 @@ export function Menu({ lang, demo, photos, initialCategory, officialProducts, ta
     <div>
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
       <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
-        {photos[p.id]}<div><strong>{official ? <Link href={`/${lang}/catalog/products/${p.id}`}>{p.name[lang]}</Link> : p.name[lang]}</strong><span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span></div>{p.description && <p>{p.description[lang]}</p>}
-        <button className="outline" onClick={() => { setSelectionError(""); setIncluded(baseTapiocaId); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>
+        {photos[p.id]}<div><strong>{official ? <Link href={`/${lang}/catalog/products/${p.id}`}>{p.name[lang]}</Link> : p.name[lang]}</strong>{!p.soldOut && <span>{money(p.prices.regular ?? p.prices.large ?? 0, lang)}</span>}</div>{p.description && <p>{p.description[lang]}</p>}
+        {p.soldOut ? <p role="status" data-testid="unavailable">{fr ? "Momentanément indisponible" : "Currently unavailable"}</p> : <button className="outline" onClick={() => { setSelectionError(""); setIncluded(baseTapiocaId); setSelected(p); }}>{fr ? "Personnaliser" : "Customize"} ＋</button>}
       </article>)}</div>
       <dialog ref={dialog} className="customize-dialog" aria-label={selected?.name[lang]} onClose={closeCustomization} onClick={event => { if (event.target === event.currentTarget) closeCustomization(); }}>
       {selected && <form ref={customization} className="customize" key={selected.id} onSubmit={add}><h2>{selected.name[lang]}</h2>

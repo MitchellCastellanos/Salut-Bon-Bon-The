@@ -23,9 +23,10 @@ try {
   // 1. Admin opens the demo store.
   const admin = await (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
   await consoleLogin(admin, "admin@example.invalid", "AdminPassw0rd!x", "Administration");
+  await admin.goto(`${BASE}/en/admin/integrations`);
+  await admin.on("dialog", dialog => dialog.accept());
   await admin.getByRole("button", { name: "Apply demo settings" }).click();
-  await admin.getByText("Demo settings applied").waitFor();
-  assert.ok(await admin.getByText("Online pickup ordering is open").count() + await admin.getByText(/Online ordering is closed/).count() >= 0);
+  await admin.getByText("Demo settings applied").first().waitFor();
 
   // 2. Customer: account, customized drink, cart, card payment on the simulated page.
   const phone = await browser.newContext({ viewport: { width: 1000, height: 1000 } });
@@ -113,15 +114,15 @@ try {
   await admin.getByRole("heading", { name: `Order #${number}` }).waitFor();
   await admin.getByLabel("Reason", { exact: true }).last().fill("Customer changed their mind");
   await admin.getByRole("button", { name: "Refund", exact: true }).click();
-  await admin.getByText("Saved.").waitFor();
+  await admin.getByText("Refund recorded.").waitFor();
   await admin.getByText(/refunded/i).first().waitFor();
   await shot(admin, "8-admin-order-refunded");
   await admin.goto(`${BASE}/en/admin/notifications`);
   await admin.getByText(/not connected \(demo\)/).waitFor();
   assert.ok((await admin.getByText("skipped").count()) > 0);
   await shot(admin, "9-admin-notifications");
-  await admin.goto(`${BASE}/en/admin/wallet`); await admin.getByRole("heading", { name: "Card QR and Apple Wallet" }).waitFor();
-  await admin.goto(`${BASE}/en/admin/activity`); await admin.getByText("order.refund").first().waitFor();
+  await admin.goto(`${BASE}/en/admin/wallet`); await admin.getByRole("heading", { name: "Digital cards" }).waitFor();
+  await admin.goto(`${BASE}/en/admin/activity`); await admin.getByText("Order refunded").first().waitFor();
 
   // 7. Demonstration pages.
   await shopper.goto(`${BASE}/en/demo`); await shopper.getByRole("heading", { name: /The complete journey/ }).waitFor();
