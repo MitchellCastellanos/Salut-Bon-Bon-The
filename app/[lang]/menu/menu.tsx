@@ -159,7 +159,7 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode
   const subtotal = priced.reduce((sum, item) => sum + item.subtotal, 0);
   const tax = official ? salesTax(subtotal, taxRates) : 0;
   const total = subtotal + tax;
-  return <div className="menu-layout">
+  return <div className={`menu-layout menu-layout--${mode}`}>
     <div>
       {!official && <div className="filters">{(["all", "fruit", "milk", "matcha"] as const).map(id => <button type="button" key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{id === "all" ? fr ? "Tout" : "All" : categories[id][lang]}</button>)}</div>}
       {mode === "legacy" && !initialProduct && <div className="product-grid menu-grid">{listing.filter(p => category === "all" || category === p.category).map(p => <article className="product-card" id={official ? `order-${p.id}` : p.id} key={p.id}>
