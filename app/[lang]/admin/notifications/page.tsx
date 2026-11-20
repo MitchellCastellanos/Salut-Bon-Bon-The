@@ -1,18 +1,17 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { demoMode } from "../../../../src/demo-mode";
 import { database } from "../../../../src/db";
-import { language, pickupDate } from "../../../../src/domain";
+import { pickupDate } from "../../../../src/domain";
 import { emailMode, orderEmail, type EmailKind } from "../../../../src/notifications";
-import { staffRole } from "../../../../src/staff";
+import { adminPage } from "../guard";
+import { PageHeader } from "../ui";
 
 export const metadata = { robots: { index: false, follow: false } };
 const mask = (email: string) => email.includes("@") ? `${email.slice(0, 2)}…@${email.split("@")[1]}` : email;
 
 /** Every transactional email the platform produced, whether or not a provider is connected, with a safe preview and the delivery status. */
 export default async function AdminNotifications({ params, searchParams }: PageProps<"/[lang]/admin/notifications">) {
-  const { lang } = await params;
-  if (!language(lang) || !process.env.DATABASE_URL || await staffRole() !== "ADMIN") notFound();
+  const lang = await adminPage((await params).lang);
   const query = await searchParams;
   const open = typeof query.open === "string" && /^\d{1,18}$/.test(query.open) ? query.open : "";
   const status = typeof query.status === "string" && ["PENDING", "SENT", "FAILED", "SKIPPED"].includes(query.status) ? query.status : "";
@@ -31,8 +30,8 @@ export default async function AdminNotifications({ params, searchParams }: PageP
   }
   const mode = emailMode();
   const tally = Object.fromEntries(counts.map(row => [row.status, row.n]));
-  return <section className="wrap catalog-page">
-    <h1>Notifications</h1>
+  return <section className="wrap">
+    <PageHeader title="Notifications" intro="The emails your store sends to customers, and whether each one was delivered."/>
     <p className="panel" role="status">Email provider: <strong>{mode === "disabled" ? (demoMode() ? "not connected (demo): messages are recorded here and never sent" : "not connected") : mode}</strong>. Messages are transactional only (order received, ready, cancelled). The templates are bilingual and live in the code.</p>
     <div className="console-stats">{["SENT", "SKIPPED", "FAILED", "PENDING"].map(s => <div className="panel" key={s}><small>{s.toLowerCase()}</small><strong>{tally[s] ?? 0}</strong></div>)}</div>
     <form className="catalog-filters"><label>Status<select name="status" defaultValue={status}><option value="">All</option>{["PENDING", "SENT", "FAILED", "SKIPPED"].map(s => <option key={s} value={s}>{s.toLowerCase()}</option>)}</select></label><button className="outline">Filter</button></form>

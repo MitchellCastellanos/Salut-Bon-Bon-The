@@ -32,7 +32,8 @@ export async function CatalogList({ lang, category, search = "", ids, previewPri
       <Link href={`/${lang}/catalog/products/${product.id}`}><strong>{product[lang]}</strong></Link>
       <small>{categories.find(item => item.id === product.category)?.[lang]}</small>
       {previewPrices?.[product.id] && <span className="catalog-preview-price">{(previewPrices[product.id].cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" })}</span>}
-      <Link className="catalog-add" href={orderHref(lang, product.id)}>{lang === "fr" ? "Ajouter au panier +" : "Add to cart +"}</Link>
+      {product.available ? <Link className="catalog-add" href={orderHref(lang, product.id)}>{lang === "fr" ? "Ajouter au panier +" : "Add to cart +"}</Link>
+        : <span className="catalog-preview-price" data-testid="unavailable">{lang === "fr" ? "Momentanément indisponible" : "Currently unavailable"}</span>}
       {ids && <Link href={`/${lang}/catalog?category=${product.category}#${product.id}`}>
         {lang === "fr" ? "Voir au menu" : "View on the menu"}
       </Link>}

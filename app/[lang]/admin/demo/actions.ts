@@ -11,5 +11,5 @@ export async function prepareDemo(lang: string) {
   if (!language(lang) || !demoMode() || await staffRole() !== "ADMIN") throw new Error("Forbidden");
   await applyDemoSettings(await staffActor());
   revalidatePath(`/${lang}`, "layout");
-  redirect(`/${lang}/admin?demo=ready`);
+  redirect(`/${lang}/admin/integrations?saved=demo`);
 }

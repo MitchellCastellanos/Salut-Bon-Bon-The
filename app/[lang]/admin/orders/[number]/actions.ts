@@ -35,10 +35,10 @@ export async function cancelOrder(lang: string, form: FormData) {
     .safeParse({ order: form.get("order"), from: form.get("from"), reason: form.get("reason") });
   if (!parsed.success) return back(lang, String(form.get("order") ?? "").replace(/\D/g, "").slice(0, 18) || "0", "error=INVALID");
   const d = parsed.data;
-  if (await updateOrder(d.order, d.from, "CANCELLED")) {
-    await (await database()).query("INSERT INTO catalog_audit_history (action, subject, details) VALUES ('order.cancel', $1, jsonb_build_object('reason', $2::text, 'actor', $3::text))", [d.order, d.reason, await staffActor()]);
-    await notifyOrder(d.order, ["cancelled"]);
-  }
+  // A stale page or a double click finds the order already moved on: say so instead of reporting a cancellation that did not happen.
+  if (!await updateOrder(d.order, d.from, "CANCELLED")) return back(lang, d.order, "error=STATE");
+  await (await database()).query("INSERT INTO catalog_audit_history (action, subject, details) VALUES ('order.cancel', $1, jsonb_build_object('reason', $2::text, 'actor', $3::text))", [d.order, d.reason, await staffActor()]);
+  await notifyOrder(d.order, ["cancelled"]);
   revalidatePath(`/${lang}/admin/orders/${d.order}`);
   return back(lang, d.order, "done=cancel");
 }

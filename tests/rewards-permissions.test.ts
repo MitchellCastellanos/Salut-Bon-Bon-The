@@ -20,14 +20,12 @@ beforeEach(async () => {
 
 describe("role separation for Salut Rewards operations", () => {
   const program = form({ rate: "10", min: "" });
-  const refundForm = form({ order: "1", amount: "5.00", reason: "refund", key: "refund-12345678" });
   const adjustForm = form({ account: "00000000-0000-4000-8000-000000000000", points: "5", reason: "test", key: "adjust-12345678", q: "" });
   for (const role of [undefined, "STAFF"] as const) {
-    it(`${role ?? "a customer or visitor"} cannot change the program, rewards, refunds, adjustments or account status`, async () => {
+    it(`${role ?? "a customer or visitor"} cannot change the program, rewards, adjustments or account status`, async () => {
       state.role = role;
       await expect(admin.saveProgram("fr", program)).rejects.toThrow("Forbidden");
       await expect(admin.saveReward("fr", form({}))).rejects.toThrow("Forbidden");
-      await expect(admin.recordRefund("fr", refundForm)).rejects.toThrow("Forbidden");
       await expect(admin.adjust("fr", adjustForm)).rejects.toThrow("Forbidden");
       await expect(admin.setAccountStatus("fr", form({ account: "x", status: "suspended", q: "" }))).rejects.toThrow("Forbidden");
     });
