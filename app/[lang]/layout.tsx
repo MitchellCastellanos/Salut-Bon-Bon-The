@@ -1,5 +1,5 @@
 import { demoMode } from "../../src/demo-mode";
-import { orderHref } from "../../src/order-links";
+import { cartHref, orderHref } from "../../src/order-links";
 import { analyticsAllowed, analyticsEnabled } from "../../src/analytics";
 import { AnalyticsPreference } from "./analytics-client";
 import { usesOfficialCatalog } from "../../src/catalog-mode";
@@ -40,7 +40,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
       <StoreNavigation lang={lang} showRewards={showRewards} orderHref={orderHref(lang)} demo={demoMode()}/>
       <div className="header-actions">
         <Link className="icon-link" href={`${home}/account`} aria-label={fr ? "Compte client" : "Customer account"}><StorefrontIcon name="account"/></Link>
-        <Link className="icon-link" href={orderHref(lang)} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>
+        <Link className="icon-link" href={cartHref(lang)} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>
         <LanguageLink lang={lang}/>
         <Link className="button header-order" href={orderHref(lang)}><StorefrontIcon name="bag"/>{fr ? "Commander" : "Order"}</Link>
       </div>

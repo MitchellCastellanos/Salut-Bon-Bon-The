@@ -6,6 +6,8 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 ## Unreleased
 
+- Menu journey: one drink list instead of two on `/catalog`, "Customize" opens a dialog (deep link `?customize=<id>`), extras collapsed, header cart icon goes to the cart, "catalog" wording removed from the storefront. `npm run check`, `npm test` (134 passed, 13 need PostgreSQL) and `npm run build` pass; sold-out drinks stay in the single list marked unavailable (merged with main's sold-out/hidden work); verified in a browser in demo mode only. The official-catalog browser suites (`tests/catalog-browser-smoke.mjs`, whose matcha count now reads the single list, `tests/plus-demo-smoke.mjs`, `tests/admin-audit-smoke.mjs`) were not run: they need PostgreSQL.
+
 - Added source-ready art direction and ordered image generation requirements for the five wired storefront slots, plus reserved promotion and owner-supplied asset paths.
 - Added individual Better Auth staff accounts, PostgreSQL migration 002, operator provisioning, and server authorization for STAFF and ADMIN order operations.
 

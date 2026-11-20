@@ -46,7 +46,7 @@ try {
     JSON.stringify({ displayName: "Smoke Shop", street: "1 Test St", city: "Montréal", province: "Québec", postalCode: "H2X 1Y4", country: "Canada", phone: "+1 514-000-0000", verification: { status: "unverified" } }),
   ]);
   await page.goto(new URL("/en/catalog?category=matcha", base).href);
-  assert.equal(await page.locator(".catalog-grid li").count(), 3);
+  assert.equal(await page.locator(".menu-grid .product-card").count(), 3);
   await page.locator("#order-401").getByRole("button", { name: /customize/i }).click();
   await page.getByLabel("Quantity").fill("2");
   await page.getByRole("button", { name: "Add to cart" }).click();
