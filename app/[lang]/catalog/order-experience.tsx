@@ -9,6 +9,7 @@ import { loyaltyProgram, programStages } from "../../../src/loyalty";
 import { cardPath, rewardsPath } from "../../../src/rewards-paths";
 import { Menu } from "../menu/menu";
 import type { Lang } from "../../../src/domain";
+import { productDisplayName } from "../../../src/product-display";
 export async function OrderExperience({ lang, mode, productId }: { lang: Lang; mode: "product" | "cart"; productId?: string }) {
   const config = process.env.DATABASE_URL ? await pickupConfiguration() : null;
   const prices = process.env.DATABASE_URL ? await officialPrices() : [];
@@ -16,7 +17,7 @@ export async function OrderExperience({ lang, mode, productId }: { lang: Lang; m
   if (!config?.enabled) return <p role="status">{lang === "fr" ? "La commande en ligne est temporairement indisponible." : "Online ordering is temporarily unavailable."}</p>;
   const orderable = [...new Set(prices.map(row => row.id))].map(id => {
     const variants = prices.filter(row => row.id === id);
-    return { id, category: all.find(p => p.id === id)?.category ?? "", name: { fr: variants[0].fr, en: variants[0].en }, topping: ["none" as const], groups: variants[0].groups, prices: Object.fromEntries(variants.map(row => [row.size, row.cents])) };
+    return { id, category: all.find(p => p.id === id)?.category ?? "", name: { fr: productDisplayName(variants[0].fr, all.find(p => p.id === id)?.category ?? "", "fr"), en: productDisplayName(variants[0].en, all.find(p => p.id === id)?.category ?? "", "en") }, topping: ["none" as const], groups: variants[0].groups, prices: Object.fromEntries(variants.map(row => [row.size, row.cents])) };
   });
   if (mode === "product" && !orderable.some(p => p.id === productId)) return <p>{lang === "fr" ? "Commande en ligne indisponible pour cette boisson." : "Online ordering is unavailable for this drink."}</p>;
   const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
