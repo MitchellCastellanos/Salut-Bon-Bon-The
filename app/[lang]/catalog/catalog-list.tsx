@@ -25,8 +25,12 @@ export async function CatalogList({ lang, category, search = "", ids, previewPri
   );
   if (ids) products.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
   if (!products.length) return <p>{lang === "fr" ? "Aucun résultat." : "No results."}</p>;
-  return <ul className="catalog-grid">
-    {products.map(product => {
+  const sections = category ? [{ id: category, title: categories.find(item => item.id === category)?.[lang] ?? category, products }] : categories.map(item => ({ id: item.id, title: item[lang], products: products.filter(product => product.category === item.id) })).filter(section => section.products.length);
+  return <div className="catalog-sections">
+    {sections.map(section => <section className="catalog-section" key={section.id} aria-labelledby={`category-${section.id}`}>
+      <h2 id={`category-${section.id}`}>{section.title}</h2>
+      <ul className="catalog-grid">
+    {section.products.map(product => {
       const photo = drinkPhoto(product);
       return <li key={product.id} id={product.id}>
       <CatalogProductLink productId={product.id} className={"catalog-visual catalog-visual--" + product.category} href={`/${lang}/catalog/products/${product.id}`} ariaLabel={productDisplayName(product[lang], product.category, lang)}>{photo && hasPublicImage(photo.path) ? <Image className="catalog-banner" src={photo.path} alt={photo.exact ? product[lang] : (lang === "fr" ? "Photo illustrative de boisson" : "Illustrative drink photo")} width={1200} height={1140} sizes="(max-width: 640px) 45vw, (max-width: 1000px) 30vw, 260px"/> : <span className="catalog-fallback"><StorefrontIcon name={product.category === "matcha" ? "matcha" : product.category === "smoothies" ? "smoothie" : product.category === "lemonade" ? "lemonade" : product.category === "fruit-tea" ? "fruit" : "milk"}/></span>}</CatalogProductLink>
@@ -39,5 +43,7 @@ export async function CatalogList({ lang, category, search = "", ids, previewPri
         {lang === "fr" ? "Voir au menu" : "View on the menu"}
       </Link>}
     </li>; })}
-  </ul>;
+      </ul>
+    </section>)}
+  </div>;
 }
