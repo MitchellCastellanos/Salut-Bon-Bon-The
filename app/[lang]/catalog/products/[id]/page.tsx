@@ -12,6 +12,7 @@ import { StorefrontIcon } from "../../../../../src/storefront-art";
 import { drinkPhoto } from "../../../../../src/drink-photography";
 import { OrderExperience } from "../../order-experience";
 import { CatalogBackLink } from "../../catalog-back-link";
+import { productDisplayName, productKind } from "../../../../../src/product-display";
 
 export default async function ProductPage({ params }: PageProps<"/[lang]/catalog/products/[id]">) {
   const { lang, id } = await params;
@@ -27,7 +28,7 @@ export default async function ProductPage({ params }: PageProps<"/[lang]/catalog
     {process.env.DATABASE_URL && (customer ? <form action={toggleFavoriteAction.bind(null, lang, id)}><button className="outline" aria-pressed={favorite}>{favorite ? (fr ? "♥ Retirer des favoris" : "♥ Remove from favorites") : (fr ? "♡ Ajouter aux favoris" : "♡ Add to favorites")}</button></form> : <p className="fine-print"><Link href={`/${lang}/account`}>{fr ? "Connectez-vous pour enregistrer vos favoris." : "Sign in to save favorites."}</Link></p>)}
     <div className="catalog-product-detail">
     <div className={"catalog-visual catalog-detail-visual catalog-visual--" + product.category}>{photo && hasPublicImage(photo.path) ? <Image src={photo.path} width={600} height={570} alt={photo.exact ? product[lang] : (fr ? "Photo illustrative" : "Illustrative photo")}/> : <span className="catalog-fallback"><StorefrontIcon name={product.category === "matcha" ? "matcha" : product.category === "smoothies" ? "smoothie" : product.category === "lemonade" ? "lemonade" : product.category === "fruit-tea" ? "fruit" : "milk"}/></span>}</div>
-    <div className="catalog-product-detail-options"><h1>{product[lang]}</h1>
+    <div className="catalog-product-detail-options"><p className="catalog-product-kind">{productKind(product.category, lang)}</p><h1>{productDisplayName(product[lang], product.category, lang)}</h1>
     {!product.available ? <p role="status" data-testid="unavailable"><strong>{fr ? "Momentanément indisponible." : "Currently unavailable."}</strong> {fr ? "Cette boisson ne peut pas être commandée pour le moment." : "This drink cannot be ordered right now."}</p>
     : <OrderExperience lang={lang} mode="product" productId={id}/>}
     </div></div>
