@@ -6,6 +6,8 @@ Initialized Salut Plus with localized storefront, sample menu and SQL migration 
 
 ## Unreleased
 
+- Simplified the dedicated cart in French and English. The page heading and storefront header provide the cart title and brand, so the cart panel starts with the order contents.
+
 - Staff card scanner: the in-page camera now works in every browser with camera access. It uses the native `BarcodeDetector` when present and falls back to `jsQR` (now a production dependency), adds a Stop button, releases the camera on exit and explains blocked permission. Real-device verification still pending.
 
 - Added source-ready art direction and ordered image generation requirements for the five wired storefront slots, plus reserved promotion and owner-supplied asset paths.

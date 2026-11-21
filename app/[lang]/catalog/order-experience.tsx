@@ -1,4 +1,3 @@
-import { officialLogo } from "../../../src/brand-server";
 import { cardPaymentsEnabled } from "../../../src/providers/stripe";
 import { pickupConfiguration } from "../../../src/store-settings";
 import { officialPrices } from "../../../src/catalog-pricing";
@@ -23,5 +22,5 @@ export async function OrderExperience({ lang, mode, productId }: { lang: Lang; m
   const program = process.env.DATABASE_URL ? await loyaltyProgram().catch(() => undefined) : undefined;
   const linked = program ? Boolean(await customerSession().catch(() => undefined) || await currentGuestCard().catch(() => undefined)) : false;
   const rewards = program?.previewVisible ? { operational: programStages(program).accrualOperational, allEligible: !program.earnCategories?.length, minOrderCents: program.minOrderCents, linked, rewardsHref: rewardsPath[lang], cardHref: cardPath[lang], accountHref: `/${lang}/account` } : undefined;
-  return <Menu lang={lang} demo={false} mode={mode} rewards={rewards} photos={{}} initialCategory="all" initialProduct={productId} officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()} logo={officialLogo()}/>;
+  return <Menu lang={lang} demo={false} mode={mode} rewards={rewards} photos={{}} initialCategory="all" initialProduct={productId} officialProducts={orderable} taxRates={config?.taxRates ?? []} pickupInfo={config?.profile ?? undefined} cardPayments={cardPaymentsEnabled()}/>;
 }

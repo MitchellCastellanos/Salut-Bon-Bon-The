@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import { cartKey, cartChanged, officialCartKey } from "../../../src/cart";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
@@ -38,11 +37,10 @@ const demoProducts: MenuProduct[] = products.map(product => ({
 export type CartRewards = {
   operational: boolean; allEligible: boolean; minOrderCents: number; linked: boolean; rewardsHref: string; cardHref: string; accountHref: string;
 };
-export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode = "legacy", officialProducts, taxRates = [], cardPayments = false, logo, pickupInfo, rewards }: {
+export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode = "legacy", officialProducts, taxRates = [], cardPayments = false, pickupInfo, rewards }: {
   initialProduct?: string;
   mode?: "legacy" | "product" | "cart";
   rewards?: CartRewards;
-  logo?: string;
   pickupInfo?: { displayName: string; street: string; city: string; province: string; postalCode: string; phone: string };
   lang: Lang;
   demo: boolean;
@@ -197,7 +195,8 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode
       </form>}
       {message && <p role="status">{message}</p>}
     </div>
-    {mode !== "product" && <aside className="panel cart" id="cart"><p className="checkout-brand" aria-hidden="true">{logo ? <Image src={logo} alt="" width={90} height={42} unoptimized/> : "Salut Bon Bon Thé"}</p><h2>{fr ? "Ton panier" : "Your cart"}</h2>
+    {mode !== "product" && <aside className="panel cart" id="cart">
+      {mode === "legacy" && <h2>{fr ? "Ton panier" : "Your cart"}</h2>}
       {!priced.length ? <p>{fr ? "Ton panier est vide." : "Your cart is empty."}</p> : <>
         <ul className="cart-lines">{priced.map(item => <li key={item.index}><div><strong>{item.quantity} × {item.name[lang]}</strong><small>{modifiers[item.size][lang]} · {item.chosen.length ? item.chosen.map(option => option[lang]).join(", ") : modifiers[item.topping][lang]} · {fr ? "sucre" : "sugar"} {item.sugar}% · {fr ? "glace" : "ice"} {item.ice}%</small></div><div className="qty" role="group" aria-label={fr ? `Quantité de ${item.name[lang]}` : `Quantity of ${item.name[lang]}`}>
             <button type="button" className="outline" aria-label={fr ? `Diminuer la quantité de ${item.name[lang]}` : `Decrease quantity of ${item.name[lang]}`} disabled={item.quantity <= 1} onClick={() => save(cart.map((line, i) => i === item.index ? { ...line, quantity: Math.max(1, line.quantity - 1) } : line))}>−</button>
