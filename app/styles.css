@@ -546,3 +546,9 @@ a.stat:hover{border-color:#c9a98e}
 .catalog-product-detail-options { min-width: 0; }
 .catalog-product-detail-options h1 { margin-top: 0; }
 @media(max-width: 760px) { .catalog-product-detail { grid-template-columns: 1fr; } .catalog-product-detail .catalog-detail-visual { max-width: 540px; margin-inline: auto; } }
+
+/* Full catalog grouped by drink family, rather than one mixed grid. */
+.catalog-sections { display: grid; gap: clamp(2rem, 5vw, 3.5rem); }
+.catalog-section { min-width: 0; }
+.catalog-section > h2 { margin: 0 0 1rem; padding-bottom: .65rem; border-bottom: 2px solid rgba(74,44,26,.14); }
+.catalog-section > .catalog-grid { margin: 0; }
