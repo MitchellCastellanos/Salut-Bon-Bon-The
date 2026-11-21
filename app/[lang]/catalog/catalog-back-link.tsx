@@ -6,10 +6,13 @@ export function CatalogBackLink({ lang, productId, category }: { lang: string; p
   const fallback = `/${lang}/catalog?category=${encodeURIComponent(category)}#${encodeURIComponent(productId)}`;
   const [href, setHref] = useState(fallback);
   useEffect(() => {
-    try {
-      const saved = JSON.parse(sessionStorage.getItem(catalogPositionKey) || "null") as { href: string; id: string } | null;
-      if (saved?.id === productId && saved.href.startsWith(`/${lang}/catalog`)) setHref(saved.href);
-    } catch { /* fallback */ }
+    const timeout = setTimeout(() => {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(catalogPositionKey) || "null") as { href: string; id: string } | null;
+        if (saved?.id === productId && saved.href.startsWith(`/${lang}/catalog`)) setHref(saved.href);
+      } catch { /* fallback */ }
+    }, 0);
+    return () => clearTimeout(timeout);
   }, [lang, productId]);
   return <Link className="outline" href={href}>← {lang === "fr" ? "Retour au catalogue" : "Back to catalog"}</Link>;
 }
