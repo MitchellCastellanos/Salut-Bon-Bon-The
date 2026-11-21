@@ -6,6 +6,7 @@ import { StorefrontIcon } from "../../../src/storefront-art";
 import { drinkPhoto } from "../../../src/drink-photography";
 import { catalogCategories, catalogProducts } from "../../../src/catalog";
 import type { Lang } from "../../../src/domain";
+import { productDisplayName } from "../../../src/product-display";
 
 export async function CatalogList({ lang, category, search = "", ids, previewPrices }: {
   lang: Lang;
@@ -28,8 +29,8 @@ export async function CatalogList({ lang, category, search = "", ids, previewPri
     {products.map(product => {
       const photo = drinkPhoto(product);
       return <li key={product.id} id={product.id}>
-      <CatalogProductLink productId={product.id} className={"catalog-visual catalog-visual--" + product.category} href={`/${lang}/catalog/products/${product.id}`} ariaLabel={product[lang]}>{photo && hasPublicImage(photo.path) ? <Image className="catalog-banner" src={photo.path} alt={photo.exact ? product[lang] : (lang === "fr" ? "Photo illustrative de boisson" : "Illustrative drink photo")} width={1200} height={1140} sizes="(max-width: 640px) 45vw, (max-width: 1000px) 30vw, 260px"/> : <span className="catalog-fallback"><StorefrontIcon name={product.category === "matcha" ? "matcha" : product.category === "smoothies" ? "smoothie" : product.category === "lemonade" ? "lemonade" : product.category === "fruit-tea" ? "fruit" : "milk"}/></span>}</CatalogProductLink>
-      <CatalogProductLink productId={product.id} href={`/${lang}/catalog/products/${product.id}`}><strong>{product[lang]}</strong></CatalogProductLink>
+      <CatalogProductLink productId={product.id} className={"catalog-visual catalog-visual--" + product.category} href={`/${lang}/catalog/products/${product.id}`} ariaLabel={productDisplayName(product[lang], product.category, lang)}>{photo && hasPublicImage(photo.path) ? <Image className="catalog-banner" src={photo.path} alt={photo.exact ? product[lang] : (lang === "fr" ? "Photo illustrative de boisson" : "Illustrative drink photo")} width={1200} height={1140} sizes="(max-width: 640px) 45vw, (max-width: 1000px) 30vw, 260px"/> : <span className="catalog-fallback"><StorefrontIcon name={product.category === "matcha" ? "matcha" : product.category === "smoothies" ? "smoothie" : product.category === "lemonade" ? "lemonade" : product.category === "fruit-tea" ? "fruit" : "milk"}/></span>}</CatalogProductLink>
+      <CatalogProductLink productId={product.id} href={`/${lang}/catalog/products/${product.id}`}><strong>{productDisplayName(product[lang], product.category, lang)}</strong></CatalogProductLink>
       <small>{categories.find(item => item.id === product.category)?.[lang]}</small>
       {previewPrices?.[product.id] && <span className="catalog-preview-price">{(previewPrices[product.id].cents / 100).toLocaleString(lang === "fr" ? "fr-CA" : "en-CA", { style: "currency", currency: "CAD" })}</span>}
       {product.available ? <CatalogProductLink productId={product.id} className="catalog-add" href={`/${lang}/catalog/products/${product.id}`}>{lang === "fr" ? "Personnaliser +" : "Customize +"}</CatalogProductLink>
