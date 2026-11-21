@@ -49,7 +49,7 @@ export async function ConsoleShell({ lang, children }: { lang: Lang; children: R
     <a className="skip-link" href="#main">Skip to content</a>
     <ConsoleSidebar lang={lang} sections={sections} name={profile?.name ?? ""} role={role} siteHref={siteHref} logout={logout.bind(null, lang)}/>
     <main id="main" className="console-main" tabIndex={-1}>
-      {demoMode() && <p className="panel" role="note" style={{ marginBottom: 16 }}><strong>Demo store.</strong> Nothing is charged and no email is sent. This is the screen your team uses to receive and prepare orders. <Link href={`${p}/demo`}>Open the demo guide</Link> · <Link href={`${p}/demo/side-by-side`}>customer and team side by side</Link></p>}
+      {demoMode() && <p className="panel" role="note" style={{ marginBottom: 16 }}><strong>Demo store.</strong> Nothing is charged and no email is sent. This is the screen your team uses to receive and prepare orders.</p>}
       {children}
     </main>
   </div>;

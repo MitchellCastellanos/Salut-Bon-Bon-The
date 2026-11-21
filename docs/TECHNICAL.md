@@ -28,7 +28,7 @@ One setting, one place. Menu data (names, photo, category, sizes and prices, sol
 | Public | `/{fr,en}`, `/menu`, `/catalog`, `/catalog/[collection]`, `/catalog/products/[id]`, `/track/[token]` (+ `/receipt`), `/legal/[document]`, `/demo-commande` · `/demo-order` (isolated demo) |
 | Rewards | `/fr/recompenses`, `/en/rewards` (public terms), `/fr/recompenses/carte`, `/en/rewards/card` (guest card) |
 | Customer | `/account` (orders with Order again, favorites), `/account/rewards` (card), `/account/verify`, `/account/reset` |
-| Demo mode | `/{fr,en}/demo`, `/demo/side-by-side`, `/{lang}/pay/[session]` (simulated payment page) |
+| Demo mode | `/{lang}/pay/[session]` (simulated payment page) |
 | Card and Wallet | `/s/[code]` (QR target, forwards to the staff scanner), `GET /api/wallet/pass`, Apple web service `/api/wallet/v1/…` |
 | STAFF + ADMIN | `/staff` (orders), `/staff/counter`, `/staff/rewards` (scan, award, redeem) |
 | ADMIN only | `/admin` (dashboard with the online-ordering switch), `/admin/orders` (+ `/[number]`), `/admin/menu` (+ `/new`, `/[id]`, `/options`), `/admin/customers` (+ `/[id]`), `/admin/rewards`, `/admin/wallet` (digital cards), `/admin/hours`, `/admin/business`, `/admin/team`, `/admin/reports`, `/admin/website`, `/admin/notifications`, `/admin/integrations`, `/admin/activity`. Retired paths `/admin/catalog`, `/admin/prices`, `/admin/analytics`, `/admin/campaigns` redirect to their replacements |

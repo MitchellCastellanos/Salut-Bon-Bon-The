@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import type { Lang } from "./domain";
 import { rewardsPath } from "./rewards-paths";
 
-export function StoreNavigation({ lang, showRewards, orderHref, demo = false }: { lang: Lang; showRewards: boolean; orderHref: string; demo?: boolean }) {
+export function StoreNavigation({ lang, showRewards, orderHref }: { lang: Lang; showRewards: boolean; orderHref: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   useEffect(() => { const timeout = setTimeout(() => setOpen(false), 0); return () => clearTimeout(timeout); }, [pathname]);
@@ -18,7 +18,6 @@ export function StoreNavigation({ lang, showRewards, orderHref, demo = false }: 
     { href: `${root}#promotions`, label: "Promotions" },
     ...(showRewards ? [{ href: rewardsPath[lang], label: fr ? "Récompenses" : "Rewards" }] : []),
     { href: `${root}#find-us`, label: fr ? "Nous trouver" : "Find us" },
-    ...(demo ? [{ href: `${root}/demo`, label: fr ? "Démo" : "Demo" }] : []),
   ];
   return <div className="store-nav-shell">
     <button className="store-nav-toggle" type="button" aria-expanded={open} aria-controls="store-nav-links" aria-label={fr ? "Ouvrir le menu de navigation" : "Open navigation menu"} onClick={() => setOpen(!open)}>
