@@ -1,4 +1,3 @@
-import { demoMode } from "../../src/demo-mode";
 import { orderHref } from "../../src/order-links";
 import { analyticsAllowed, analyticsEnabled } from "../../src/analytics";
 import { AnalyticsPreference } from "./analytics-client";
@@ -37,7 +36,7 @@ export default async function LanguageLayout({ children, params }: LayoutProps<"
     <a className="skip" href="#main">{fr ? "Aller au contenu" : "Skip to content"}</a>
     <header className="top"><div className="wrap storefront-nav">
       <Brand href={home}/>
-      <StoreNavigation lang={lang} showRewards={showRewards} orderHref={`${home}/catalog`} demo={demoMode()}/>
+      <StoreNavigation lang={lang} showRewards={showRewards} orderHref={`${home}/catalog`}/>
       <div className="header-actions">
         <Link className="icon-link" href={`${home}/account`} aria-label={fr ? "Compte client" : "Customer account"}><StorefrontIcon name="account"/></Link>
         <Link className="icon-link" href={orderHref(lang)} aria-label={fr ? "Panier" : "Cart"} aria-describedby="header-cart-count"><StorefrontIcon name="bag"/><CartCount official={official}/></Link>

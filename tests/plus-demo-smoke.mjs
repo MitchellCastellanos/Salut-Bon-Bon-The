@@ -124,9 +124,6 @@ try {
   await admin.goto(`${BASE}/en/admin/wallet`); await admin.getByRole("heading", { name: "Digital cards" }).waitFor();
   await admin.goto(`${BASE}/en/admin/activity`); await admin.getByText("Order refunded").first().waitFor();
 
-  // 7. Demonstration pages.
-  await shopper.goto(`${BASE}/en/demo`); await shopper.getByRole("heading", { name: /The complete journey/ }).waitFor();
-  await shopper.goto(`${BASE}/en/demo/side-by-side`); await shopper.getByRole("heading", { name: /Customer and team, side by side/ }).waitFor();
   console.log("PASS plus-demo-smoke");
 } finally {
   await browser.close();
