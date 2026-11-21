@@ -77,7 +77,7 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode
     const init = window.setTimeout(() => {
       try {
         const saved = lineSchema.array().max(20).parse(JSON.parse(localStorage.getItem(storageKey) || "[]"));
-        setCart(saved.filter(line => (official || !line.optionIds?.length) && listing.some(product => product.id === line.product && product.prices[line.size] !== undefined && product.topping.includes(line.topping))));
+        setCart(saved.filter(line => (official || !line.optionIds?.length) && (mode === "product" || listing.some(product => product.id === line.product && product.prices[line.size] !== undefined && product.topping.includes(line.topping)))));
       } catch { /* An invalid or unavailable cart starts empty. */ }
       setReady(true);
     }, 0);
@@ -177,14 +177,14 @@ export function Menu({ lang, demo, photos, initialCategory, initialProduct, mode
         {official && selected.groups && (() => {
           const label: Record<string, string> = { tapioca: fr ? "Tapioca" : "Tapioca", popping: fr ? "Perles éclatantes" : "Popping pearls", jelly: fr ? "Gelées" : "Jellies", "brown-sugar": fr ? "Boba à la cassonade" : "Brown Sugar Boba" };
           const pool = selected.groups.flatMap(group => group.options.filter(option => isIncludedChoice(group.id, option.id)).map(option => ({ ...option, group: group.id }))).sort((a, b) => Number(b.id === baseTapiocaId) - Number(a.id === baseTapiocaId));
-          const extras = selected.groups.filter(group => group.id !== "tapioca" || group.options.some(option => option.id !== baseTapiocaId)).map(group => ({ ...group, options: group.options.filter(option => !(group.id === "tapioca" && option.id === baseTapiocaId)) })).filter(group => group.options.length > 0);
+          const extraGroups = selected.groups.filter(group => group.id !== "tapioca" || group.options.some(option => option.id !== baseTapiocaId)).map(group => ({ ...group, options: group.options.filter(option => !(group.id === "tapioca" && option.id === baseTapiocaId)) })).filter(group => group.options.length > 0);
           const price = (cents: number) => `+${money(cents, lang)}`;
           const current = pool.some(option => option.id === included) ? included : pool[0]?.id;
           return <>
             {pool.length > 0 && <fieldset className="topping-grid"><legend>{fr ? "Garniture incluse · choisis-en 1 : tapioca ou perles éclatantes" : "Included topping · choose 1: tapioca or popping pearls"}</legend>
               {pool.map(option => <label key={option.id}><input type="radio" name="included" value={option.id} checked={current === option.id} onChange={() => setIncluded(option.id)}/> {option.group === "popping" ? `${option[lang]} (${fr ? "perles éclatantes" : "popping"})` : option[lang]}</label>)}
             </fieldset>}
-            {extras.map(group => <fieldset key={group.id} className="topping-grid">
+            {extraGroups.map(group => <fieldset key={group.id} className="topping-grid">
               <legend>{label[group.id] ?? group.id} · {fr ? "extras" : "extras"} {price(group.options[0]?.cents ?? 100)} {fr ? "chacun" : "each"}</legend>
               {group.options.map(option => <label key={option.id}><input type="checkbox" name="option" value={option.id} checked={extras.includes(option.id)} onChange={event => setExtras(previous => event.target.checked ? [...previous, option.id] : previous.filter(id => id !== option.id))} disabled={option.id === current}/> {option[lang]} {option.cents > 0 ? price(option.cents) : ""}</label>)}
             </fieldset>)}
